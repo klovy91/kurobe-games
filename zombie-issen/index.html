@@ -802,12 +802,12 @@ function explode(cx,cz){flash(.92,'#fff6e4');shakeT=.95;fireball(cx,1.25,cz);sBo
   d0.body.wakeUp();d0.body.applyImpulse(new CANNON.Vec3((q.x-cx)/(d||1)*f,f*.8,(q.z-cz)/(d||1)*f),new CANNON.Vec3(0,0,0));
   const i=dyn.indexOf(d0);if(i>=0){dyn.splice(i,1);gib.push({mesh:d0.mesh,b:d0.body,age:0,nc:1,vt:8})}})}
 function clearField(){En.forEach(e=>{scene.remove(e.g);disposeTree(e.g)});En=[];gib.forEach(dropGib);gib=[];corpses.forEach(m=>scene.remove(m));corpses=[];fx.forEach(f=>{if(f.m!==XL)scene.remove(f.m)});fx.length=0;XL.intensity=0;sn=0;SCM.count=0;blD0=1e9;blD1=-1;shakeT=0;$('gl').style.transform='';$('ov').style.transform=''}
-let bnT=null;
+let bnT=null,bnH=null;
 function banner(t,ms,sz,tw){const b=$('bn');b.style.fontSize=(sz||34)+'px';b.style.opacity=1;
  if(bnT){clearInterval(bnT);bnT=null}
  if(tw){let i=0;b.textContent='';bnT=setInterval(()=>{i++;b.textContent=t.slice(0,i);if(i>=t.length){clearInterval(bnT);bnT=null}},45)}
  else b.innerHTML=t;
- setTimeout(()=>{b.style.opacity=0},ms)}
+ if(bnH)clearTimeout(bnH);bnH=setTimeout(()=>{b.style.opacity=0;bnH=null},ms)}
 function waveBanner(){sDing();banner('WAVE '+wave+'<br><span style="font-size:17px;opacity:.92">ゾンビ '+En.length+'体</span>',1500)}
 function nextWave(){wave++;spawnWave();MAXL=bladeLen(wave);waveBanner()}
 const MSG=['…と、そこで目が覚めた。','チャイムが鳴った。妄想終了。','次の授業は体育だった。','先生「ここ、テストに出るぞ」'];
@@ -978,7 +978,7 @@ function frame(now){requestAnimationFrame(frame);perfTick(now-last);const dr=Mat
   if(introS===0&&t>.3){introS=1;banner('退屈な授業中。',2000,34,1)}
   else if(introS===1&&t>2.4){introS=2;banner('廊下が、騒がしい。',1900,34,1);sMoan()}
   else if(introS===2&&t>4.6){introS=3;banner('——なんだ、あれ。',1700,34,1)}
-  else if(introS===3&&t>6.5){introS=4;killActor(iAct[0]);banner('先生ッ！！',1800,34,1);flash(.3);sCut();sMoan();play('bite',.95)}
+  else if(introS===3&&t>6.5){introS=4;roomOff();killActor(iAct[0]);banner('先生ッ！！',1800,34,1);flash(.3);sCut();sMoan();play('bite',.95)}
   else if(introS===4&&t>8.6){introS=5;fleeAll(t);play('flee',.85);banner('——みんな逃げろっ！！',1900,34,1)}
   else if(introS===5&&t>10.8){introS=6;banner('この名刀「一閃」で切り伏せる…',2400,21)}
   else if(introS===6&&t>13.4){introS=7;play('shout',1);sWhoosh();setTimeout(()=>sCut(),240);introSlash();banner('一閃。',2000);flash(.42)}
