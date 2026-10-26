@@ -100,8 +100,14 @@
   </div>
 
   <div class="ad">
-<!-- admax -->
-<script src="https://adm.shinobi.jp/s/4875ab3f089e9b671a7083d5cda45686"></script>
+<!-- admax：スマホはスマホ用の枠、それ以外はPC用の枠 -->
+<script>
+(function(){
+  var sp=/iPhone|iPod|Android.+Mobile|Windows Phone/i.test(navigator.userAgent);
+  var id=sp?'5da68a901c66dc40ba25813107825f56':'4875ab3f089e9b671a7083d5cda45686';
+  document.write('<script src="https://adm.shinobi.jp/s/'+id+'"><\/script>');
+})();
+</script>
 <!-- admax -->
   </div>
 
