@@ -805,7 +805,7 @@ function cutGib(q,nx,ny,s){const dA=dirAt(s.x1,s.y1),dB=dirAt(s.x2,s.y2);let n=d
  const v0=q.b.velocity;[0,1].forEach(k=>{const sg=k?-1:1;mkPiece(sd[k],{x:v0.x+n.x*.95*sg,y:v0.y+n.y*.95*sg+.45,z:v0.z+n.z*.95*sg-.25},q.nc,.3)});
  sand(q.b.position,q.nc?10:26,q.nc?DUST:BLOOD,2,q.nc?0:1,.3);dropGib(q);gib.splice(gib.indexOf(q),1)}
 /* ---- waves ---- */
-function waveCount(w){return Math.min(30,1+Math.ceil(w/2))}
+function waveCount(w){return Math.min(30,1+Math.floor(w/2.5))}
 function bladeLen(w){return Math.hypot(innerWidth,innerHeight)*Math.min(.95,.38+waveCount(w)*.028)}
 /* visible half-width at depth z, minus the zombie's own half-width r -> its whole body stays on screen */
 function halfW(z,r){const T=Math.tan(cam.fov*Math.PI/360)*cam.aspect;return Math.min(5.4-r,Math.max(0,T*(6-z-r)*.94-r))}
@@ -814,9 +814,9 @@ function zNear(r){const T=Math.tan(cam.fov*Math.PI/360)*cam.aspect;return Math.m
 const SRC=new THREE.Raycaster(),SEYE=new THREE.Vector3(0,1.6,6);
 function seenFrom(x,y,z){const d=new THREE.Vector3(x,y,z).sub(SEYE),L=d.length();SRC.set(SEYE,d.normalize());SRC.far=L;return !SRC.intersectObjects(dyn.map(o=>o.mesh),true).length}
 function freeSpot(x,z){return !dyn.some(d=>{const ob=d.body.ob;if(!ob)return false;const q=d.body.position;return Math.abs(x-q.x)<ob[0]+.32&&Math.abs(z-q.z)<ob[1]+.32})}
-function spawnWave(){spawnCrawlers();const n=waveCount(wave),pb=Math.min(.16,.02+wave*.005),maxB=1,nd=wave===10?3:wave>10?(wave>=20?2:1):0,N=wave===10?3:n;let nb=0;for(let i=0;i<N;i++){
+function spawnWave(){spawnCrawlers();const n=waveCount(wave),pb=Math.min(.16,.02+wave*.005),maxB=1,nd=wave===10?3:wave>10?[0,1].slice(0,wave>=20?2:1).filter(()=>Math.random()<.4).length:0,N=wave===10?3:n;let nb=0;for(let i=0;i<N;i++){
  const dog=i<nd,cf=zcfg(),bomb=!dog&&nb<maxB&&Math.random()<pb;if(bomb)nb++;let lt=null;
- const ty=dog?3:bomb?1:(n<3?(Math.random()*3|0):(i%3));let vm=1,sc=cf.s;
+ const rt0=Math.random(),ty=dog?3:bomb?1:rt0<.2?0:rt0<.4?2:1;let vm=1,sc=cf.s;
  const r=dog?.58*cf.s:.56*cf.s*(ty===2?1.42:ty===0?1.45:1),zn=zNear(r);
  let x,z,tries=0;do{z=-5.4+Math.random()*(zn+5.4);x=(Math.random()*2-1)*halfW(z,r);tries++}
  while(tries<60&&(En.some(o=>Math.hypot(o.x-x,o.z-z)<1.05)||!freeSpot(x,z)||(dog&&!seenFrom(x,.8*cf.s,z))));
