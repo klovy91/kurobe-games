@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>広告</title>
+<style>html,body{margin:0;padding:0;background:transparent;overflow:hidden}body{display:flex;justify-content:center}</style>
+</head>
+<body>
+<!-- admax：?s=title はタイトル用の枠、?s=over はゲームオーバー用（ホーム下部と共用）。スマホ／PCで枠を選ぶ -->
+<script>
+(function(){
+  var sp=/iPhone|iPod|Android.+Mobile|Windows Phone/i.test(navigator.userAgent);
+  var s=/[?&]s=title\b/.test(location.search)?'title':'over';
+  var T={
+    title:{sp:'9b07d8721a9f5f0faa36ac0b19baac09',pc:'9a5db557b811213d5198b29d2a457f47'},
+    over:{sp:'5da68a901c66dc40ba25813107825f56',pc:'4875ab3f089e9b671a7083d5cda45686'}
+  };
+  document.write('<script src="https://adm.shinobi.jp/s/'+T[s][sp?'sp':'pc']+'"><\/script>');
+})();
+</script>
+<!-- admax -->
+</body>
+</html>
