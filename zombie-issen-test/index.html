@@ -723,16 +723,18 @@ function cutEnemy(e,nx,ny,s,hitY){const dA=dirAt(s.x1,s.y1),dB=dirAt(s.x2,s.y2);
   for(let k=0;k<2;k++){const t=sd[k][bo]||(sd[k][bo]={parts:[],par:m.parent});t.parts.push({v:r.out[k],vn:r.on[k],vu:r.ou[k],mat:m.material,c})}});
  // legs only? = the cut plane misses the pelvis, chest and head, and the blade touched below the pelvis
  let leg=-1,hip=null;if(hitY!==undefined&&e.ty!==0&&!e.bomb&&!e.legless&&e.cf){const dd=v=>n.x*(v.x-C.x)+n.y*(v.y-C.y)+n.z*(v.z-C.z),P=[.9,1.3,1.66].map(y=>e.inr.localToWorld(new THREE.Vector3(0,y,0))),sg=P.map(dd);
-  if((sg.every(v=>v>0)||sg.every(v=>v<0))&&hitY<P[0].y){leg=sg[0]>0?0:1;hip=P[0]}}
+  if((sg.every(v=>v>0)||sg.every(v=>v<0))&&hitY<P[0].y&&Math.random()<Math.min(.7,.3+(wave-1)*.02)){leg=sg[0]>0?0:1;hip=P[0]}}
  [0,1].forEach(k=>{const sg=k?-1:1;mkRagdoll(sd[k],{x:n.x*.62*sg,y:n.y*.62*sg+.3,z:n.z*.62*sg-.18});if(k===leg){Object.values(MADE).forEach(o=>o.carry=1);CARRY.push({cf:e.cf,ty:e.ty,made:MADE,x:e.x,z:e.z,ry:e.g.rotation.y,hip:hip.clone(),sc:e.inr.scale.x})}});
  gush(e.x,1.25,e.z);sCut();scene.remove(e.g);disposeTree(e.g);En.splice(En.indexOf(e),1);if(leg<0)S++;if(e.bomb)explode(e.x,e.z)}
 /* a zombie that lost only its legs: its fallen upper body is replaced by a legless crawler at the start of the next wave */
-function spawnCrawlers(){const L=CARRY;CARRY=[];L.forEach(c=>{const M=c.made||{},ok=o=>o&&gib.includes(o)&&o.dieT===undefined&&o.sink===undefined,t=M[0];
+function spawnCrawlers(){const L=CARRY;CARRY=[];L.forEach(c=>{const M=c.made||{},ok=o=>o&&gib.includes(o)&&o.dieT===undefined&&o.sink===undefined,t=M[0],dead=()=>{S++;Object.values(M).forEach(o=>{if(o)o.carry=0})};
   // blown up, cut apart again or gone: it stays dead (and now counts as a kill)
-  if(!ok(t)||!c.hip){S++;return}
+  if(!ok(t)||!c.hip){dead();return}
+  let x=t.b.position.x,z=t.b.position.z;const rr=.7*c.sc,nd=new THREE.Vector3(x,.2,z).project(cam);
+  if(Math.hypot(x,z-6)<3||nd.z>1||Math.abs(nd.x)>1||nd.y<-1||nd.y>1){dead();return}
+  z=Math.max(-5.4,Math.min(zNear(rr),z));const hw=halfW(z,rr);x=Math.max(-hw,Math.min(hw,x));
   const ps=Object.keys(M).map(k=>M[k]).filter(ok);
   ps.forEach(o=>{if(o.con){o.con.forEach(rmCon);o.con=[]}world.remove(o.b);gib.splice(gib.indexOf(o),1)});
-  let x=Math.max(-5.2,Math.min(5.2,t.b.position.x)),z=Math.max(-5.4,Math.min(3.4,t.b.position.z));
   const G=new THREE.Group(),Pg=new THREE.Group();G.add(Pg);G.position.set(x,0,z);G.rotation.y=Math.atan2(-x,6-z);Pg.rotation.x=1.35;Pg.position.y=.17*c.sc;scene.add(G);G.updateMatrixWorld(true);
   const qy=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),-c.ry),arms=[],dc=new THREE.Vector3(),dq=new THREE.Quaternion(),ds=new THREE.Vector3();
   const parts=ps.map(o=>{const m=o.mesh,r={m,sp:m.position.clone(),sq:m.quaternion.clone(),lp:o.p0.clone().sub(c.hip).applyQuaternion(qy),lq:qy.clone()};
@@ -914,7 +916,7 @@ function howTo(){if($('ht'))return;const d=document.createElement('div');d.id='h
  '<li>指を離すと一閃。線の上のゾンビを斬る。</li>'+
  '<li>1体でも斬り残すと、ゾンビが一気に押し寄せてきて終わり。</li></ol>'+
  '<p class="tip">重なったゾンビは、まとめて斬れる。</p>'+
- '<p class="tip">足だけを斬ると、その WAVE はしのげるが、次の WAVE で脚のないゾンビになって這ってくる。這うゾンビは遅い。</p>'+
+ '<p class="tip">足だけを斬ると、次の WAVE で脚のないゾンビになって這ってくることがある（WAVE が進むほど起きやすい）。這うゾンビは遅い。</p>'+
  '<p class="tip">赤く光る爆弾を背負ったゾンビを斬ると爆発し、周りのゾンビも巻き込む。</p>'+
  '<p class="tip">机や椅子、教卓も斬れる。</p>'+
  '<p class="tip">PCはマウスのドラッグで同じように操作できる。</p>'+
