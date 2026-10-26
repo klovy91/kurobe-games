@@ -1014,7 +1014,7 @@ function frame(now){requestAnimationFrame(frame);perfTick(now-last);const dr=Mat
  if(st==='after'){after-=dr;if(slowT>0)slowT-=dr;if(after<=0){if(cleared){recEnd();En.forEach(e=>scene.remove(e.g));En=[];nextWave();st='ready'}else die()}}
  if(st!=='title'&&!ZV){const sdt=dr*ts,fs=Math.min(1/90,Math.max(1/240,sdt));world.step(fs,sdt,6)}
  {let np=0;for(const o of gib)if(o.pc&&o.sink===undefined)np++;
-  for(let i=0,k=0;i<gib.length&&np>GIBMAX&&k<15;i++){const o=gib[i];if(o.pc&&(o.fz||QL===0&&o.dieT===undefined)&&o.sink===undefined){o.sink=0;if(o.con){o.con.forEach(rmCon);o.con=[]}world.remove(o.b);np--;k++}}}
+  for(let i=0,k=0;i<gib.length&&np>GIBMAX&&k<15;i++){const o=gib[i];if(o.pc&&(o.age||0)>5&&(o.fz||QL===0&&o.dieT===undefined)&&o.sink===undefined){o.sink=0;if(o.con){o.con.forEach(rmCon);o.con=[]}world.remove(o.b);np--;k++}}}
  const gd=dr*ts; // game time: slows down in the zone
  gib=gib.filter(o=>{o.age=(o.age||0)+gd;
   if(o.sink!==undefined){o.sink+=gd;o.mesh.position.y-=gd*.45;if(o.sink>1.6){scene.remove(o.mesh);disposeTree(o.mesh);return false}return true}
