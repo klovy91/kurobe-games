@@ -44,7 +44,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 .bt{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
 .b2{pointer-events:auto;display:inline-flex;align-items:center;padding:9px 18px;border-radius:999px;border:1.5px solid rgba(255,255,255,.85);color:#fff;background:rgba(0,0,0,.25);font-weight:700;font-size:14px;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .b2:active{opacity:.7}
-#scr #nt{font-size:12px;opacity:.75;max-width:340px}
+#rt{pointer-events:auto;min-width:220px;margin-top:4px;padding:15px 40px;border:0;border-radius:999px;background:#c81e2a;color:#fff;font-size:20px;font-weight:900;letter-spacing:.12em;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);-webkit-tap-highlight-color:transparent}
+#rt:active{transform:scale(.97);opacity:.85}
 </style>
 </head>
 <body>
@@ -122,8 +123,6 @@ const RM=(()=>{if(!window.MediaRecorder||!rcv.captureStream)return['',0];
 const REC={on:false,go:false,mr:null,vs:null,ch:[],t0:0,s0:0,w0:1,snap:null,snapAt:0,pend:0,run:0};
 let HL=null;
 const MOB=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Mac/.test(navigator.platform||''));
-const CLIP=!MOB&&!!(navigator.clipboard&&navigator.clipboard.write&&window.ClipboardItem),PK=/Mac/.test(navigator.platform||'')?'⌘+V':'Ctrl+V';
-let xBlocked=false;
 function recSize(){const c=R.domElement,k=Math.min(1,1280/Math.max(c.width,c.height,1));rcv.width=Math.max(2,Math.round(c.width*k/2)*2);rcv.height=Math.max(2,Math.round(c.height*k/2)*2)}
 function recKill(){const mr=REC.mr,vs=REC.vs;REC.mr=null;REC.vs=null;
  if(mr&&mr.state!=='inactive'){mr.ondataavailable=null;mr.onstop=null;try{mr.stop()}catch(e){}}
@@ -134,8 +133,8 @@ function recBegin(){if(!RMIME||!REC.on)return;
   const mr=new MediaRecorder(new MediaStream(tr),{mimeType:RMIME,videoBitsPerSecond:4e6}),ch=REC.ch;
   mr.ondataavailable=e=>{if(e.data&&e.data.size)ch.push(e.data)};mr.start();REC.mr=mr;REC.vs=vs}catch(e){recKill()}}
 function recAbort(){REC.on=false;REC.go=false;recKill()}
-function recSnap(){const o={b:null,u:'',p:null};REC.snap=o;
- try{rcv.toBlob(b=>{o.b=b;if(HL&&HL.img===o)hlUI()},'image/jpeg',.9);if(CLIP)rcv.toBlob(b=>{o.p=b},'image/png')}catch(e){}}
+function recSnap(){const o={b:null,u:''};REC.snap=o;
+ try{rcv.toBlob(b=>{o.b=b;if(HL&&HL.img===o)hlUI()},'image/jpeg',.9)}catch(e){}}
 function recDraw(){const W=rcv.width,H=rcv.height,k=W/Math.max(1,innerWidth);
  rcx.globalAlpha=1;rcx.shadowBlur=0;rcx.drawImage(R.domElement,0,0,W,H);rcx.drawImage(ov,0,0,W,H);
  if(zv>.01){const g=rcx.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.hypot(W,H)/2);
@@ -172,27 +171,24 @@ function hlFile(){if(!HL)return null;const n='zombie-issen-wave'+HL.wave;
  if(HL.img&&HL.img.b)return new File([HL.img.b],n+'.jpg',{type:'image/jpeg'});return null}
 function saveFile(f){const a=document.createElement('a'),u=URL.createObjectURL(f);a.href=u;a.download=f.name;
  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),60000)}
-function openX(u,msg){const w=window.open(u,'_blank');const nt=$('nt');
- if(w){try{w.opener=null}catch(e){}if(nt&&msg)nt.textContent=msg}
- else{xBlocked=true;if(nt)nt.textContent=(msg?'画像はコピー済みです。':'')+'もう一度「𝕏 でシェア」を押すと投稿画面が開きます'}}
 function noProp(el){if(el)['pointerdown','pointerup','click'].forEach(n=>el.addEventListener(n,ev=>ev.stopPropagation()))}
 function canShareFile(f){if(!MOB||!f||!navigator.canShare)return false;try{return navigator.canShare({files:[f]})}catch(e){return false}}
 function overUI(){
  $('scr').innerHTML='<h1>斬り残した。</h1><p>'+MSG[Math.floor(Math.random()*MSG.length)]+'</p><p>WAVE '+wave+'　撃退 '+S+'<br>ベスト WAVE '+best+'</p>'
   +'<div id="hl"></div>'
-  +'<a id="sh" target="_blank" rel="noopener" href="https://x.com/intent/post?text='+encodeURIComponent(shTxt())+'&amp;url='+encodeURIComponent(shUrl())+'">𝕏 でシェア</a>'
+  +'<button id="rt" type="button">もう一度</button>'
+  +'<a id="sh" target="_blank" rel="noopener" href="https://x.com/intent/post?text='+encodeURIComponent(shTxt())+'&amp;url='+encodeURIComponent(shUrl())+'">'+(MOB?'結果をシェア':'𝕏 でシェア')+'</a>'
   +'<div class="bt"><a id="sv" class="b2" href="#">動画を保存</a><a id="pt" class="b2" href="../">ポータルへ戻る</a></div>'
-  +'<p id="nt"></p><p>タップでもう一度</p>';
- ['hl','sh','sv','pt'].forEach(i=>noProp($(i)));
+  ;
+ ['hl','rt','sh','sv','pt'].forEach(i=>noProp($(i)));
+ $('rt').addEventListener('click',()=>{A();start()});
  $('sh').addEventListener('click',ev=>{const f=hlFile();
   if(canShareFile(f)){ev.preventDefault();navigator.share({files:[f],text:shTxt()+'\n'+shUrl()}).catch(()=>{});return}
-  const png=CLIP&&!xBlocked&&HL&&HL.img&&HL.img.p;if(!png)return;
-  ev.preventDefault();const u=$('sh').href;
-  navigator.clipboard.write([new ClipboardItem({'image/png':png})]).then(()=>{openX(u,'画像をコピーしました。開いた投稿画面で '+PK+' を押すと貼り付けられます')},()=>openX(u,''))});
+  });
  $('sv').addEventListener('click',ev=>{ev.preventDefault();const f=hlFile();if(f)saveFile(f)});
  hlUI()}
-function hlUI(){if(st!=='over')return;const h=$('hl'),sv=$('sv'),nt=$('nt');if(!h||!sv||!nt)return;
- h.textContent='';nt.textContent='';
+function hlUI(){if(st!=='over')return;const h=$('hl'),sv=$('sv');if(!h||!sv)return;
+ h.textContent='';
  if(REC.on||REC.pend>0){h.innerHTML='<small>ハイライトを作成中…</small>';sv.style.display='none';return}
  const vid=!!(HL&&HL.blob&&/mp4/.test(HL.blob.type)),img=!!(HL&&HL.img&&HL.img.b);
  if(!vid&&!img){sv.style.display='none';return}
@@ -203,10 +199,7 @@ function hlUI(){if(st!=='over')return;const h=$('hl'),sv=$('sv'),nt=$('nt');if(!
   v.addEventListener('click',()=>{v.muted=!v.muted;if(v.paused)v.play().catch(()=>{})})}
  else{const im=new Image();im.alt='';im.src=HL.img.u;h.appendChild(im)}
  const cap=document.createElement('small');cap.textContent='ハイライト：WAVE '+HL.wave+' の一太刀（'+HL.kills+'体）'+(vid&&RAUD?'　タップで音声':'');h.appendChild(cap);
- const k=vid?'動画':'画像';sv.style.display='';sv.textContent=k+'を保存';
- nt.textContent=canShareFile(hlFile())?'':MOB?'保存した'+k+'を投稿に添付できます'
-  :CLIP&&img?'「𝕏 でシェア」で画像がコピーされます。投稿画面で '+PK+' を押すと貼り付けられます'+(vid?'（動画は「動画を保存」から添付できます）':'')
-  :'「'+k+'を保存」したファイルを投稿画面に添付してください'}
+ const k=vid?'動画':'画像';sv.style.display='';sv.textContent=k+'を保存'}
 
 const world=new CANNON.World();world.gravity.set(0,-9.8,0);world.defaultContactMaterial.friction=.4;world.defaultContactMaterial.restitution=.2;world.allowSleep=true;world.broadphase=new CANNON.SAPBroadphase(world);world.solver.iterations=10;
 world.defaultContactMaterial.contactEquationStiffness=4e6;world.defaultContactMaterial.contactEquationRelaxation=6;
@@ -597,7 +590,7 @@ function title(){$('scr').innerHTML='<h1>ゾンビ一閃</h1><p>\u9000\u5c48\u30
 const rc=new THREE.Raycaster();
 function rayAt(px,py){rc.setFromCamera(new THREE.Vector2(px/innerWidth*2-1,-(py/innerHeight)*2+1),cam)}
 let fin=false,slashA=null,swA=null;const TQ=new THREE.Quaternion();
-addEventListener('pointerdown',e=>{A();if(st==='title'||st==='over'){start();return}if(st==='intro'){introS=7;endIntro();return}if(st!=='ready')return;st='cut';sZone();stroke={x:e.clientX,y:e.clientY,ex:e.clientX,ey:e.clientY,len:0};recStart()});
+addEventListener('pointerdown',e=>{A();if(st==='title'){start();return}if(st==='over')return;if(st==='intro'){introS=7;endIntro();return}if(st!=='ready')return;st='cut';sZone();stroke={x:e.clientX,y:e.clientY,ex:e.clientX,ey:e.clientY,len:0};recStart()});
 addEventListener('pointermove',e=>{if(!stroke||st!=='cut')return;let dx=e.clientX-stroke.x,dy=e.clientY-stroke.y,d=Math.hypot(dx,dy);
  if(d>MAXL){dx*=MAXL/d;dy*=MAXL/d;d=MAXL}
  stroke.ex=stroke.x+dx;stroke.ey=stroke.y+dy;stroke.len=d});
@@ -625,7 +618,7 @@ function frame(now){requestAnimationFrame(frame);const dr=Math.min(.05,(now-last
      b.wakeUp();const di=dyn.findIndex(x=>x.mesh===o);if(di>=0){dyn.splice(di,1);gib.push({mesh:o,b,age:2.6,nc:1})}
      b.applyImpulse(new CANNON.Vec3((d.x+w.x*.6)*k,(d.y+w.y*.6+.5)*k,(d.z+w.z*.6)*k),new CANNON.Vec3(p.x-b.position.x,p.y-b.position.y,p.z-b.position.z))}}}});
   pend=[];
-  if(fin){fin=false;if(REC.on)REC.snapAt=now+900;cleared=En.length===0;slowT=cleared?2.6:1.7;after=cleared?3.9:4.9;rushT=cleared?0:1.9;st='after'}
+  if(fin){fin=false;if(REC.on)REC.snapAt=now+420;cleared=En.length===0;slowT=cleared?2.6:1.7;after=cleared?3.9:4.9;rushT=cleared?0:1.9;st='after'}
  }
  if(st==='intro'){introT+=dr;const t=introT,k=Math.min(1,t/15.4);
   {let px,py,pz,ly,lz;
