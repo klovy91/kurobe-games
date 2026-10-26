@@ -28,7 +28,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 .bars i{display:block;height:100%;width:100%;background:#111}
 #zn{position:fixed;inset:0;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,rgba(20,40,90,0) 30%,rgba(8,14,45,.8) 100%)}
 #zt{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 58px);text-align:center;color:#fff;font-weight:900;letter-spacing:.5em;font-size:15px;text-shadow:0 0 10px #4fc3ff,0 0 4px #000;opacity:0;pointer-events:none}
-#scr{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(10,12,20,.55);color:#fff;text-align:center;padding:24px;pointer-events:none}
+#scr{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:10px;background:rgba(10,12,20,.55);color:#fff;text-align:center;padding:calc(env(safe-area-inset-top,0px) + 58px) 24px calc(env(safe-area-inset-bottom,0px) + 24px);pointer-events:auto;overflow-y:auto;touch-action:pan-y;-webkit-overflow-scrolling:touch}
+#scr>:first-child{margin-top:auto}#scr>:last-child{margin-bottom:auto}
 #scr h1{margin:0;font-size:30px}#scr p{margin:0;font-size:15px;line-height:1.6;opacity:.92}
 #bn{position:fixed;left:0;right:0;top:40%;text-align:center;color:#fff;font-weight:900;font-size:34px;text-shadow:0 2px 12px rgba(0,0,0,.6);opacity:0;transition:opacity .25s;pointer-events:none}
 #fl{position:fixed;inset:0;background:#8d0b12;opacity:0;transition:opacity .5s;pointer-events:none}
@@ -41,11 +42,24 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 #hl{pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:5px;margin:2px 0}
 #hl video,#hl img{display:block;max-width:min(78vw,420px);max-height:min(32vh,300px);border-radius:10px;box-shadow:0 4px 18px rgba(0,0,0,.45);background:#000;cursor:pointer}
 #hl small{font-size:12px;opacity:.82}
+#pl{min-width:150px;padding:14px 30px;margin-top:0}
+.tb{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;margin:6px 0 2px}
+.tb .b2{padding:13px 22px;font-size:16px}
+.adw{pointer-events:auto;width:100%;display:flex;flex-direction:column;align-items:center;gap:3px;margin-top:30px}
+.adw small{font-size:10px;letter-spacing:.2em;opacity:.5}
+.adw iframe{display:block;border:0;background:transparent;width:100%;overflow:hidden}
+#ht{position:fixed;inset:0;z-index:30;display:flex;align-items:flex-start;justify-content:center;background:rgba(6,8,14,.9);color:#fff;overflow-y:auto;touch-action:pan-y;padding:24px 18px}
+#ht .in{max-width:440px;width:100%;margin:auto 0;text-align:left}
+#ht h2{margin:0 0 12px;font-size:22px;text-align:center}
+#ht ol{margin:0 0 14px;padding-left:1.4em;font-size:15px;line-height:1.75}
+#ht li{margin:0 0 6px}
+#ht .tip{font-size:14px;line-height:1.7;opacity:.9;margin:0 0 8px;padding:8px 12px;border-left:3px solid #c81e2a;background:rgba(255,255,255,.05);border-radius:0 8px 8px 0}
+#ht .cl{display:block;margin:18px auto 0}
 .bt{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
 .b2{pointer-events:auto;display:inline-flex;align-items:center;padding:9px 18px;border-radius:999px;border:1.5px solid rgba(255,255,255,.85);color:#fff;background:rgba(0,0,0,.25);font-weight:700;font-size:14px;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .b2:active{opacity:.7}
-#rt{pointer-events:auto;min-width:220px;margin-top:4px;padding:15px 40px;border:0;border-radius:999px;background:#c81e2a;color:#fff;font-size:20px;font-weight:900;letter-spacing:.12em;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);-webkit-tap-highlight-color:transparent}
-#rt:active{transform:scale(.97);opacity:.85}
+#rt,#pl{pointer-events:auto;min-width:220px;margin-top:4px;padding:15px 40px;border:0;border-radius:999px;background:#c81e2a;color:#fff;font-size:20px;font-weight:900;letter-spacing:.12em;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);-webkit-tap-highlight-color:transparent}
+#rt:active,#pl:active{transform:scale(.97);opacity:.85}
 </style>
 </head>
 <body>
@@ -243,6 +257,7 @@ function overUI(){
   +'<a id="sh" target="_blank" rel="noopener" href="https://x.com/intent/post?text='+encodeURIComponent(shTxt())+'&amp;url='+encodeURIComponent(shUrl())+'">'+(MOB?'結果をシェア':'𝕏 でシェア')+'</a>'
   +'<div class="bt"><a id="sv" class="b2" href="#">動画を保存</a><a id="pt" class="b2" href="../">ホームへ戻る</a></div>'
   ;
+ $('scr').appendChild(adSlot('over'));
  ['hl','rt','sh','sv','pt'].forEach(i=>noProp($(i)));
  $('rt').addEventListener('click',()=>{A();start()});
  $('sh').addEventListener('click',ev=>{const f=hlFile();
@@ -645,7 +660,7 @@ function die(){st='over';roomOff();sThud();setTimeout(()=>{if(st==='over'){if(BU
 /* retry: stop the game-over highlight video (it keeps playing while hidden) and free its data */
 function hlStop(){const h=$('hl');if(h){h.querySelectorAll('video').forEach(v=>{try{v.pause();v.removeAttribute('src');v.load()}catch(e){}});h.textContent=''}
  if(HL){if(HL.vu)URL.revokeObjectURL(HL.vu);if(HL.img&&HL.img.u)URL.revokeObjectURL(HL.img.u)}}
-function start(){recAbort();hlStop();HL=null;REC.run++;REC.pend=0;{const f0=$('fl');f0.style.transition='none';f0.style.opacity=0}roomOff();moanT=3;if(DOOR)DOOR.position.z=-3.4;bl=[];biter=null;bite=0;rushT=0;slashA=null;swA=null;slowT=0;holdT=0;clearField();bn=0;BL.count=0;for(let j=0;j<NP;j++)sL[j]=0;wave=1;S=0;ts=1;after=0;stroke=null;pend=[];TR=[];MAXL=bladeLen(1);layout();$('scr').style.display='none';
+function start(){adOff();{const h=$('ht');if(h)h.remove()}recAbort();hlStop();HL=null;REC.run++;REC.pend=0;{const f0=$('fl');f0.style.transition='none';f0.style.opacity=0}roomOff();moanT=3;if(DOOR)DOOR.position.z=-3.4;bl=[];biter=null;bite=0;rushT=0;slashA=null;swA=null;slowT=0;holdT=0;clearField();bn=0;BL.count=0;for(let j=0;j<NP;j++)sL[j]=0;wave=1;S=0;ts=1;after=0;stroke=null;pend=[];TR=[];MAXL=bladeLen(1);layout();$('scr').style.display='none';
  if(seenIntro){endIntro();return}
  $('lb1').style.height='8.5%';$('lb2').style.height='8.5%';
  roomOn();introSetup();st='intro';introT=0;introS=0}
@@ -710,13 +725,40 @@ function introSlash(){const ang=-.3,dx=Math.cos(ang),dy=Math.sin(ang),LN=Math.ma
   sliceGroup(o.g,o.g.position.x,o.g.position.z,s)});
  iZom=[]}
 function endIntro(){seenIntro=true;roomOff();kq=[];holdT=1.3;$('lb1').style.height='0';$('lb2').style.height='0';if(DOOR)DOOR.position.z=-5.02;iAct.forEach(a=>scene.remove(a));iAct=[];iZom.forEach(z=>scene.remove(z.g));iZom=[];if(!En.length)spawnWave();cam.position.set(0,1.15,6);cam.lookAt(0,.82,-8);cam.updateMatrixWorld();MAXL=bladeLen(1);st='ready';waveBanner()}
-function title(){$('scr').innerHTML='<h1>ゾンビ一閃</h1><p>\u9000\u5c48\u306a\u6388\u696d\u4e2d\u3001\u3075\u3068\u5984\u60f3\u3057\u305f\u3002<br>\u6559\u5ba4\u306b\u30be\u30f3\u30d3\u304c\u96ea\u5d29\u308c\u8fbc\u3093\u3067\u304d\u305f\u3089\u3002</p><p>\u30be\u30f3\u30d3\u306f\u6b69\u3044\u3066\u8fd1\u3065\u3044\u3066\u304f\u308b\u3002<br>\u6307\u3092\u4e0b\u308d\u3059\u3068\u6642\u304c\u6b62\u307e\u308b\u3002<br><b>\u4e00\u76f4\u7dda\u306e\u4e00\u592a\u5200\u3067\u3001\u5168\u54e1\u3092\u65ac\u308c\u3002</b><br>\u6307\u3092\u96e2\u3057\u305f\u6642\u306b\u6b8b\u3063\u3066\u3044\u305f\u3089\u3001\u6b7b\u306c\u3002</p><p>\u30bf\u30c3\u30d7\u3067\u30b9\u30bf\u30fc\u30c8\u3000\u30d9\u30b9\u30c8 WAVE '+best+'</p><p style="font-size:11px;opacity:.62;line-height:1.5">効果音：効果音ラボ<br>https://soundeffect-lab.info/</p>'}
+/* ads: zombie-issen/ad.html holds the AdMax tag (it can only be written while a page loads, so it lives in its own page) */
+const ADS={title:{sp:[300,250],pc:[300,250]},over:{sp:[320,50],pc:[728,90]}};
+function adSlot(where){const sp=/iPhone|iPod|Android.+Mobile|Windows Phone/i.test(navigator.userAgent),sz=ADS[where][sp?'sp':'pc'];
+ const w=document.createElement('div');w.className='adw';w.innerHTML='<small>広告</small>';
+ const f=document.createElement('iframe');f.src='../zombie-issen/ad.html?s='+where;f.title='広告';f.setAttribute('scrolling','no');f.loading='eager';
+ f.style.maxWidth=(sp?Math.max(sz[0],360):sz[0])+'px';f.style.height=sz[1]+'px';w.appendChild(f);
+ let n=0;const fit=()=>{try{const d=f.contentDocument;if(d&&d.body){const h=Math.max(d.body.scrollHeight,d.documentElement.scrollHeight);if(h>10)f.style.height=h+'px'}}catch(e){}
+  if(++n<12&&f.isConnected)setTimeout(fit,500)};f.addEventListener('load',()=>setTimeout(fit,300));
+ return w}
+function adOff(){document.querySelectorAll('#scr .adw iframe').forEach(f=>{try{f.src='about:blank'}catch(e){}f.remove()})}
+/* how to play */
+function howTo(){if($('ht'))return;const d=document.createElement('div');d.id='ht';
+ d.innerHTML='<div class="in"><h2>遊び方</h2><ol>'+
+ '<li>ゾンビが教室に湧き、歩いて近づいてくる。</li>'+
+ '<li>画面に指を置くと、時間がほぼ止まる。</li>'+
+ '<li>そのまま指をなぞって、一直線の刃の向きと長さを決める。長さには上限がある（上のゲージで確認）。</li>'+
+ '<li>指を離すと一閃。線の上のゾンビを斬る。</li>'+
+ '<li>1体でも斬り残すと、ゾンビが一気に押し寄せてきて終わり。</li></ol>'+
+ '<p class="tip">コツ：奥のゾンビは、手前のゾンビの陰に隠れていると斬れない。</p>'+
+ '<p class="tip">赤く光る爆弾を背負ったゾンビを斬ると爆発し、周りのゾンビも巻き込む。</p>'+
+ '<p class="tip">机や椅子、教卓も斬れる。</p>'+
+ '<p class="tip">PCはマウスのドラッグで同じように操作できる。</p>'+
+ '<button type="button" class="b2 cl" id="htc">閉じる</button></div>';
+ document.body.appendChild(d);['pointerdown','pointerup','click'].forEach(n=>d.addEventListener(n,ev=>ev.stopPropagation()));
+ $('htc').addEventListener('click',()=>d.remove())}
+function title(){$('scr').innerHTML='<h1>ゾンビ一閃</h1><p>退屈な授業中、ふと妄想した。<br>教室にゾンビが雪崩れ込んできたら。</p><p>ベスト WAVE '+best+'</p><div class="tb"><button id="pl" type="button">プレイ</button><button id="hw" class="b2" type="button">遊び方</button></div><p style="font-size:11px;opacity:.62;line-height:1.5">効果音：効果音ラボ<br>https://soundeffect-lab.info/</p>';
+ ['pl','hw'].forEach(i=>noProp($(i)));$('pl').addEventListener('click',()=>{A();start()});$('hw').addEventListener('click',()=>{A();howTo()});
+ $('scr').appendChild(adSlot('title'))}
 /* ---- input ---- */
 {const b=$('mt');b.addEventListener('pointerdown',toggleMute);b.addEventListener('click',e=>{e.stopPropagation();e.preventDefault()});applyMute()}
 const rc=new THREE.Raycaster();
 function rayAt(px,py){rc.setFromCamera(new THREE.Vector2(px/innerWidth*2-1,-(py/innerHeight)*2+1),cam)}
 let fin=false,slashA=null,swA=null;const TQ=new THREE.Quaternion();
-addEventListener('pointerdown',e=>{A();if(st==='title'){start();return}if(st==='over')return;if(st==='intro'){introS=7;endIntro();return}if(st!=='ready')return;st='cut';sZone();stroke={x:e.clientX,y:e.clientY,ex:e.clientX,ey:e.clientY,len:0};recStart()});
+addEventListener('pointerdown',e=>{A();if(st==='title')return;if(st==='over')return;if(st==='intro'){introS=7;endIntro();return}if(st!=='ready')return;st='cut';sZone();stroke={x:e.clientX,y:e.clientY,ex:e.clientX,ey:e.clientY,len:0};recStart()});
 addEventListener('pointermove',e=>{if(!stroke||st!=='cut')return;let dx=e.clientX-stroke.x,dy=e.clientY-stroke.y,d=Math.hypot(dx,dy);
  if(d>MAXL){dx*=MAXL/d;dy*=MAXL/d;d=MAXL}
  stroke.ex=stroke.x+dx;stroke.ey=stroke.y+dy;stroke.len=d});
