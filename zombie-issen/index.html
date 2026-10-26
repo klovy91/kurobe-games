@@ -164,7 +164,7 @@ function recEnd(){if(!REC.on)return;REC.on=false;REC.go=false;if(!REC.snap)recSn
   if(!HL||HL.sc<=info.sc){if(HL&&HL.vu)URL.revokeObjectURL(HL.vu);HL=info}hlUI()};
  if(mr&&mr.state!=='inactive'){mr.onstop=fin;try{mr.stop()}catch(e){fin()}}else fin()}
 /* ---- game-over share UI ---- */
-function shTxt(){return '「ゾンビ一閃」 WAVE '+wave+'、撃退 '+S+'体。\n一直線の一太刀で、教室のゾンビを斬れ。'}
+function shTxt(){return '「ゾンビ一閃」 WAVE '+wave+'、撃退 '+S+'体。\n魂の一閃で、迫りくるゾンビを斬れ。'}
 function shUrl(){return location.href.split('#')[0]}
 function hlFile(){if(!HL)return null;const n='zombie-issen-wave'+HL.wave;
  if(HL.blob&&/mp4/.test(HL.blob.type))return new File([HL.blob],n+'.mp4',{type:'video/mp4'});
@@ -176,9 +176,9 @@ function canShareFile(f){if(!MOB||!f||!navigator.canShare)return false;try{retur
 function overUI(){
  $('scr').innerHTML='<h1>斬り残した。</h1><p>'+MSG[Math.floor(Math.random()*MSG.length)]+'</p><p>WAVE '+wave+'　撃退 '+S+'<br>ベスト WAVE '+best+'</p>'
   +'<div id="hl"></div>'
-  +'<button id="rt" type="button">もう一度</button>'
+  +'<button id="rt" type="button">もう一閃</button>'
   +'<a id="sh" target="_blank" rel="noopener" href="https://x.com/intent/post?text='+encodeURIComponent(shTxt())+'&amp;url='+encodeURIComponent(shUrl())+'">'+(MOB?'結果をシェア':'𝕏 でシェア')+'</a>'
-  +'<div class="bt"><a id="sv" class="b2" href="#">動画を保存</a><a id="pt" class="b2" href="../">ポータルへ戻る</a></div>'
+  +'<div class="bt"><a id="sv" class="b2" href="#">動画を保存</a><a id="pt" class="b2" href="../">ホームへ戻る</a></div>'
   ;
  ['hl','rt','sh','sv','pt'].forEach(i=>noProp($(i)));
  $('rt').addEventListener('click',()=>{A();start()});
@@ -198,7 +198,7 @@ function hlUI(){if(st!=='over')return;const h=$('hl'),sv=$('sv');if(!h||!sv)retu
   v.loop=true;v.autoplay=true;if(img)v.poster=HL.img.u;v.src=HL.vu;h.appendChild(v);v.play().catch(()=>{});
   v.addEventListener('click',()=>{v.muted=!v.muted;if(v.paused)v.play().catch(()=>{})})}
  else{const im=new Image();im.alt='';im.src=HL.img.u;h.appendChild(im)}
- const cap=document.createElement('small');cap.textContent='ハイライト：WAVE '+HL.wave+' の一太刀（'+HL.kills+'体）'+(vid&&RAUD?'　タップで音声':'');h.appendChild(cap);
+ const cap=document.createElement('small');cap.textContent='ハイライト：WAVE '+HL.wave+' の一閃（'+HL.kills+'体）'+(vid&&RAUD?'　タップで音声':'');h.appendChild(cap);
  const k=vid?'動画':'画像';sv.style.display='';sv.textContent=k+'を保存'}
 
 const world=new CANNON.World();world.gravity.set(0,-9.8,0);world.defaultContactMaterial.friction=.4;world.defaultContactMaterial.restitution=.2;world.allowSleep=true;world.broadphase=new CANNON.SAPBroadphase(world);world.solver.iterations=10;
@@ -509,7 +509,7 @@ function banner(t,ms,sz,tw){const b=$('bn');b.style.fontSize=(sz||34)+'px';b.sty
  setTimeout(()=>{b.style.opacity=0},ms)}
 function waveBanner(){sDing();banner('WAVE '+wave+'<br><span style="font-size:17px;opacity:.92">ゾンビ '+En.length+'体</span>',1500)}
 function nextWave(){wave++;spawnWave();MAXL=bladeLen(wave);waveBanner()}
-const MSG=['\u2026\u3068\u3001\u305d\u3053\u3067\u76ee\u304c\u899a\u3081\u305f\u3002','\u30c1\u30e3\u30a4\u30e0\u304c\u9cf4\u3063\u305f\u3002\u5984\u60f3\u7d42\u4e86\u3002','\u30ce\u30fc\u30c8\u3092\u53d6\u308a\u5fd8\u308c\u305f\u3002','\u5148\u751f\u300c\u3053\u3053\u3001\u30c6\u30b9\u30c8\u306b\u51fa\u308b\u305e\u300d'];
+const MSG=['…と、そこで目が覚めた。','チャイムが鳴った。妄想終了。','次の授業は体育だった。','先生「ここ、テストに出るぞ」'];
 function bloodScreen(){bl=[];bt0=performance.now();const S0=Math.min(innerWidth,innerHeight)/390;
  for(let i=0;i<66;i++)bl.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:(26+Math.random()*120)*S0,d:Math.random()*.09});
  for(let i=0;i<16;i++)bl.push({x:innerWidth*(.1+Math.random()*.8),y:innerHeight*(.2+Math.random()*.6),r:(130+Math.random()*190)*S0,d:Math.random()*.035});
@@ -640,7 +640,7 @@ function frame(now){requestAnimationFrame(frame);const dr=Math.min(.05,(now-last
   else if(introS===2&&t>4.6){introS=3;banner('——なんだ、あれ。',1700,34,1)}
   else if(introS===3&&t>6.5){introS=4;killActor(iAct[0]);banner('先生ッ！！',1800,34,1);flash(.3);sCut();sMoan();play('bite',.95)}
   else if(introS===4&&t>8.6){introS=5;fleeAll(t);play('flee',.85);banner('——逃げろっ！！',1900,34,1)}
-  else if(introS===5&&t>10.8){introS=6;banner('この最上大業物<br>「一閃」で迎え撃つ…',2400,21)}
+  else if(introS===5&&t>10.8){introS=6;banner('この名刀「一閃」で切り伏せる…',2400,21)}
   else if(introS===6&&t>13.4){introS=7;play('shout',1);sWhoosh();setTimeout(()=>sCut(),240);introSlash();banner('一閃。',2000);flash(.42)}
   if(t>15.4)endIntro()}
  const tgt=st==='cut'?.07:st==='bite'?.5:st==='title'?.02:(st==='intro'&&introS>=7)?.3:(st==='after'&&slowT>0)?.11:1;ts+=(tgt-ts)*(tgt>ts?.3:.4);
