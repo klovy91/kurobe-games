@@ -13,6 +13,7 @@
   gtag('config', 'G-4YLJM61BY7');
 </script>
 <meta charset="utf-8">
+<meta name="robots" content="noindex">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ゾンビ一閃</title>
 <style>
@@ -66,7 +67,7 @@ function applyMute(){if(MU)MU.gain.value=muted?0:1;const b=document.getElementBy
 function toggleMute(e){e.stopPropagation();e.preventDefault();muted=!muted;
  try{localStorage.setItem('zi_mute',muted?'1':'0')}catch(e2){}
  if(!muted)A();applyMute()}
-const SFX={ready:'sfx/ready.mp3',cut:'sfx/cut.mp3',bite:'sfx/bite.mp3',boom:'sfx/boom.mp3',moan1:'sfx/moan1.mp3',moan2:'sfx/moan2.mp3',moan3:'sfx/moan3.mp3',room:'sfx/room.mp3',flee:'sfx/flee.mp3',shout:'sfx/shout.mp3',over:'sfx/over.mp3'};
+const SFX={ready:'../zombie-issen/sfx/ready.mp3',cut:'../zombie-issen/sfx/cut.mp3',bite:'../zombie-issen/sfx/bite.mp3',boom:'../zombie-issen/sfx/boom.mp3',moan1:'../zombie-issen/sfx/moan1.mp3',moan2:'../zombie-issen/sfx/moan2.mp3',moan3:'../zombie-issen/sfx/moan3.mp3',room:'../zombie-issen/sfx/room.mp3',flee:'../zombie-issen/sfx/flee.mp3',shout:'../zombie-issen/sfx/shout.mp3',over:'../zombie-issen/sfx/over.mp3'};
 const BUF={};let roomSrc=null;
 function loadSfx(){for(const k in SFX){fetch(SFX[k]).then(r=>r.arrayBuffer()).then(b=>new Promise((res,rej)=>AC.decodeAudioData(b,res,rej))).then(d=>{BUF[k]=d;if(k==='room'&&st==='intro')roomOn()}).catch(()=>{})}}
 function A(){if(AC===null){try{const C=window.AudioContext||window.webkitAudioContext;AC=new C();MG=AC.createGain();MG.gain.value=.5;MU=AC.createGain();MU.gain.value=muted?0:1;MG.connect(MU);MU.connect(AC.destination);try{RD=AC.createMediaStreamDestination();MG.connect(RD)}catch(e2){RD=null}}catch(e){AC=false}if(AC)loadSfx()}
@@ -141,16 +142,19 @@ function recDraw(){const W=rcv.width,H=rcv.height,k=W/Math.max(1,innerWidth);
   g.addColorStop(.3,'rgba(20,40,90,0)');g.addColorStop(1,'rgba(8,14,45,'+(.8*zv).toFixed(3)+')');rcx.fillStyle=g;rcx.fillRect(0,0,W,H);
   rcx.globalAlpha=zv;rcx.font='900 '+Math.round(15*k)+'px system-ui,sans-serif';rcx.textAlign='center';rcx.textBaseline='top';
   rcx.fillStyle='#fff';rcx.shadowColor='#4fc3ff';rcx.shadowBlur=10*k;rcx.fillText('Z O N E',W/2,58*k);rcx.shadowBlur=0;rcx.globalAlpha=1}
- const fs=getComputedStyle(flE),fo=+fs.opacity;if(fo>.01){rcx.globalAlpha=fo;rcx.fillStyle=fs.backgroundColor;rcx.fillRect(0,0,W,H);rcx.globalAlpha=1}
+ let fo=+flE.style.opacity||0,fc=flE.style.backgroundColor||'#8d0b12';if(flAnim){const fs=getComputedStyle(flE);fo=+fs.opacity;fc=fs.backgroundColor}if(fo>.01){rcx.globalAlpha=fo;rcx.fillStyle=fc;rcx.fillRect(0,0,W,H);rcx.globalAlpha=1}
  const u=Math.max(13,18*k),ff='px system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif';
  rcx.shadowColor='rgba(0,0,0,.75)';rcx.shadowBlur=6;rcx.fillStyle='#fff';
  rcx.font='800 '+Math.round(u)+ff;rcx.textAlign='left';rcx.textBaseline='top';rcx.fillText('WAVE '+REC.w0,u*.7,u*.7);
  rcx.font='700 '+Math.round(u*.7)+ff;rcx.textAlign='right';rcx.textBaseline='bottom';rcx.fillText('ゾンビ一閃  '+location.host,W-u*.7,H-u*.7);
  rcx.shadowBlur=0;rcx.textAlign='left';rcx.textBaseline='alphabetic'}
-function recTick(now){if(!REC.on)return;
+/* the red/white flash fades by CSS; read its live value only while it is fading */
+let flAnim=false;flE.addEventListener('transitionrun',()=>{flAnim=true});flE.addEventListener('transitionend',()=>{flAnim=false});flE.addEventListener('transitioncancel',()=>{flAnim=false});
+const NOREC=/[?&]norec\b/.test(location.search);
+function recTick(now){if(!REC.on||NOREC)return;
  if(now-REC.t0>60000){recEnd();return}
  if(st==='cut'&&!slashA&&now-REC.t0>1500){const s0=REC.s0;recStart();REC.s0=s0}
- recDraw();
+ if(REC.go||now-(REC.ld||0)>=29){REC.ld=now;recDraw()}
  if(REC.go){REC.go=false;recBegin()}
  if(REC.snapAt&&now>=REC.snapAt&&!REC.snap)recSnap()}
 function recEnd(){if(!REC.on)return;REC.on=false;REC.go=false;if(!REC.snap)recSnap();
@@ -446,18 +450,19 @@ let GIBMAX=300;
 /* ---- auto quality: watch the frame time; step the load down while slow, back up once fast again ----
    level 0 normal / 1 lower resolution / 2 pieces cap 200 / 3 cap 120 / 4 pieces turn into props sooner */
 const FZ={s:1,a:1.5,l:5,f:10},PRL=Math.min(PR0,1),QS=[{pr:PR0,cap:300,fz:0},{pr:PRL,cap:300,fz:0},{pr:PRL,cap:200,fz:0},{pr:PRL,cap:120,fz:0},{pr:PRL,cap:120,fz:1}];
-let QL=0;const QW={a:[],t:0,bad:0,good:0,now:0,last:0,lastUp:-99,upWait:8,med:0};
+let QL=0;const QW={a:[],t:0,bad:0,good:0,now:0,last:0,lastUp:-99,upWait:8,med:0,n:[],sl:[],nf:0,sf:0};
 const FPSD=/[?&]fps\b/.test(location.search)?(()=>{const d=document.createElement('div');d.style.cssText='position:fixed;left:6px;bottom:6px;z-index:9999;font:12px/1.3 monospace;color:#3f3;background:rgba(0,0,0,.6);padding:2px 6px;pointer-events:none;white-space:pre';d.textContent='fps …';document.body.appendChild(d);return d})():null;
 function setQ(l){QL=Math.max(0,Math.min(QS.length-1,l));const q=QS[QL];if(R.getPixelRatio()!==q.pr){R.setPixelRatio(q.pr);resize()}GIBMAX=q.cap;
  if(q.fz){FZ.s=.5;FZ.a=1;FZ.l=3;FZ.f=6}else{FZ.s=1;FZ.a=1.5;FZ.l=5;FZ.f=10}}
 function perfTick(ms){if(!(ms>0&&ms<250))return;const P=QW;P.now+=ms/1000;
- if(st==='ready'||st==='cut'||st==='after'||st==='bite'){P.a.push(ms);P.t+=ms}
- if(P.t<1000)return;const a=P.a.sort((x,y)=>x-y),med=a[a.length>>1];P.a=[];P.t=0;P.med=med;
+ if(st==='ready'||st==='cut'||st==='after'||st==='bite'){P.a.push(ms);P.t+=ms;if(FPSD)(ts<.6?P.sl:P.n).push(ms)}
+ if(P.t<1000)return;const md=v=>{v.sort((x,y)=>x-y);return v[v.length>>1]},med=md(P.a);P.a=[];P.t=0;P.med=med;
+ if(FPSD){if(P.n.length>=10)P.nf=Math.round(1000/md(P.n));if(P.sl.length>=10)P.sf=Math.round(1000/md(P.sl));P.n=[];P.sl=[]}
  if(med>25){P.bad++;P.good=0}else if(med<18.5){P.good++;P.bad=0}else{P.bad=0;P.good=0}
  const since=P.now-P.last;
  if(P.bad>=2&&since>3&&QL<QS.length-1){if(P.now-P.lastUp<15)P.upWait=Math.min(64,P.upWait*2);setQ(QL+1);P.last=P.now;P.bad=0}
  else if(P.good>=5&&since>P.upWait&&QL>0){setQ(QL-1);P.last=P.lastUp=P.now;P.good=0}
- if(FPSD)FPSD.textContent=Math.round(1000/med)+'fps  段階'+QL+'\n破片 '+gib.length+' / 上限 '+GIBMAX}
+ if(FPSD)FPSD.textContent='通常 '+(P.nf||'-')+'fps / スロー '+(P.sf||'-')+'fps\n段階'+QL+'  破片 '+gib.length+' / 上限 '+GIBMAX+(NOREC?'\n録画OFF':'')}
 function mkRagdoll(map,vel){const made={};
  for(const k in map)if(map[k].parts.length){const o=mkPiece(map[k].parts,vel,0,.13);if(o)made[k]=o}
  for(const k in map){const o=made[k];if(!o)continue;const d=BONE[k];if(!d||d.p<0)continue;const q=made[d.p];if(!q)continue;
