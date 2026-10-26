@@ -133,28 +133,57 @@ function recBegin(){if(!RMIME||!REC.on)return;
   const mr=new MediaRecorder(new MediaStream(tr),{mimeType:RMIME,videoBitsPerSecond:4e6}),ch=REC.ch;
   mr.ondataavailable=e=>{if(e.data&&e.data.size)ch.push(e.data)};mr.start();REC.mr=mr;REC.vs=vs}catch(e){recKill()}}
 function recAbort(){zvOff();REC.on=false;REC.go=false;recKill()}
-/* after death: ~3 s seen from the zombie that got you, appended to the clip (the player's own screen is not changed) */
-let ZV=null,ZF=null,ZC=null;
-function zvFig(){if(ZF)return ZF;ZF=new THREE.Group();
- const ch=new THREE.Group(),s=mk(.45,.08,.45,0x4a6fa5),k=mk(.45,.5,.06,0x4a6fa5);s.position.y=.2;k.position.set(0,.5,.2);ch.add(s,k);
- [[-.18,-.18],[.18,-.18],[-.18,.18],[.18,.18]].forEach(([lx,lz])=>{const lg=mk(.04,.16,.04,0x333b47);lg.position.set(lx,.08,lz);ch.add(lg)});
- ch.rotation.y=Math.PI;ZF.add(ch);
- const c=pcfg();c.shirt=0x7a1116;const pm=personMesh(c,1);pm.rotation.y=Math.PI;pm.rotation.x=-.15;ZF.add(pm);
- ZF.position.set(0,0,6.05);ZF.visible=false;scene.add(ZF);ZC=new THREE.PerspectiveCamera(62,1,.05,60);return ZF}
-function zvStart(){zvFig();ZV={t0:performance.now(),t:0,D:3.2,x:biter?Math.max(-.6,Math.min(.6,biter.x*.3)):.25};
- for(let i=0;i<5;i++)splat((Math.random()-.5)*1.2,5.7+Math.random()*.7,.2+Math.random()*.35)}
-function zvOff(){ZV=null;if(ZF)ZF.visible=false}
-function zvDraw(){const W=rcv.width,H=rcv.height,t=ZV.t,u=Math.min(1,t/ZV.D),e=u*u*(3-2*u);
- const px=ZV.x*(1-e)+Math.sin(t*2.1)*.06,py=1.66-.12*e+Math.abs(Math.sin(t*4.2))*.035,pz=4.15+.75*e;
- ZC.position.set(px,py,pz);ZC.lookAt(Math.sin(t*1.3)*.05,1.02+Math.sin(t*2.6)*.02,5.85);ZC.rotateZ(Math.sin(t*1.7)*.06);
+/* after death (video only): fly from your eyes to where the zombie that got you stood when your last slash ended,
+   then look back at your seat through its eyes. The blade's path is shown as a glowing sheet + the cut line at its depth. */
+let ZV=null,ZC=null,LS=null,ZS=null;
+function lsSnap(){if(!swA||!En.length){LS=null;return}
+ const C=cam.position.clone(),q=cam.quaternion.clone(),dA=dirAt(swA.x1,swA.y1),dB=dirAt(swA.x2,swA.y2);
+ const sv=En.map(e=>{e.g.updateMatrixWorld(true);let hd=null;e.g.traverse(o=>{if(!hd&&o.isMesh&&o.userData.bone===2&&o.geometry.type==='SphereGeometry')hd=o});
+  const h=new THREE.Vector3();if(hd)hd.getWorldPosition(h);else h.set(e.x,1.6,e.z);return{e,p:e.g.position.clone(),ry:e.g.rotation.y,h}});
+ LS={C,q,fov:cam.fov,dA,dB,sv}}
+const ZSV='attribute float aR;varying float vR;void main(){vR=aR;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+ ZSF='uniform float uA,uT;varying float vR;void main(){float d=vR*15.,a=smoothstep(.35,2.2,d)*(1.-smoothstep(10.,15.,d)),w=d-uT*16.,band=exp(-w*w*.9)+.55*exp(-(w+3.)*(w+3.)*.35);'+
+ 'vec3 c=mix(vec3(.31,.76,1.),vec3(1.),clamp(band,0.,1.));gl_FragColor=vec4(c,(.13+.6*band)*a*uA);}';
+function zsBuild(t){const g=new THREE.Group(),{C,dA,dB}=LS,N=32,L=15,P=[],R0=[];
+ for(let i=0;i<N;i++){const a=dA.clone().lerp(dB,i/N).normalize(),b=dA.clone().lerp(dB,(i+1)/N).normalize();
+  P.push(C.x,C.y,C.z,C.x+a.x*L,C.y+a.y*L,C.z+a.z*L,C.x+b.x*L,C.y+b.y*L,C.z+b.z*L);R0.push(0,1,1)}
+ const ge=new THREE.BufferGeometry();ge.setAttribute('position',new THREE.Float32BufferAttribute(P,3));ge.setAttribute('aR',new THREE.Float32BufferAttribute(R0,1));
+ const sh=new THREE.Mesh(ge,new THREE.ShaderMaterial({vertexShader:ZSV,fragmentShader:ZSF,uniforms:{uA:{value:0},uT:{value:0}},transparent:true,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending}));
+ sh.frustumCulled=false;g.add(sh);g.userData.sh=sh;
+ // the cut line at the depth of the zombie that survived
+ const fw=new THREE.Vector3(0,0,-1).applyQuaternion(LS.q),dp=t.h.clone().sub(C).dot(fw);
+ const pa=C.clone().addScaledVector(dA,dp/Math.max(.05,dA.dot(fw))),pb=C.clone().addScaledVector(dB,dp/Math.max(.05,dB.dot(fw)));
+ const cyl=(r,m)=>{const d=pb.clone().sub(pa),o=new THREE.Mesh(new THREE.CylinderGeometry(r,r,d.length(),12,1,true),m);o.position.copy(pa).addScaledVector(d,.5);
+  o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());o.frustumCulled=false;g.add(o);return o};
+ const M=(c,o)=>new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:o,depthWrite:false,blending:THREE.AdditiveBlending});
+ g.userData.ln=[cyl(.014,M(0xffffff,1)),cyl(.045,M(0x4fc3ff,.5)),cyl(.12,M(0x4fc3ff,.16))];
+ const o1=new THREE.Mesh(new THREE.SphereGeometry(.05,12,9),M(0xffffff,1)),o2=new THREE.Mesh(new THREE.SphereGeometry(.16,14,10),M(0x4fc3ff,.3));o1.position.copy(C);o2.position.copy(C);g.add(o1,o2);g.userData.orb=o2;
+ g.visible=false;scene.add(g);return g}
+function zvStart(){const t=LS.sv.find(o=>o.e===biter)||LS.sv[0];if(!ZC)ZC=new THREE.PerspectiveCamera(62,1,.05,60);
+ const d=LS.C.clone().sub(t.h);d.y=0;d.normalize();const E=t.h.clone().addScaledVector(d,.22);E.y+=.02;
+ ZC.position.copy(E);ZC.lookAt(LS.C.x,LS.C.y-.08,LS.C.z);
+ const F=t.h.clone().addScaledVector(d,1.35);F.y+=.32;ZS=zsBuild(t);ZV={t0:performance.now(),t:0,D:5,T:t,E,F,Q1:ZC.quaternion.clone()}}
+function zvOff(){ZV=null;if(ZS){scene.remove(ZS);disposeTree(ZS);ZS=null}}
+function zvDraw(){const W=rcv.width,H=rcv.height,t=ZV.t,T=ZV.T,E=ZV.E,F=ZV.F,C=LS.C,sm=x=>{x=Math.min(1,Math.max(0,x));return x*x*x*(x*(x*6-15)+10)};
+ // 0-0.6 your view / 0.6-2.4 move in while looking at it / 2.4-2.85 turn round into its eyes / then look back at your seat
+ if(t<2.4){const e=sm((t-.6)/1.8);ZC.position.copy(C).lerp(F,e);ZC.position.y+=Math.sin(Math.PI*e)*.6;ZC.lookAt(T.h);ZV.Qz=ZC.quaternion.clone();
+  ZC.quaternion.copy(LS.q).slerp(ZV.Qz,sm((t-.6)/1.1));ZC.fov=LS.fov+(55-LS.fov)*e}
+ else if(t<2.85){const e=sm((t-2.4)/.45);ZC.position.copy(F).lerp(E,e);ZC.quaternion.copy(ZV.Qz).slerp(ZV.Q1,e);ZC.fov=55+7*e}
+ else{const k=t-2.85,dd=C.clone().sub(E).normalize();ZC.position.copy(E).addScaledVector(dd,k*.07);ZC.position.x+=Math.sin(t*2.1)*.03;ZC.position.y+=Math.abs(Math.sin(t*3.6))*.025;
+  ZC.lookAt(C.x+Math.sin(t*1.3)*.08,C.y-.08+Math.sin(t*2.6)*.03,C.z);ZC.rotateZ(Math.sin(t*1.7)*.05);ZC.fov=62}
  ZC.aspect=cam.aspect;ZC.updateProjectionMatrix();ZC.updateMatrixWorld();
- const hid=[];En.forEach(z=>{if((z===biter||Math.hypot(z.x-px,z.z-pz)<.9)&&z.g.visible){z.g.visible=false;hid.push(z.g)}});
- ZF.visible=true;R.render(scene,ZC);
+ // stage: survivors back where they stood at the end of the slash; hide the one whose eyes we are looking through
+ const keep=[];LS.sv.forEach(o=>{const g=o.e.g;keep.push([g,g.position.clone(),g.rotation.y,g.visible]);g.position.copy(o.p);g.rotation.y=o.ry;g.updateMatrixWorld(true);
+  if(o===T&&t>2.6)g.visible=false});
+ const sh=ZS.userData.sh;sh.material.uniforms.uA.value=Math.min(1,t/.25)*(t<.5?1.6-t*1.2:1);sh.material.uniforms.uT.value=(t*.55)%1.25;
+ const pu=.75+.25*Math.sin(t*9);ZS.userData.ln[1].material.opacity=.5*pu;ZS.userData.ln[2].material.opacity=.16*pu;ZS.userData.orb.material.opacity=.3*pu;
+ ZS.visible=true;R.render(scene,ZC);
  rcx.globalAlpha=1;rcx.shadowBlur=0;rcx.drawImage(R.domElement,0,0,W,H);
- ZF.visible=false;hid.forEach(g=>g.visible=true);R.render(scene,cam);   // the player's own view goes back before the browser shows this frame
- rcx.fillStyle='rgba(0,0,0,.18)';rcx.fillRect(0,0,W,H);
- const g=rcx.createRadialGradient(W/2,H/2,Math.min(W,H)*.22,W/2,H/2,Math.hypot(W,H)/2);g.addColorStop(0,'rgba(20,60,25,0)');g.addColorStop(1,'rgba(14,48,18,.8)');rcx.fillStyle=g;rcx.fillRect(0,0,W,H);
- const fd=Math.max(0,1-t/.3,(t-(ZV.D-.4))/.4);if(fd>0){rcx.fillStyle='rgba(0,0,0,'+Math.min(1,fd).toFixed(3)+')';rcx.fillRect(0,0,W,H)}}
+ ZS.visible=false;keep.forEach(([g,p,ry,v])=>{g.position.copy(p);g.rotation.y=ry;g.visible=v});R.render(scene,cam);   // the player's own view goes back before the browser shows this frame
+ const zw=Math.min(1,Math.max(0,(t-2.5)/.5));
+ if(zw>0){rcx.fillStyle='rgba(0,0,0,'+(.18*zw).toFixed(3)+')';rcx.fillRect(0,0,W,H);
+  const g=rcx.createRadialGradient(W/2,H/2,Math.min(W,H)*.22,W/2,H/2,Math.hypot(W,H)/2);g.addColorStop(0,'rgba(20,60,25,0)');g.addColorStop(1,'rgba(14,48,18,'+(.8*zw).toFixed(3)+')');rcx.fillStyle=g;rcx.fillRect(0,0,W,H)}
+ const fd=Math.max(0,1-t/.25,(t-(ZV.D-.4))/.4);if(fd>0){rcx.fillStyle='rgba(0,0,0,'+Math.min(1,fd).toFixed(3)+')';rcx.fillRect(0,0,W,H)}}
 function recSnap(){const o={b:null,u:''};REC.snap=o;
  try{rcv.toBlob(b=>{o.b=b;if(HL&&HL.img===o)hlUI()},'image/jpeg',.9)}catch(e){}}
 function recDraw(){const W=rcv.width,H=rcv.height,k=W/Math.max(1,innerWidth);
@@ -567,7 +596,7 @@ function banner(t,ms,sz,tw){const b=$('bn');b.style.fontSize=(sz||34)+'px';b.sty
  else b.innerHTML=t;
  setTimeout(()=>{b.style.opacity=0},ms)}
 function waveBanner(){sDing();banner('WAVE '+wave+'<br><span style="font-size:17px;opacity:.92">ゾンビ '+En.length+'体</span>',1500)}
-function nextWave(){wave++;spawnWave();MAXL=bladeLen(wave);waveBanner()}
+function nextWave(){LS=null;wave++;spawnWave();MAXL=bladeLen(wave);waveBanner()}
 const MSG=['…と、そこで目が覚めた。','チャイムが鳴った。妄想終了。','次の授業は体育だった。','先生「ここ、テストに出るぞ」'];
 function bloodScreen(){bl=[];bt0=performance.now();const S0=Math.min(innerWidth,innerHeight)/390;
  for(let i=0;i<66;i++)bl.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:(26+Math.random()*120)*S0,d:Math.random()*.09});
@@ -577,11 +606,11 @@ function startBite(e){st='bite';bite=.62;biter=e;e.v=13;play('bite',1);sMoan()}
 function die(){st='over';roomOff();sThud();setTimeout(()=>{if(st==='over'){if(BUF.over)play('over',1);else sChime()}},620);if(!bl.length)bloodScreen();
  const f=$('fl');
  if(wave>best){best=wave;try{localStorage.setItem('ht_best',best)}catch(e){}}
- $('scr').style.display='none';setTimeout(()=>{if(st==='over'){f.style.transition='opacity 1.1s';f.style.opacity=.16;$('scr').style.display='flex'}},560);overUI();setTimeout(()=>{if(st==='over'){if(REC.on&&REC.mr&&!NOREC)zvStart();else recEnd()}},350)}
+ $('scr').style.display='none';setTimeout(()=>{if(st==='over'){f.style.transition='opacity 1.1s';f.style.opacity=.16;$('scr').style.display='flex'}},560);overUI();setTimeout(()=>{if(st==='over'){if(REC.on&&REC.mr&&!NOREC&&LS&&LS.sv.length)zvStart();else recEnd()}},350)}
 /* retry: stop the game-over highlight video (it keeps playing while hidden) and free its data */
 function hlStop(){const h=$('hl');if(h){h.querySelectorAll('video').forEach(v=>{try{v.pause();v.removeAttribute('src');v.load()}catch(e){}});h.textContent=''}
  if(HL){if(HL.vu)URL.revokeObjectURL(HL.vu);if(HL.img&&HL.img.u)URL.revokeObjectURL(HL.img.u)}}
-function start(){recAbort();hlStop();HL=null;REC.run++;REC.pend=0;{const f0=$('fl');f0.style.transition='none';f0.style.opacity=0}roomOff();moanT=3;if(DOOR)DOOR.position.z=-3.4;bl=[];biter=null;bite=0;rushT=0;slashA=null;swA=null;slowT=0;holdT=0;clearField();bn=0;BL.count=0;for(let j=0;j<NP;j++)sL[j]=0;wave=1;S=0;ts=1;after=0;stroke=null;pend=[];TR=[];MAXL=bladeLen(1);layout();$('scr').style.display='none';
+function start(){recAbort();hlStop();HL=null;LS=null;REC.run++;REC.pend=0;{const f0=$('fl');f0.style.transition='none';f0.style.opacity=0}roomOff();moanT=3;if(DOOR)DOOR.position.z=-3.4;bl=[];biter=null;bite=0;rushT=0;slashA=null;swA=null;slowT=0;holdT=0;clearField();bn=0;BL.count=0;for(let j=0;j<NP;j++)sL[j]=0;wave=1;S=0;ts=1;after=0;stroke=null;pend=[];TR=[];MAXL=bladeLen(1);layout();$('scr').style.display='none';
  if(seenIntro){endIntro();return}
  $('lb1').style.height='8.5%';$('lb2').style.height='8.5%';
  roomOn();introSetup();st='intro';introT=0;introS=0}
@@ -680,7 +709,7 @@ function frame(now){requestAnimationFrame(frame);perfTick(now-last);const dr=Mat
      b.wakeUp();const di=dyn.findIndex(x=>x.mesh===o);if(di>=0){dyn.splice(di,1);gib.push({mesh:o,b,age:2.6,nc:1})}
      b.applyImpulse(new CANNON.Vec3((d.x+w.x*.6)*k,(d.y+w.y*.6+.5)*k,(d.z+w.z*.6)*k),new CANNON.Vec3(p.x-b.position.x,p.y-b.position.y,p.z-b.position.z))}}}});
   pend=[];
-  if(fin){fin=false;if(REC.on)REC.snapAt=now+420;cleared=En.length===0;slowT=cleared?2.6:1.7;after=cleared?3.9:4.9;rushT=cleared?0:1.9;st='after'}
+  if(fin){fin=false;if(REC.on)REC.snapAt=now+420;cleared=En.length===0;if(cleared)LS=null;else lsSnap();slowT=cleared?2.6:1.7;after=cleared?3.9:4.9;rushT=cleared?0:1.9;st='after'}
  }
  if(st==='intro'){introT+=dr;const t=introT,k=Math.min(1,t/15.4);
   {let px,py,pz,ly,lz;
