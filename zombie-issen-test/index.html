@@ -51,7 +51,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 <body>
 <canvas id="gl"></canvas><canvas id="ov"></canvas>
 <div id="hud"><span id="sc">WAVE 1</span><span id="rm"></span><div class="bars"><b><i id="ib"></i></b></div></div>
-<div id="zn"></div><div id="zt">ZONE</div><div id="fl"></div><div id="lb1"></div><div id="lb2"></div><div id="bn"></div>
+<div id="zn"></div><div id="fl"></div><div id="lb1"></div><div id="lb2"></div><div id="bn"></div>
 <div id="scr"></div>
 <button id="mt" type="button" aria-label="音の切り替え">🔊</button>
 
@@ -132,15 +132,35 @@ function recBegin(){if(!RMIME||!REC.on)return;
  try{const vs=rcv.captureStream(30),tr=vs.getVideoTracks();if(RD&&RAUD)RD.stream.getAudioTracks().forEach(t=>tr.push(t));
   const mr=new MediaRecorder(new MediaStream(tr),{mimeType:RMIME,videoBitsPerSecond:4e6}),ch=REC.ch;
   mr.ondataavailable=e=>{if(e.data&&e.data.size)ch.push(e.data)};mr.start();REC.mr=mr;REC.vs=vs}catch(e){recKill()}}
-function recAbort(){REC.on=false;REC.go=false;recKill()}
+function recAbort(){zvOff();REC.on=false;REC.go=false;recKill()}
+/* after death: ~3 s seen from the zombie that got you, appended to the clip (the player's own screen is not changed) */
+let ZV=null,ZF=null,ZC=null;
+function zvFig(){if(ZF)return ZF;ZF=new THREE.Group();
+ const ch=new THREE.Group(),s=mk(.45,.08,.45,0x4a6fa5),k=mk(.45,.5,.06,0x4a6fa5);s.position.y=.2;k.position.set(0,.5,.2);ch.add(s,k);
+ [[-.18,-.18],[.18,-.18],[-.18,.18],[.18,.18]].forEach(([lx,lz])=>{const lg=mk(.04,.16,.04,0x333b47);lg.position.set(lx,.08,lz);ch.add(lg)});
+ ch.rotation.y=Math.PI;ZF.add(ch);
+ const c=pcfg();c.shirt=0x7a1116;const pm=personMesh(c,1);pm.rotation.y=Math.PI;pm.rotation.x=-.15;ZF.add(pm);
+ ZF.position.set(0,0,6.05);ZF.visible=false;scene.add(ZF);ZC=new THREE.PerspectiveCamera(62,1,.05,60);return ZF}
+function zvStart(){zvFig();ZV={t0:performance.now(),t:0,D:3.2,x:biter?Math.max(-.6,Math.min(.6,biter.x*.3)):.25};
+ for(let i=0;i<5;i++)splat((Math.random()-.5)*1.2,5.7+Math.random()*.7,.2+Math.random()*.35)}
+function zvOff(){ZV=null;if(ZF)ZF.visible=false}
+function zvDraw(){const W=rcv.width,H=rcv.height,t=ZV.t,u=Math.min(1,t/ZV.D),e=u*u*(3-2*u);
+ const px=ZV.x*(1-e)+Math.sin(t*2.1)*.06,py=1.66-.12*e+Math.abs(Math.sin(t*4.2))*.035,pz=4.15+.75*e;
+ ZC.position.set(px,py,pz);ZC.lookAt(Math.sin(t*1.3)*.05,1.02+Math.sin(t*2.6)*.02,5.85);ZC.rotateZ(Math.sin(t*1.7)*.06);
+ ZC.aspect=cam.aspect;ZC.updateProjectionMatrix();ZC.updateMatrixWorld();
+ const hid=[];En.forEach(z=>{if((z===biter||Math.hypot(z.x-px,z.z-pz)<.9)&&z.g.visible){z.g.visible=false;hid.push(z.g)}});
+ ZF.visible=true;R.render(scene,ZC);
+ rcx.globalAlpha=1;rcx.shadowBlur=0;rcx.drawImage(R.domElement,0,0,W,H);
+ ZF.visible=false;hid.forEach(g=>g.visible=true);R.render(scene,cam);   // the player's own view goes back before the browser shows this frame
+ rcx.fillStyle='rgba(0,0,0,.18)';rcx.fillRect(0,0,W,H);
+ const g=rcx.createRadialGradient(W/2,H/2,Math.min(W,H)*.22,W/2,H/2,Math.hypot(W,H)/2);g.addColorStop(0,'rgba(20,60,25,0)');g.addColorStop(1,'rgba(14,48,18,.8)');rcx.fillStyle=g;rcx.fillRect(0,0,W,H);
+ const fd=Math.max(0,1-t/.3,(t-(ZV.D-.4))/.4);if(fd>0){rcx.fillStyle='rgba(0,0,0,'+Math.min(1,fd).toFixed(3)+')';rcx.fillRect(0,0,W,H)}}
 function recSnap(){const o={b:null,u:''};REC.snap=o;
  try{rcv.toBlob(b=>{o.b=b;if(HL&&HL.img===o)hlUI()},'image/jpeg',.9)}catch(e){}}
 function recDraw(){const W=rcv.width,H=rcv.height,k=W/Math.max(1,innerWidth);
  rcx.globalAlpha=1;rcx.shadowBlur=0;rcx.drawImage(R.domElement,0,0,W,H);rcx.drawImage(ov,0,0,W,H);
  if(zv>.01){const g=rcx.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.hypot(W,H)/2);
-  g.addColorStop(.3,'rgba(20,40,90,0)');g.addColorStop(1,'rgba(8,14,45,'+(.8*zv).toFixed(3)+')');rcx.fillStyle=g;rcx.fillRect(0,0,W,H);
-  rcx.globalAlpha=zv;rcx.font='900 '+Math.round(15*k)+'px system-ui,sans-serif';rcx.textAlign='center';rcx.textBaseline='top';
-  rcx.fillStyle='#fff';rcx.shadowColor='#4fc3ff';rcx.shadowBlur=10*k;rcx.fillText('Z O N E',W/2,58*k);rcx.shadowBlur=0;rcx.globalAlpha=1}
+  g.addColorStop(.3,'rgba(20,40,90,0)');g.addColorStop(1,'rgba(8,14,45,'+(.8*zv).toFixed(3)+')');rcx.fillStyle=g;rcx.fillRect(0,0,W,H)}
  let fo=+flE.style.opacity||0,fc=flE.style.backgroundColor||'#8d0b12';if(flAnim){const fs=getComputedStyle(flE);fo=+fs.opacity;fc=fs.backgroundColor}if(fo>.01){rcx.globalAlpha=fo;rcx.fillStyle=fc;rcx.fillRect(0,0,W,H);rcx.globalAlpha=1}
  const u=Math.max(13,18*k),ff='px system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif';
  rcx.shadowColor='rgba(0,0,0,.75)';rcx.shadowBlur=6;rcx.fillStyle='#fff';
@@ -153,18 +173,18 @@ const NOREC=/[?&]norec\b/.test(location.search);
 function recTick(now){if(!REC.on||NOREC)return;
  if(now-REC.t0>60000){recEnd();return}
  if(st==='cut'&&!slashA&&now-REC.t0>1500){const s0=REC.s0;recStart();REC.s0=s0}
- if(REC.go||now-(REC.ld||0)>=29){REC.ld=now;recDraw()}
+ if(ZV){ZV.t=(now-ZV.t0)/1000;if(ZV.t>ZV.D){recEnd();return}}
+ if(REC.go||now-(REC.ld||0)>=29){REC.ld=now;if(ZV)zvDraw();else recDraw()}
  if(REC.go){REC.go=false;recBegin()}
  if(REC.snapAt&&now>=REC.snapAt&&!REC.snap)recSnap()}
-function recEnd(){if(!REC.on)return;REC.on=false;REC.go=false;if(!REC.snap)recSnap();
+function recEnd(){zvOff();if(!REC.on)return;REC.on=false;REC.go=false;if(!REC.snap)recSnap();
  const kills=S-REC.s0,info={sc:kills*10+(cleared?5:0)+REC.w0*.01,kills,wave:REC.w0,img:REC.snap,blob:null,vu:'',run:REC.run},
   mr=REC.mr,vs=REC.vs,ch=REC.ch;REC.mr=null;REC.vs=null;
  const stopT=()=>{if(vs)vs.getVideoTracks().forEach(t=>t.stop())};
- if(HL&&HL.sc>info.sc){if(mr&&mr.state!=='inactive'){mr.ondataavailable=null;try{mr.stop()}catch(e){}}stopT();hlUI();return}
  REC.pend++;
  const fin=()=>{stopT();if(info.run!==REC.run)return;REC.pend--;
   if(ch.length)info.blob=new Blob(ch,{type:((mr&&mr.mimeType)||RMIME).split(';')[0]});
-  if(!HL||HL.sc<=info.sc){if(HL&&HL.vu)URL.revokeObjectURL(HL.vu);HL=info}hlUI()};
+  if(HL&&HL!==info){if(HL.vu)URL.revokeObjectURL(HL.vu);if(HL.img&&HL.img.u)URL.revokeObjectURL(HL.img.u)}HL=info;hlUI()};
  if(mr&&mr.state!=='inactive'){mr.onstop=fin;try{mr.stop()}catch(e){fin()}}else fin()}
 /* ---- game-over share UI ---- */
 function shTxt(){return '「ゾンビ一閃」 WAVE '+wave+'、撃退 '+S+'体。\n魂の一閃で、迫りくるゾンビを斬れ。'}
@@ -201,7 +221,7 @@ function hlUI(){if(st!=='over')return;const h=$('hl'),sv=$('sv');if(!h||!sv)retu
   v.loop=true;v.autoplay=true;if(img)v.poster=HL.img.u;v.src=HL.vu;h.appendChild(v);v.play().catch(()=>{});
   v.addEventListener('click',()=>{v.muted=!v.muted;if(v.paused)v.play().catch(()=>{})})}
  else{const im=new Image();im.alt='';im.src=HL.img.u;h.appendChild(im)}
- const cap=document.createElement('small');cap.textContent='ハイライト：WAVE '+HL.wave+' の一閃（'+HL.kills+'体）'+(vid&&RAUD?'　タップで音声':'');h.appendChild(cap);
+ const cap=document.createElement('small');cap.textContent=(HL.wave===wave?'最終WAVE ':'WAVE ')+HL.wave+' の一閃（'+HL.kills+'体）'+(vid&&RAUD?'　タップで音声':'');h.appendChild(cap);
  const k=vid?'動画':'画像';sv.style.display='';sv.textContent=k+'を保存'}
 
 const world=new CANNON.World();world.gravity.set(0,-9.8,0);world.defaultContactMaterial.friction=.4;world.defaultContactMaterial.restitution=.2;world.allowSleep=true;world.broadphase=new CANNON.SAPBroadphase(world);world.solver.iterations=10;
@@ -557,7 +577,7 @@ function startBite(e){st='bite';bite=.62;biter=e;e.v=13;play('bite',1);sMoan()}
 function die(){st='over';roomOff();sThud();setTimeout(()=>{if(st==='over'){if(BUF.over)play('over',1);else sChime()}},620);if(!bl.length)bloodScreen();
  const f=$('fl');
  if(wave>best){best=wave;try{localStorage.setItem('ht_best',best)}catch(e){}}
- $('scr').style.display='none';setTimeout(()=>{if(st==='over'){f.style.transition='opacity 1.1s';f.style.opacity=.16;$('scr').style.display='flex'}},560);overUI();setTimeout(()=>{if(st==='over')recEnd()},350)}
+ $('scr').style.display='none';setTimeout(()=>{if(st==='over'){f.style.transition='opacity 1.1s';f.style.opacity=.16;$('scr').style.display='flex'}},560);overUI();setTimeout(()=>{if(st==='over'){if(REC.on&&REC.mr&&!NOREC)zvStart();else recEnd()}},350)}
 /* retry: stop the game-over highlight video (it keeps playing while hidden) and free its data */
 function hlStop(){const h=$('hl');if(h){h.querySelectorAll('video').forEach(v=>{try{v.pause();v.removeAttribute('src');v.load()}catch(e){}});h.textContent=''}
  if(HL){if(HL.vu)URL.revokeObjectURL(HL.vu);if(HL.img&&HL.img.u)URL.revokeObjectURL(HL.img.u)}}
@@ -744,7 +764,7 @@ function frame(now){requestAnimationFrame(frame);perfTick(now-last);const dr=Mat
    oc.strokeStyle='rgba(255,255,255,.7)';oc.shadowColor='#9fe3ff';oc.shadowBlur=14;oc.lineWidth=4;oc.beginPath();oc.moveTo(sx,sy);oc.lineTo(hx,hy);oc.stroke();
    oc.shadowBlur=26;oc.fillStyle='#fff';oc.beginPath();oc.arc(hx,hy,9,0,6.28);oc.fill();oc.shadowBlur=0}}
  if(bl.length){const ag=(now-bt0)/1000;oc.globalAlpha=.95;bl.forEach(b=>{if(ag<b.d)return;const k=Math.min(1,(ag-b.d)/.1);oc.fillStyle=b.r>140?'#5a060b':'#7d0a12';oc.beginPath();oc.arc(b.x,b.y,b.r*k,0,6.28);oc.fill()});oc.globalAlpha=1}
- {const zz=(st==='cut')?1:0;zv+=(zz-zv)*.28;$('zn').style.opacity=zv;$('zt').style.opacity=zv}
+ {const zz=(st==='cut')?1:0;zv+=(zz-zv)*.28;$('zn').style.opacity=zv}
  $('sc').textContent=(st==='title'||st==='intro')?'ゾンビ一閃':'WAVE '+wave;
  $('rm').textContent=st==='intro'?'タップでスキップ':st==='title'?'':'\u6b8b\u308a '+En.length;
  $('ib').style.width=(stroke?Math.max(0,1-stroke.len/MAXL)*100:100)+'%';
