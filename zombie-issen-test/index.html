@@ -587,7 +587,7 @@ function jumpStep(e,ax,az,d){const J=e.jm,dist=Math.hypot(e.x,e.z-6);J.ph+=d*7;l
  else if(e.v>4){e.x+=ax*d*e.v;e.z+=az*d*e.v;J.y+=(0-J.y)*Math.min(1,d*10);J.m='walk'}
  else if(J.m==='walk'){e.x+=ax*d*e.v;e.z+=az*d*e.v;J.y=0;J.t-=d;if(J.t<=0&&dist>2.2){J.m='charge';J.t=.8;jmCry(1.35);puff(e.x,.12,e.z,0x8f8068,'s',.45,.35,0)}}
  else if(J.m==='charge'){J.t-=d;T=JC;if(Math.random()<d*12)sand({x:e.x+(Math.random()-.5)*.5,y:.05,z:e.z+(Math.random()-.5)*.5},3,DUST,1,0,.3);
-  if(J.t<=0){J.m='air';J.u=0;J.vel={x:ax*2.5/.7,y:0,z:az*2.5/.7};jmCry(1.6);puff(e.x,.15,e.z,0x8f8068,'s',.6,.45,0)}}
+  if(J.t<=0){J.m='air';J.u=0;J.vel={x:ax*1.5/.7,y:0,z:az*1.5/.7};jmCry(1.6);puff(e.x,.15,e.z,0x8f8068,'s',.6,.45,0)}}
  else if(J.m==='air'){T=JA;J.u+=d/.7;const u=Math.min(1,J.u);e.x+=J.vel.x*d;e.z+=J.vel.z*d;J.y=5*u*(1-u);J.vel.y=5*(1-2*u)/.7;
   if(J.u>=1){J.y=0;J.m='land';J.t=.25;puff(e.x,.12,e.z,0x8f8068,'s',.5,.4,0)}}
  else if(J.m==='land'){J.t-=d;T=JL;if(J.t<=0){J.m='walk';J.t=1.2+Math.random()*1.2}}
@@ -850,16 +850,16 @@ function freeSpot(x,z){return !dyn.some(d=>{const ob=d.body.ob;if(!ob)return fal
 function spawnWave(){spawnCrawlers();const n=waveCount(wave),pb=Math.min(.16,.02+wave*.005),maxB=1,nd=wave===10?3:wave>10&&wave!==20?[0,1].slice(0,wave>=20?2:1).filter(()=>Math.random()<.4).length:0,nj=wave===20?3:wave>20?[0,1].slice(0,wave>=30?2:1).filter(()=>Math.random()<.4).length:0,N=wave===10||wave===20?3:n;let nb=0;for(let i=0;i<N;i++){
  const dog=i<nd,jmp=!dog&&i<nd+nj,cf=zcfg(),bomb=!dog&&!jmp&&nb<maxB&&Math.random()<pb;if(bomb)nb++;let lt=null;
  const rt0=Math.random(),ty=dog?3:jmp?4:bomb?1:rt0<.2?0:rt0<.4?2:1;let vm=1,sc=cf.s;
- const r=dog?.58*cf.s:.56*cf.s*(ty===2?1.42:ty===0?1.45:1),zn=zNear(r);
+ const r=dog?.76*cf.s:.56*cf.s*(ty===2?1.42:ty===0?1.45:1),zn=zNear(r);
  let x,z,tries=0;do{z=-5.4+Math.random()*(zn+5.4);x=(Math.random()*2-1)*halfW(z,r);tries++}
- while(tries<60&&(En.some(o=>Math.hypot(o.x-x,o.z-z)<1.05)||!freeSpot(x,z)||(dog&&!seenFrom(x,.8*cf.s,z))||(jmp&&!seenFrom(x,1.15*cf.s,z))));
+ while(tries<60&&(En.some(o=>Math.hypot(o.x-x,o.z-z)<1.05)||!freeSpot(x,z)||(dog&&!seenFrom(x,1.05*cf.s,z))||(jmp&&!seenFrom(x,1.15*cf.s,z))));
  const g=new THREE.Group(),inr=dog?dogMesh():jmp?jumperMesh(cf):zombieMesh(cf);g.add(inr);
  if(bomb){const bb=new THREE.Mesh(new THREE.SphereGeometry(.21,12,10),SM(0x15151a,.6));bb.position.set(0,1.22,.25);inr.add(bb);
   const bs=new THREE.Mesh(new THREE.BoxGeometry(.5,.07,.05),SM(0x2b2420,.9));bs.position.set(0,1.3,.1);inr.add(bs);
   lt=new THREE.Mesh(new THREE.SphereGeometry(.05,8,6),new THREE.MeshBasicMaterial({color:0xff2b2b}));lt.position.set(0,1.34,.44);inr.add(lt);vm=.8}
  if(ty===0){inr.rotation.x=1.35;inr.position.y=.42;sc*=.95;vm=.5}
  else if(ty===2){sc*=1.42;vm=.85}
- else if(dog)sc*=1.3;
+ else if(dog)sc*=1.7;
  else if(jmp)vm=1.15;
  inr.scale.setScalar(sc);
  const rh=(ty===0?1.05:dog?.82:jmp?1.45:1.95)*sc;
