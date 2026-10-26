@@ -287,7 +287,7 @@ function recEnd(){zvOff();if(!REC.on)return;REC.on=false;REC.go=false;if(!REC.sn
   if(HL&&HL!==info){if(HL.vu)URL.revokeObjectURL(HL.vu);if(HL.img&&HL.img.u)URL.revokeObjectURL(HL.img.u)}HL=info;hlUI()};
  if(mr&&mr.state!=='inactive'){mr.onstop=fin;try{mr.stop()}catch(e){fin()}}else fin()}
 /* ---- game-over share UI ---- */
-function shTxt(){return '「ゾンビ一閃」 WAVE '+wave+'、撃退 '+S+'体。\n魂の一閃で、迫りくるゾンビを斬れ。'}
+function shTxt(){return '「ゾンビ一閃」 WAVE '+wave+'、撃退 '+S+'体。\n魂の一閃で、迫りくるゾンビを斬れ。\n#ゾンビ一閃'}
 function shUrl(){return location.href.split('#')[0]}
 function hlFile(){if(!HL)return null;const n='zombie-issen-wave'+HL.wave;
  if(HL.blob&&/mp4/.test(HL.blob.type))return new File([HL.blob],n+'.mp4',{type:'video/mp4'});
@@ -1012,22 +1012,23 @@ function frame(now){requestAnimationFrame(frame);perfTick(now-last);const dr=Mat
  if(st!=='title'&&!ZV){const sdt=dr*ts,fs=Math.min(1/90,Math.max(1/240,sdt));world.step(fs,sdt,6)}
  {let np=0;for(const o of gib)if(o.pc&&o.sink===undefined)np++;
   for(let i=0,k=0;i<gib.length&&np>GIBMAX&&k<15;i++){const o=gib[i];if(o.pc&&(o.fz||QL===0&&o.dieT===undefined)&&o.sink===undefined){o.sink=0;if(o.con){o.con.forEach(rmCon);o.con=[]}world.remove(o.b);np--;k++}}}
- gib=gib.filter(o=>{o.age=(o.age||0)+dr;
-  if(o.sink!==undefined){o.sink+=dr;o.mesh.position.y-=dr*.45;if(o.sink>1.6){scene.remove(o.mesh);disposeTree(o.mesh);return false}return true}
+ const gd=dr*ts; // game time: slows down in the zone
+ gib=gib.filter(o=>{o.age=(o.age||0)+gd;
+  if(o.sink!==undefined){o.sink+=gd;o.mesh.position.y-=gd*.45;if(o.sink>1.6){scene.remove(o.mesh);disposeTree(o.mesh);return false}return true}
   if(!o.fz&&o.dieT===undefined){const v=o.b.velocity,w=o.b.angularVelocity;
    const v2=v.x*v.x+v.y*v.y+v.z*v.z,w2=w.x*w.x+w.y*w.y+w.z*w.z,lim=o.age>FZ.l?4:1;
-   if(v2<.004*lim*lim&&w2<.03*lim*lim){o.st=(o.st||0)+dr;if(o.st>FZ.s&&o.age>FZ.a)freezeGib(o)}else o.st=0;
+   if(v2<.004*lim*lim&&w2<.03*lim*lim){o.st=(o.st||0)+gd;if(o.st>FZ.s&&o.age>FZ.a)freezeGib(o)}else o.st=0;
    if(o.age>FZ.f&&Math.abs(v.y)<.5&&o.b.position.y<3.6)freezeGib(o)}
-  if(o.bleed>0&&ts>.3){o.bleed-=dr;sand(o.b.position,3,BLOOD,1,.75,.18)}
-  if(o.vt!==undefined&&o.dieT===undefined){o.vt-=dr;if(o.vt<=0)o.dieT=1.2}
-  if(o.dieT!==undefined){o.dieT-=dr;const dk=o.dieT/1.2;
-   if(dk<1){if(o.nc)crumble(o,1-Math.max(0,dk),dr);else{if(Math.random()<dr*20)sand(o.b.position,4,BLOOD,1.5,1,.18);o.mesh.scale.setScalar(.3+.7*Math.max(0,dk))}}
+  if(o.bleed>0&&ts>.3){o.bleed-=gd;sand(o.b.position,3,BLOOD,1,.75,.18)}
+  if(o.vt!==undefined&&o.dieT===undefined){o.vt-=gd;if(o.vt<=0)o.dieT=1.2}
+  if(o.dieT!==undefined){o.dieT-=gd;const dk=o.dieT/1.2;
+   if(dk<1){if(o.nc)crumble(o,1-Math.max(0,dk),gd);else{if(Math.random()<gd*20)sand(o.b.position,4,BLOOD,1.5,1,.18);o.mesh.scale.setScalar(.3+.7*Math.max(0,dk))}}
    if(o.dieT<=0){const q=o.b.position;if(o.nc){const c=o.cr;if(c)for(let k=0;k<10;k++)sand({x:c.bb.min.x+Math.random()*(c.bb.max.x-c.bb.min.x),y:.04,z:c.bb.min.z+Math.random()*(c.bb.max.z-c.bb.min.z)},1,c.col[k%c.col.length],.4,0,.05)}else sand(q,30,BLOOD,2.6,1,.32);if(!o.nc)for(let k=0;k<2;k++)splat(q.x+(Math.random()-.5)*.6,q.z+(Math.random()-.5)*.6,.2+Math.random()*.35);dropGib(o);return false}}
   if(o.nc)return true;
-  if(o.age<60&&!o.carry){const off=GORE!=='on',k=Math.min(1,dr/(off?1.5:8));o.mesh.traverse(m=>{if(m.isMesh&&!m.userData.cap)m.material.color.lerp(off?GRAYC:FLESHC,k)})}
+  if(o.age<60&&!o.carry){const off=GORE!=='on',k=Math.min(1,gd/(off?1.5:8));o.mesh.traverse(m=>{if(m.isMesh&&!m.userData.cap)m.material.color.lerp(off?GRAYC:FLESHC,k)})}
   if(o.age>4.5&&!o.sp){o.sp=1;for(let i=0;i<4;i++)splat(o.b.position.x+(Math.random()-.5)*.75,o.b.position.z+(Math.random()-.5)*.75,.18+Math.random()*.42)}
   return true});
- stepSand(dr);stepFx(dr*Math.max(.4,ts));
+ stepSand(dr*ts);stepFx(dr*Math.max(.4,ts));
  if(shakeT>0){shakeT-=dr;const a=Math.max(0,shakeT)*30,tf=shakeT>0?'translate('+((Math.random()-.5)*a).toFixed(1)+'px,'+((Math.random()-.5)*a).toFixed(1)+'px)':'';$('gl').style.transform=tf;$('ov').style.transform=tf}
  {const sm=ts<.5,kk=Math.min(1,dr*20);
   const sync=(mesh,b)=>{if(sm){mesh.position.lerp(b.position,kk);TQ.set(b.quaternion.x,b.quaternion.y,b.quaternion.z,b.quaternion.w);mesh.quaternion.slerp(TQ,kk)}
