@@ -905,7 +905,7 @@ function sliceGroup(gr,x,z,s){const dA=dirAt(s.x1,s.y1),dB=dirAt(s.x2,s.y2);let 
   for(let k=0;k<2;k++){const t=sd[k][bo]||(sd[k][bo]={parts:[],par:m.parent,jw:m.userData.jl&&m.userData.jp?m.userData.jp.localToWorld(m.userData.jl.clone()):null});t.parts.push({v:r.out[k],vn:r.on[k],vu:r.ou[k],mat:m.material,c})}});
  [0,1].forEach(k=>{const sg=k?-1:1;mkRagdoll(sd[k],{x:n.x*1.1*sg,y:n.y*1.1*sg+.6,z:n.z*1.1*sg-.3})});
  gush(x,1.25,z);scene.remove(gr)}
-function introSlash(){const ang=-.3,dx=Math.cos(ang),dy=Math.sin(ang),LN=Math.max(innerWidth,innerHeight)*.8;
+function introSlash(){const ang=(Math.random()*2-1)*Math.PI,dx=Math.cos(ang),dy=Math.sin(ang),LN=Math.max(innerWidth,innerHeight)*.8;
  iZom.forEach(o=>{const c=new THREE.Vector3();new THREE.Box3().setFromObject(o.g).getCenter(c);
   const v=c.project(cam),sx=(v.x+1)/2*innerWidth,sy=(1-v.y)/2*innerHeight;
   const s={x1:sx-dx*LN,y1:sy-dy*LN,x2:sx+dx*LN,y2:sy+dy*LN};
