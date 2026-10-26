@@ -48,6 +48,9 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 .adw{pointer-events:auto;width:100%;display:flex;flex-direction:column;align-items:center;gap:3px;margin-top:30px}
 .adw small{font-size:10px;letter-spacing:.2em;opacity:.5}
 .adw iframe{display:block;border:0;background:transparent;width:100%;overflow:hidden}
+#hz{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.92);padding:calc(env(safe-area-inset-top,0px) + 60px) 12px calc(env(safe-area-inset-bottom,0px) + 16px);touch-action:manipulation}
+#hz video,#hz img{display:block;max-width:100%;max-height:100%;border-radius:8px;background:#000}
+#hzx{position:absolute;top:calc(env(safe-area-inset-top,0px) + 8px);right:10px;width:44px;height:44px;border-radius:50%;border:1.5px solid rgba(255,255,255,.85);background:rgba(0,0,0,.45);color:#fff;font-size:26px;line-height:1;cursor:pointer;-webkit-tap-highlight-color:transparent}
 #ht{position:fixed;inset:0;z-index:30;display:flex;align-items:flex-start;justify-content:center;background:rgba(6,8,14,.9);color:#fff;overflow-y:auto;touch-action:pan-y;padding:24px 18px}
 #ht .in{max-width:440px;width:100%;margin:auto 0;text-align:left}
 #ht h2{margin:0 0 12px;font-size:22px;text-align:center}
@@ -312,9 +315,9 @@ function hlUI(){if(st!=='over')return;const h=$('hl'),sv=$('sv');if(!h||!sv)retu
  if(vid){if(!HL.vu)HL.vu=URL.createObjectURL(HL.blob);
   const v=document.createElement('video');v.muted=true;v.defaultMuted=true;v.setAttribute('muted','');v.playsInline=true;v.setAttribute('playsinline','');
   v.loop=true;v.autoplay=true;if(img)v.poster=HL.img.u;v.src=HL.vu;h.appendChild(v);v.play().catch(()=>{});
-  v.addEventListener('click',()=>{v.muted=!v.muted;if(v.paused)v.play().catch(()=>{})})}
- else{const im=new Image();im.alt='';im.src=HL.img.u;h.appendChild(im)}
- const cap=document.createElement('small');cap.textContent=(HL.wave===wave?'最期の一閃：WAVE '+HL.wave+'（'+HL.kills+'体）':'WAVE '+HL.wave+' の一閃（'+HL.kills+'体）')+(vid&&RAUD?'　タップで音声':'');h.appendChild(cap);
+  v.addEventListener('click',hlZoom)}
+ else{const im=new Image();im.alt='';im.src=HL.img.u;im.addEventListener('click',hlZoom);h.appendChild(im)}
+ const cap=document.createElement('small');cap.textContent=(HL.wave===wave?'最期の一閃：WAVE '+HL.wave+'（'+HL.kills+'体）':'WAVE '+HL.wave+' の一閃（'+HL.kills+'体）')+'　タップで拡大';h.appendChild(cap);
  const k=vid?'動画':'画像';sv.style.display='';sv.textContent=k+'を保存'}
 
 const world=new CANNON.World();world.gravity.set(0,-9.8,0);world.defaultContactMaterial.friction=.4;world.defaultContactMaterial.restitution=.2;world.allowSleep=true;world.broadphase=new CANNON.SAPBroadphase(world);world.solver.iterations=10;
@@ -707,7 +710,17 @@ function die(){st='over';roomOff();sThud();setTimeout(()=>{if(st==='over'){if(BU
  if(wave>best){best=wave;try{localStorage.setItem('ht_best',best)}catch(e){}}
  $('scr').style.display='none';setTimeout(()=>{if(st==='over'){f.style.transition='opacity 1.1s';f.style.opacity=.16;$('scr').style.display='flex'}},560);overUI();setTimeout(()=>{if(st==='over'){if(!(REC.on&&REC.mr&&!NOREC&&zvStart()))recEnd()}},350)}
 /* retry: stop the game-over highlight video (it keeps playing while hidden) and free its data */
-function hlStop(){const h=$('hl');if(h){h.querySelectorAll('video').forEach(v=>{try{v.pause();v.removeAttribute('src');v.load()}catch(e){}});h.textContent=''}
+/* 最期の一閃: tap the small preview -> full-screen viewer with sound and the player's own controls */
+function hlZoom(){if($('hz')||!HL)return;const vid=!!HL.vu,d=document.createElement('div');d.id='hz';
+ d.innerHTML='<button type="button" id="hzx" aria-label="閉じる">×</button>';let m;
+ if(vid){m=document.createElement('video');m.src=HL.vu;m.controls=true;m.playsInline=true;m.setAttribute('playsinline','');m.muted=false;if(HL.img&&HL.img.u)m.poster=HL.img.u}
+ else{m=new Image();m.alt='';m.src=HL.img.u}
+ d.appendChild(m);document.body.appendChild(d);['pointerdown','pointerup','click'].forEach(n=>d.addEventListener(n,ev=>ev.stopPropagation()));
+ const small=document.querySelector('#hl video');if(small)small.pause();
+ const close=()=>{if(vid){try{m.pause();m.removeAttribute('src');m.load()}catch(e){}}d.remove();if(small&&small.isConnected){small.muted=true;small.play().catch(()=>{})}};
+ $('hzx').addEventListener('click',close);d.addEventListener('click',ev=>{if(ev.target===d)close()});
+ if(vid)m.play().catch(()=>{})}
+function hlStop(){{const z=$('hz');if(z){z.querySelectorAll('video').forEach(v=>{try{v.pause();v.removeAttribute('src');v.load()}catch(e){}});z.remove()}}const h=$('hl');if(h){h.querySelectorAll('video').forEach(v=>{try{v.pause();v.removeAttribute('src');v.load()}catch(e){}});h.textContent=''}
  if(HL){if(HL.vu)URL.revokeObjectURL(HL.vu);if(HL.img&&HL.img.u)URL.revokeObjectURL(HL.img.u)}}
 function start(){adOff();{const h=$('ht');if(h)h.remove()}recAbort();hlStop();HL=null;REC.run++;REC.pend=0;{const f0=$('fl');f0.style.transition='none';f0.style.opacity=0}roomOff();moanT=3;if(DOOR)DOOR.position.z=-3.4;bl=[];biter=null;bite=0;rushT=0;slashA=null;swA=null;slowT=0;holdT=0;clearField();bn=0;BL.count=0;for(let j=0;j<NP;j++)sL[j]=0;wave=1;S=0;ts=1;after=0;stroke=null;pend=[];TR=[];MAXL=bladeLen(1);layout();$('scr').style.display='none';
  if(seenIntro){endIntro();return}
