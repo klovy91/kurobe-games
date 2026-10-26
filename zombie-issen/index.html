@@ -38,6 +38,13 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 #mt:active{background:rgba(18,20,26,.7)}
 #sh{pointer-events:auto;display:inline-flex;align-items:center;gap:7px;margin:2px 0;padding:11px 22px;border-radius:999px;background:#fff;color:#000;font-weight:700;font-size:15px;text-decoration:none;-webkit-tap-highlight-color:transparent}
 #sh:active{opacity:.7}
+#hl{pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:5px;margin:2px 0}
+#hl video,#hl img{display:block;max-width:min(78vw,420px);max-height:min(32vh,300px);border-radius:10px;box-shadow:0 4px 18px rgba(0,0,0,.45);background:#000;cursor:pointer}
+#hl small{font-size:12px;opacity:.82}
+.bt{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.b2{pointer-events:auto;display:inline-flex;align-items:center;padding:9px 18px;border-radius:999px;border:1.5px solid rgba(255,255,255,.85);color:#fff;background:rgba(0,0,0,.25);font-weight:700;font-size:14px;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.b2:active{opacity:.7}
+#scr #nt{font-size:12px;opacity:.75;max-width:340px}
 </style>
 </head>
 <body>
@@ -52,16 +59,16 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 <script>
 const $=id=>document.getElementById(id);
 var DOOR=null;
-let AC=null,MG=null,lastCut=0,moanT=3,muted=false;
+let AC=null,MG=null,MU=null,RD=null,lastCut=0,moanT=3,muted=false;
 try{muted=localStorage.getItem('zi_mute')==='1'}catch(e){}
-function applyMute(){if(MG)MG.gain.value=muted?0:.5;const b=document.getElementById('mt');if(b)b.textContent=muted?'🔇':'🔊'}
+function applyMute(){if(MU)MU.gain.value=muted?0:1;const b=document.getElementById('mt');if(b)b.textContent=muted?'🔇':'🔊'}
 function toggleMute(e){e.stopPropagation();e.preventDefault();muted=!muted;
  try{localStorage.setItem('zi_mute',muted?'1':'0')}catch(e2){}
  if(!muted)A();applyMute()}
 const SFX={ready:'sfx/ready.mp3',cut:'sfx/cut.mp3',bite:'sfx/bite.mp3',boom:'sfx/boom.mp3',moan1:'sfx/moan1.mp3',moan2:'sfx/moan2.mp3',moan3:'sfx/moan3.mp3',room:'sfx/room.mp3',flee:'sfx/flee.mp3',shout:'sfx/shout.mp3',over:'sfx/over.mp3'};
 const BUF={};let roomSrc=null;
 function loadSfx(){for(const k in SFX){fetch(SFX[k]).then(r=>r.arrayBuffer()).then(b=>new Promise((res,rej)=>AC.decodeAudioData(b,res,rej))).then(d=>{BUF[k]=d;if(k==='room'&&st==='intro')roomOn()}).catch(()=>{})}}
-function A(){if(AC===null){try{const C=window.AudioContext||window.webkitAudioContext;AC=new C();MG=AC.createGain();MG.gain.value=muted?0:.5;MG.connect(AC.destination)}catch(e){AC=false}if(AC)loadSfx()}
+function A(){if(AC===null){try{const C=window.AudioContext||window.webkitAudioContext;AC=new C();MG=AC.createGain();MG.gain.value=.5;MU=AC.createGain();MU.gain.value=muted?0:1;MG.connect(MU);MU.connect(AC.destination);try{RD=AC.createMediaStreamDestination();MG.connect(RD)}catch(e2){RD=null}}catch(e){AC=false}if(AC)loadSfx()}
  if(AC&&AC.state==='suspended')AC.resume();return AC}
 function play(k,v,rate){if(!A()||!BUF[k])return null;const s=AC.createBufferSource();s.buffer=BUF[k];s.playbackRate.value=rate||1;
  const g=AC.createGain();g.gain.value=v===undefined?1:v;s.connect(g);g.connect(MG);s.start();return s}
@@ -107,6 +114,91 @@ const fil=new THREE.DirectionalLight(0x86adff,.34);fil.position.set(-4,3.2,-5);s
 const ov=$('ov'),oc=ov.getContext('2d');
 function resize(){const w=innerWidth,h=innerHeight;R.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix();ov.width=w;ov.height=h;try{if(st!=='title')MAXL=bladeLen(wave)}catch(e){}}
 addEventListener('resize',resize);resize();
+/* ---- highlight recorder ---- */
+const rcv=document.createElement('canvas'),rcx=rcv.getContext('2d'),flE=$('fl');
+/* X wants H.264 + AAC: record sound only when AAC is available, otherwise video-only; no MP4 at all -> still image */
+const RM=(()=>{if(!window.MediaRecorder||!rcv.captureStream)return['',0];
+ for(const[m,a]of[['video/mp4;codecs=avc1.42E01E,mp4a.40.2',1],['video/mp4;codecs=avc1,mp4a.40.2',1],['video/mp4;codecs=avc1.42E01E',0],['video/mp4;codecs=avc1',0],['video/mp4',0]]){try{if(MediaRecorder.isTypeSupported(m))return[m,a]}catch(e){}}return['',0]})(),RMIME=RM[0],RAUD=RM[1];
+const REC={on:false,go:false,mr:null,vs:null,ch:[],t0:0,s0:0,w0:1,snap:null,snapAt:0,pend:0,run:0};
+let HL=null;
+const MOB=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Mac/.test(navigator.platform||''));
+function recSize(){const c=R.domElement,k=Math.min(1,1280/Math.max(c.width,c.height,1));rcv.width=Math.max(2,Math.round(c.width*k/2)*2);rcv.height=Math.max(2,Math.round(c.height*k/2)*2)}
+function recKill(){const mr=REC.mr,vs=REC.vs;REC.mr=null;REC.vs=null;
+ if(mr&&mr.state!=='inactive'){mr.ondataavailable=null;mr.onstop=null;try{mr.stop()}catch(e){}}
+ if(vs)vs.getVideoTracks().forEach(t=>t.stop())}
+function recStart(){recKill();recSize();REC.on=true;REC.go=true;REC.t0=performance.now();REC.s0=S;REC.w0=wave;REC.snap=null;REC.snapAt=0;REC.ch=[]}
+function recBegin(){if(!RMIME||!REC.on)return;
+ try{const vs=rcv.captureStream(30),tr=vs.getVideoTracks();if(RD&&RAUD)RD.stream.getAudioTracks().forEach(t=>tr.push(t));
+  const mr=new MediaRecorder(new MediaStream(tr),{mimeType:RMIME,videoBitsPerSecond:4e6}),ch=REC.ch;
+  mr.ondataavailable=e=>{if(e.data&&e.data.size)ch.push(e.data)};mr.start();REC.mr=mr;REC.vs=vs}catch(e){recKill()}}
+function recAbort(){REC.on=false;REC.go=false;recKill()}
+function recSnap(){const o={b:null,u:''};REC.snap=o;
+ try{rcv.toBlob(b=>{o.b=b;if(HL&&HL.img===o)hlUI()},'image/jpeg',.9)}catch(e){}}
+function recDraw(){const W=rcv.width,H=rcv.height,k=W/Math.max(1,innerWidth);
+ rcx.globalAlpha=1;rcx.shadowBlur=0;rcx.drawImage(R.domElement,0,0,W,H);rcx.drawImage(ov,0,0,W,H);
+ if(zv>.01){const g=rcx.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.hypot(W,H)/2);
+  g.addColorStop(.3,'rgba(20,40,90,0)');g.addColorStop(1,'rgba(8,14,45,'+(.8*zv).toFixed(3)+')');rcx.fillStyle=g;rcx.fillRect(0,0,W,H);
+  rcx.globalAlpha=zv;rcx.font='900 '+Math.round(15*k)+'px system-ui,sans-serif';rcx.textAlign='center';rcx.textBaseline='top';
+  rcx.fillStyle='#fff';rcx.shadowColor='#4fc3ff';rcx.shadowBlur=10*k;rcx.fillText('Z O N E',W/2,58*k);rcx.shadowBlur=0;rcx.globalAlpha=1}
+ const fs=getComputedStyle(flE),fo=+fs.opacity;if(fo>.01){rcx.globalAlpha=fo;rcx.fillStyle=fs.backgroundColor;rcx.fillRect(0,0,W,H);rcx.globalAlpha=1}
+ const u=Math.max(13,18*k),ff='px system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif';
+ rcx.shadowColor='rgba(0,0,0,.75)';rcx.shadowBlur=6;rcx.fillStyle='#fff';
+ rcx.font='800 '+Math.round(u)+ff;rcx.textAlign='left';rcx.textBaseline='top';rcx.fillText('WAVE '+REC.w0,u*.7,u*.7);
+ rcx.font='700 '+Math.round(u*.7)+ff;rcx.textAlign='right';rcx.textBaseline='bottom';rcx.fillText('ゾンビ一閃  '+location.host,W-u*.7,H-u*.7);
+ rcx.shadowBlur=0;rcx.textAlign='left';rcx.textBaseline='alphabetic'}
+function recTick(now){if(!REC.on)return;
+ if(now-REC.t0>16000){recAbort();return}
+ if(st==='cut'&&!slashA&&now-REC.t0>1500){const s0=REC.s0;recStart();REC.s0=s0}
+ recDraw();
+ if(REC.go){REC.go=false;recBegin()}
+ if(REC.snapAt&&now>=REC.snapAt&&!REC.snap)recSnap()}
+function recEnd(){if(!REC.on)return;REC.on=false;REC.go=false;if(!REC.snap)recSnap();
+ const kills=S-REC.s0,info={sc:kills*10+(cleared?5:0)+REC.w0*.01,kills,wave:REC.w0,img:REC.snap,blob:null,vu:'',run:REC.run},
+  mr=REC.mr,vs=REC.vs,ch=REC.ch;REC.mr=null;REC.vs=null;
+ const stopT=()=>{if(vs)vs.getVideoTracks().forEach(t=>t.stop())};
+ if(HL&&HL.sc>info.sc){if(mr&&mr.state!=='inactive'){mr.ondataavailable=null;try{mr.stop()}catch(e){}}stopT();hlUI();return}
+ REC.pend++;
+ const fin=()=>{stopT();if(info.run!==REC.run)return;REC.pend--;
+  if(ch.length)info.blob=new Blob(ch,{type:((mr&&mr.mimeType)||RMIME).split(';')[0]});
+  if(!HL||HL.sc<=info.sc){if(HL&&HL.vu)URL.revokeObjectURL(HL.vu);HL=info}hlUI()};
+ if(mr&&mr.state!=='inactive'){mr.onstop=fin;try{mr.stop()}catch(e){fin()}}else fin()}
+/* ---- game-over share UI ---- */
+function shTxt(){return '「ゾンビ一閃」 WAVE '+wave+'、撃退 '+S+'体。\n一直線の一太刀で、教室のゾンビを斬れ。'}
+function shUrl(){return location.href.split('#')[0]}
+function hlFile(){if(!HL)return null;const n='zombie-issen-wave'+HL.wave;
+ if(HL.blob&&/mp4/.test(HL.blob.type))return new File([HL.blob],n+'.mp4',{type:'video/mp4'});
+ if(HL.img&&HL.img.b)return new File([HL.img.b],n+'.jpg',{type:'image/jpeg'});return null}
+function saveFile(f){const a=document.createElement('a'),u=URL.createObjectURL(f);a.href=u;a.download=f.name;
+ document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),60000)}
+function noProp(el){if(el)['pointerdown','pointerup','click'].forEach(n=>el.addEventListener(n,ev=>ev.stopPropagation()))}
+function canShareFile(f){if(!MOB||!f||!navigator.canShare)return false;try{return navigator.canShare({files:[f]})}catch(e){return false}}
+function overUI(){
+ $('scr').innerHTML='<h1>斬り残した。</h1><p>'+MSG[Math.floor(Math.random()*MSG.length)]+'</p><p>WAVE '+wave+'　撃退 '+S+'<br>ベスト WAVE '+best+'</p>'
+  +'<div id="hl"></div>'
+  +'<a id="sh" target="_blank" rel="noopener" href="https://x.com/intent/post?text='+encodeURIComponent(shTxt())+'&amp;url='+encodeURIComponent(shUrl())+'">𝕏 でシェア</a>'
+  +'<div class="bt"><a id="sv" class="b2" href="#">動画を保存</a><a id="pt" class="b2" href="../">ポータルへ戻る</a></div>'
+  +'<p id="nt"></p><p>タップでもう一度</p>';
+ ['hl','sh','sv','pt'].forEach(i=>noProp($(i)));
+ $('sh').addEventListener('click',ev=>{const f=hlFile();
+  if(canShareFile(f)){ev.preventDefault();navigator.share({files:[f],text:shTxt()+'\n'+shUrl()}).catch(()=>{});return}
+  if(f&&!MOB)saveFile(f)});
+ $('sv').addEventListener('click',ev=>{ev.preventDefault();const f=hlFile();if(f)saveFile(f)});
+ hlUI()}
+function hlUI(){if(st!=='over')return;const h=$('hl'),sv=$('sv'),nt=$('nt');if(!h||!sv||!nt)return;
+ h.textContent='';nt.textContent='';
+ if(REC.on||REC.pend>0){h.innerHTML='<small>ハイライトを作成中…</small>';sv.style.display='none';return}
+ const vid=!!(HL&&HL.blob&&/mp4/.test(HL.blob.type)),img=!!(HL&&HL.img&&HL.img.b);
+ if(!vid&&!img){sv.style.display='none';return}
+ if(img&&!HL.img.u)HL.img.u=URL.createObjectURL(HL.img.b);
+ if(vid){if(!HL.vu)HL.vu=URL.createObjectURL(HL.blob);
+  const v=document.createElement('video');v.muted=true;v.defaultMuted=true;v.setAttribute('muted','');v.playsInline=true;v.setAttribute('playsinline','');
+  v.loop=true;v.autoplay=true;if(img)v.poster=HL.img.u;v.src=HL.vu;h.appendChild(v);v.play().catch(()=>{});
+  v.addEventListener('click',()=>{v.muted=!v.muted;if(v.paused)v.play().catch(()=>{})})}
+ else{const im=new Image();im.alt='';im.src=HL.img.u;h.appendChild(im)}
+ const cap=document.createElement('small');cap.textContent='ハイライト：WAVE '+HL.wave+' の一太刀（'+HL.kills+'体）'+(vid&&RAUD?'　タップで音声':'');h.appendChild(cap);
+ const k=vid?'動画':'画像';sv.style.display='';sv.textContent=k+'を保存';
+ nt.textContent=canShareFile(hlFile())?'':MOB?'保存した'+k+'を投稿に添付できます':'「𝕏 でシェア」を押すと'+k+'が保存され、投稿画面が開きます。'+k+'を投稿に添付してください'}
+
 const world=new CANNON.World();world.gravity.set(0,-9.8,0);world.defaultContactMaterial.friction=.4;world.defaultContactMaterial.restitution=.2;world.allowSleep=true;world.broadphase=new CANNON.SAPBroadphase(world);world.solver.iterations=10;
 world.defaultContactMaterial.contactEquationStiffness=4e6;world.defaultContactMaterial.contactEquationRelaxation=6;
 world.defaultContactMaterial.frictionEquationStiffness=3e6;world.defaultContactMaterial.frictionEquationRelaxation=6;
@@ -424,9 +516,8 @@ function startBite(e){st='bite';bite=.62;biter=e;e.v=13;play('bite',1);sMoan()}
 function die(){st='over';roomOff();sThud();setTimeout(()=>{if(st==='over'){if(BUF.over)play('over',1);else sChime()}},620);if(!bl.length)bloodScreen();
  const f=$('fl');
  if(wave>best){best=wave;try{localStorage.setItem('ht_best',best)}catch(e){}}
- $('scr').style.display='none';setTimeout(()=>{if(st==='over'){f.style.transition='opacity 1.1s';f.style.opacity=.16;$('scr').style.display='flex'}},560);$('scr').innerHTML='<h1>\u65ac\u308a\u6b8b\u3057\u305f\u3002</h1><p>'+MSG[Math.floor(Math.random()*MSG.length)]+'</p><p>WAVE '+wave+'\u3000\u6483\u9000 '+S+'<br>\u30d9\u30b9\u30c8 WAVE '+best+'</p><a id="sh" target="_blank" rel="noopener" href="https://x.com/intent/post?text='+encodeURIComponent('\u300c\u30be\u30f3\u30d3\u4e00\u9583\u300d WAVE '+wave+'\u3001\u6483\u9000 '+S+'\u4f53\u3002\n\u4e00\u76f4\u7dda\u306e\u4e00\u592a\u5200\u3067\u3001\u6559\u5ba4\u306e\u30be\u30f3\u30d3\u3092\u65ac\u308c\u3002')+'&amp;url='+encodeURIComponent(location.href.split('#')[0])+'">\ud835\udd4f \u3067\u30b7\u30a7\u30a2</a><p>\u30bf\u30c3\u30d7\u3067\u3082\u3046\u4e00\u5ea6</p>';
- {const a=$('sh');if(a)['pointerdown','pointerup','click'].forEach(n=>a.addEventListener(n,ev=>ev.stopPropagation()))}}
-function start(){{const f0=$('fl');f0.style.transition='none';f0.style.opacity=0}roomOff();moanT=3;if(DOOR)DOOR.position.z=-3.4;bl=[];biter=null;bite=0;rushT=0;slashA=null;swA=null;slowT=0;holdT=0;clearField();bn=0;BL.count=0;for(let j=0;j<NP;j++)sL[j]=0;wave=1;S=0;ts=1;after=0;stroke=null;pend=[];TR=[];MAXL=bladeLen(1);layout();$('scr').style.display='none';
+ $('scr').style.display='none';setTimeout(()=>{if(st==='over'){f.style.transition='opacity 1.1s';f.style.opacity=.16;$('scr').style.display='flex'}},560);overUI();setTimeout(()=>{if(st==='over')recEnd()},350)}
+function start(){recAbort();HL=null;REC.run++;REC.pend=0;{const f0=$('fl');f0.style.transition='none';f0.style.opacity=0}roomOff();moanT=3;if(DOOR)DOOR.position.z=-3.4;bl=[];biter=null;bite=0;rushT=0;slashA=null;swA=null;slowT=0;holdT=0;clearField();bn=0;BL.count=0;for(let j=0;j<NP;j++)sL[j]=0;wave=1;S=0;ts=1;after=0;stroke=null;pend=[];TR=[];MAXL=bladeLen(1);layout();$('scr').style.display='none';
  if(seenIntro){endIntro();return}
  $('lb1').style.height='8.5%';$('lb2').style.height='8.5%';
  roomOn();introSetup();st='intro';introT=0;introS=0}
@@ -497,13 +588,13 @@ function title(){$('scr').innerHTML='<h1>ゾンビ一閃</h1><p>\u9000\u5c48\u30
 const rc=new THREE.Raycaster();
 function rayAt(px,py){rc.setFromCamera(new THREE.Vector2(px/innerWidth*2-1,-(py/innerHeight)*2+1),cam)}
 let fin=false,slashA=null,swA=null;const TQ=new THREE.Quaternion();
-addEventListener('pointerdown',e=>{A();if(st==='title'||st==='over'){start();return}if(st==='intro'){introS=7;endIntro();return}if(st!=='ready')return;st='cut';sZone();stroke={x:e.clientX,y:e.clientY,ex:e.clientX,ey:e.clientY,len:0}});
+addEventListener('pointerdown',e=>{A();if(st==='title'||st==='over'){start();return}if(st==='intro'){introS=7;endIntro();return}if(st!=='ready')return;st='cut';sZone();stroke={x:e.clientX,y:e.clientY,ex:e.clientX,ey:e.clientY,len:0};recStart()});
 addEventListener('pointermove',e=>{if(!stroke||st!=='cut')return;let dx=e.clientX-stroke.x,dy=e.clientY-stroke.y,d=Math.hypot(dx,dy);
  if(d>MAXL){dx*=MAXL/d;dy*=MAXL/d;d=MAXL}
  stroke.ex=stroke.x+dx;stroke.ey=stroke.y+dy;stroke.len=d});
 function endStroke(){if(st!=='cut'||!stroke)return;
  if(stroke.len>22){slashA={x1:stroke.x,y1:stroke.y,x2:stroke.ex,y2:stroke.ey,p:0};stroke=null;sWhoosh()}
- else{stroke=null;st='ready'}}
+ else{stroke=null;st='ready';recAbort()}}
 addEventListener('pointerup',endStroke);addEventListener('pointercancel',endStroke);
 /* ---- loop ---- */
 let zv=0,rushT=0,bite=0,biter=null,bl=[],bt0=0,introT=0,introS=0,iAct=[],iZom=[],kq=[],kqT=0,holdT=0,slowT=0,seenIntro=false;
@@ -525,7 +616,7 @@ function frame(now){requestAnimationFrame(frame);const dr=Math.min(.05,(now-last
      b.wakeUp();const di=dyn.findIndex(x=>x.mesh===o);if(di>=0){dyn.splice(di,1);gib.push({mesh:o,b,age:2.6,nc:1})}
      b.applyImpulse(new CANNON.Vec3((d.x+w.x*.6)*k,(d.y+w.y*.6+.5)*k,(d.z+w.z*.6)*k),new CANNON.Vec3(p.x-b.position.x,p.y-b.position.y,p.z-b.position.z))}}}});
   pend=[];
-  if(fin){fin=false;cleared=En.length===0;slowT=cleared?2.6:1.7;after=cleared?3.9:4.9;rushT=cleared?0:1.9;st='after'}
+  if(fin){fin=false;if(REC.on)REC.snapAt=now+420;cleared=En.length===0;slowT=cleared?2.6:1.7;after=cleared?3.9:4.9;rushT=cleared?0:1.9;st='after'}
  }
  if(st==='intro'){introT+=dr;const t=introT,k=Math.min(1,t/15.4);
   {let px,py,pz,ly,lz;
@@ -563,7 +654,7 @@ function frame(now){requestAnimationFrame(frame);const dr=Math.min(.05,(now-last
    e.g.position.set(e.x,Math.abs(Math.sin(e.z*5))*.04,e.z);e.g.rotation.y=Math.atan2(ax,az)});
   if(st==='bite'){bite-=dr;if(!bl.length&&bite<.25)bloodScreen();if(bite<=0)die()}
   else if(rushT<=0){const b=En.find(e=>Math.hypot(e.x,e.z-6)<1.5);if(b){cleared=false;startBite(b)}}}
- if(st==='after'){after-=dr;if(slowT>0)slowT-=dr;if(after<=0){if(cleared){En.forEach(e=>scene.remove(e.g));En=[];nextWave();st='ready'}else die()}}
+ if(st==='after'){after-=dr;if(slowT>0)slowT-=dr;if(after<=0){if(cleared){recEnd();En.forEach(e=>scene.remove(e.g));En=[];nextWave();st='ready'}else die()}}
  if(st!=='title'){const sdt=dr*ts,fs=Math.min(1/90,Math.max(1/240,sdt));world.step(fs,sdt,6)}
  gib=gib.filter(o=>{o.age=(o.age||0)+dr;
   if(o.bleed>0&&ts>.3){o.bleed-=dr;sand(o.b.position,3,BLOOD,1,.75,.18)}
@@ -598,6 +689,7 @@ function frame(now){requestAnimationFrame(frame);const dr=Math.min(.05,(now-last
  $('sc').textContent=(st==='title'||st==='intro')?'ゾンビ一閃':'WAVE '+wave;
  $('rm').textContent=st==='intro'?'タップでスキップ':st==='title'?'':'\u6b8b\u308a '+En.length;
  $('ib').style.width=(stroke?Math.max(0,1-stroke.len/MAXL)*100:100)+'%';
+ recTick(now);
 }
 layout();title();requestAnimationFrame(frame);
 </script>
