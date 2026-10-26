@@ -911,16 +911,14 @@ function adOff(){document.querySelectorAll('#scr .adw iframe').forEach(f=>{try{f
 /* how to play */
 function howTo(){if($('ht'))return;const d=document.createElement('div');d.id='ht';
  d.innerHTML='<div class="in"><h2>遊び方</h2><ol>'+
- '<li>ゾンビが教室に湧き、歩いて近づいてくる。</li>'+
- '<li>画面に指を置くと、時間がほぼ止まる。</li>'+
- '<li>そのまま指をなぞって、一直線の刃の向きと長さを決める。長さには上限がある（上のゲージで確認）。</li>'+
- '<li>指を離すと一閃。線の上のゾンビを斬る。</li>'+
+ '<li>ゾンビは歩いて近づいてくる。近づかれると死ぬ。</li>'+
+ '<li>画面を長押しで、ゾーンに入る。</li>'+
+ '<li>そのままドラッグで、一直線に刃の向きと長さを決める。長さには上限がある（上のゲージで確認）。</li>'+
+ '<li>離すと一閃。線の上のゾンビを斬る。</li>'+
  '<li>1体でも斬り残すと、ゾンビが一気に押し寄せてきて終わり。</li></ol>'+
  '<p class="tip">重なったゾンビは、まとめて斬れる。</p>'+
  '<p class="tip">足だけを斬ると、次の WAVE で脚のないゾンビになって這ってくることがある（WAVE が進むほど起きやすい）。這うゾンビは遅い。</p>'+
  '<p class="tip">赤く光る爆弾を背負ったゾンビを斬ると爆発し、周りのゾンビも巻き込む。</p>'+
- '<p class="tip">机や椅子、教卓も斬れる。</p>'+
- '<p class="tip">PCはマウスのドラッグで同じように操作できる。</p>'+
  '<button type="button" class="b2 cl" id="htc">閉じる</button></div>';
  document.body.appendChild(d);['pointerdown','pointerup','click'].forEach(n=>d.addEventListener(n,ev=>ev.stopPropagation()));
  $('htc').addEventListener('click',()=>d.remove())}
@@ -981,7 +979,7 @@ function frame(now){requestAnimationFrame(frame);perfTick(now-last);const dr=Mat
   else if(introS===1&&t>2.4){introS=2;banner('廊下が、騒がしい。',1900,34,1);sMoan()}
   else if(introS===2&&t>4.6){introS=3;banner('——なんだ、あれ。',1700,34,1)}
   else if(introS===3&&t>6.5){introS=4;killActor(iAct[0]);banner('先生ッ！！',1800,34,1);flash(.3);sCut();sMoan();play('bite',.95)}
-  else if(introS===4&&t>8.6){introS=5;fleeAll(t);play('flee',.85);banner('——逃げろっ！！',1900,34,1)}
+  else if(introS===4&&t>8.6){introS=5;fleeAll(t);play('flee',.85);banner('——みんな逃げろっ！！',1900,34,1)}
   else if(introS===5&&t>10.8){introS=6;banner('この名刀「一閃」で切り伏せる…',2400,21)}
   else if(introS===6&&t>13.4){introS=7;play('shout',1);sWhoosh();setTimeout(()=>sCut(),240);introSlash();banner('一閃。',2000);flash(.42)}
   if(t>15.4)endIntro()}
