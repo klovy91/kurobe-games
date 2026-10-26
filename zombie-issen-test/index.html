@@ -569,7 +569,7 @@ function stepSand(dt){for(let j=0;j<NP;j++){if(sL[j]<=0){sP[j*3+1]=-50;continue}
   if(py>3.43){sT[j]=0;splatN(px,3.442,pz,rr,0,-1,0);sL[j]=0;continue}}
  if(py<.02){if(sT[j]){sT[j]=0;splat(px,pz,rr);sL[j]=0}sP[j*3+1]=.02;sV[j*3+1]=0;sV[j*3]*=.9;sV[j*3+2]*=.9}}
  sGeo.attributes.position.needsUpdate=true;sGeo.attributes.color.needsUpdate=true}
-const BLOOD=[.72,.04,.07],DUST=[.65,.5,.3],FIRE=[1,.55,.15],FLESHC=new THREE.Color(0x8d1a22),GRAYC=new THREE.Color(0x707070);
+const BLOOD=[.72,.04,.07],DUST=[.65,.5,.3],FIRE=[1,.55,.15],FLESHC=new THREE.Color(0x6e0810),GRAYC=new THREE.Color(0x555555);
 function gush(x,y,z){sand({x,y,z},175,BLOOD,3.6,1,.45);for(let i=0;i<32;i++)splat(x+(Math.random()-.5)*3,z+(Math.random()-.5)*3,.26+Math.random()*.72)}
 const NS=600,SCM=new THREE.InstancedMesh(BG,new THREE.MeshBasicMaterial({color:0x1d1714,map:BL.material.map,transparent:true,alphaTest:.3,depthWrite:false,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-3}),NS);
 SCM.count=0;SCM.frustumCulled=false;scene.add(SCM);let sn=0;
@@ -723,7 +723,7 @@ function cutEnemy(e,nx,ny,s,hitY){const dA=dirAt(s.x1,s.y1),dB=dirAt(s.x2,s.y2);
   for(let k=0;k<2;k++){const t=sd[k][bo]||(sd[k][bo]={parts:[],par:m.parent,jw:m.userData.jl&&m.userData.jp?m.userData.jp.localToWorld(m.userData.jl.clone()):null});t.parts.push({v:r.out[k],vn:r.on[k],vu:r.ou[k],mat:m.material,c})}});
  // legs only? = the cut plane misses the pelvis, chest and head, and the blade touched below the pelvis
  let leg=-1,hip=null;if(hitY!==undefined&&e.ty!==0&&!e.bomb&&!e.legless&&e.cf){const dd=v=>n.x*(v.x-C.x)+n.y*(v.y-C.y)+n.z*(v.z-C.z),P=[.9,1.3,1.66].map(y=>e.inr.localToWorld(new THREE.Vector3(0,y,0))),sg=P.map(dd);
-  if((sg.every(v=>v>0)||sg.every(v=>v<0))&&hitY<P[0].y&&Math.random()<Math.min(.7,.3+(wave-1)*.02)){leg=sg[0]>0?0:1;hip=P[0]}}
+  if((sg.every(v=>v>0)||sg.every(v=>v<0))&&hitY<P[0].y&&Math.random()<Math.min(.7,(wave-1)*.02)){leg=sg[0]>0?0:1;hip=P[0]}}
  [0,1].forEach(k=>{const sg=k?-1:1;mkRagdoll(sd[k],{x:n.x*.62*sg,y:n.y*.62*sg+.3,z:n.z*.62*sg-.18});if(k===leg){Object.values(MADE).forEach(o=>o.carry=1);CARRY.push({cf:e.cf,ty:e.ty,made:MADE,x:e.x,z:e.z,ry:e.g.rotation.y,hip:hip.clone(),sc:e.inr.scale.x})}});
  gush(e.x,1.25,e.z);sCut();scene.remove(e.g);disposeTree(e.g);En.splice(En.indexOf(e),1);if(leg<0)S++;if(e.bomb)explode(e.x,e.z)}
 /* a zombie that lost only its legs: its fallen upper body is replaced by a legless crawler at the start of the next wave */
@@ -1028,7 +1028,7 @@ function frame(now){requestAnimationFrame(frame);perfTick(now-last);const dr=Mat
    if(dk<1){if(o.nc)crumble(o,1-Math.max(0,dk),gd);else{if(Math.random()<gd*20)sand(o.b.position,4,BLOOD,1.5,1,.18);o.mesh.scale.setScalar(.3+.7*Math.max(0,dk))}}
    if(o.dieT<=0){const q=o.b.position;if(o.nc){const c=o.cr;if(c)for(let k=0;k<10;k++)sand({x:c.bb.min.x+Math.random()*(c.bb.max.x-c.bb.min.x),y:.04,z:c.bb.min.z+Math.random()*(c.bb.max.z-c.bb.min.z)},1,c.col[k%c.col.length],.4,0,.05)}else sand(q,30,BLOOD,2.6,1,.32);if(!o.nc)for(let k=0;k<2;k++)splat(q.x+(Math.random()-.5)*.6,q.z+(Math.random()-.5)*.6,.2+Math.random()*.35);dropGib(o);return false}}
   if(o.nc)return true;
-  if(o.age<60&&!o.carry){const off=GORE!=='on',k=Math.min(1,gd/(off?1.5:8));o.mesh.traverse(m=>{if(m.isMesh&&!m.userData.cap)m.material.color.lerp(off?GRAYC:FLESHC,k)})}
+  if(o.age<60&&!o.carry){const off=GORE!=='on',k=Math.min(1,gd/(off?.5:.7));o.mesh.traverse(m=>{if(m.isMesh&&!m.userData.cap)m.material.color.lerp(off?GRAYC:FLESHC,k)})}
   if(o.age>4.5&&!o.sp){o.sp=1;for(let i=0;i<4;i++)splat(o.b.position.x+(Math.random()-.5)*.75,o.b.position.z+(Math.random()-.5)*.75,.18+Math.random()*.42)}
   return true});
  stepSand(dr*ts);stepFx(dr*Math.max(.4,ts));
@@ -1074,7 +1074,7 @@ function precompile(){const T=[],add=o=>{o.position.set(0,-30,0);scene.add(o);T.
  try{R.compile(scene,cam)}catch(e){}T.forEach(o=>scene.remove(o));ZS.visible=zv0}
 
 /* ---------------- options: graphics + gore ---------------- */
-const GP={on:{s:[.72,.04,.07],bl:0x7d0a12,cu:0x5c0208,fl:0x8d1a22,zb:0x5e070b,pt:0x8a0a10,css:'#8d0b12',d1:'#5a060b',d2:'#7d0a12',end:'150,0,8',sb:'110,4,10'},
+const GP={on:{s:[.72,.04,.07],bl:0x7d0a12,cu:0x5c0208,fl:0x6e0810,zb:0x5e070b,pt:0x8a0a10,css:'#8d0b12',d1:'#5a060b',d2:'#7d0a12',end:'150,0,8',sb:'110,4,10'},
  green:{s:[.25,.62,.12],bl:0x2f6410,cu:0x1e4a10,fl:0x3f6a20,zb:0x1f4a0c,pt:0x3a8a1a,css:'#2f6a10',d1:'#1d4a08',d2:'#2f6410',end:'40,110,10',sb:'34,90,12'},
  off:{s:[.65,.5,.3],bl:0x555555,cu:0x6b6b6b,fl:0,zb:0,pt:0x8f8068,css:'#18181c',d1:'#111114',d2:'#1c1c20',end:'0,0,0',sb:'0,0,0'}};
 function setGore(g){GORE=GP[g]?g:'on';GC=GP[GORE];BLOOD[0]=GC.s[0];BLOOD[1]=GC.s[1];BLOOD[2]=GC.s[2];BL.material.color.set(GC.bl);CU.color.set(GC.cu);
@@ -1084,7 +1084,7 @@ function applyGfx(){setQ(GFXL[OPT.gfx]);QW.bad=QW.good=QW.wg=0;QW.last=QW.now}
 function optUI(){if($('opt'))return;const d=document.createElement('div');d.id='opt';
  const row=(k,list)=>'<div class="og">'+list.map(([v,t])=>'<button type="button" class="b2'+(OPT[k]===v?' on':'')+'" data-k="'+k+'" data-v="'+v+'">'+t+'</button>').join('')+'</div>';
  d.innerHTML='<div class="in"><h2>設定</h2><h3>グラフィック</h3>'+row('gfx',[['auto','自動（おすすめ）'],['high','高画質'],['std','標準'],['low','軽量']])+
-  '<p class="nt">自動：高画質で始めて、重いときは自動で下げます</p><h3>グロ描写</h3>'+row('gore',[['on','あり'],['green','控えめ（血が緑）'],['off','なし']])+
+  '<p class="nt">自動：高画質で始めて、重いときは自動で下げます</p><h3>流血表現</h3>'+row('gore',[['on','あり'],['green','控えめ'],['off','なし']])+
   '<p class="nt">服の血の模様は、次に出てくるゾンビから変わります</p><button type="button" class="b2 cl" id="opc">閉じる</button></div>';
  document.body.appendChild(d);['pointerdown','pointerup','click'].forEach(n=>d.addEventListener(n,ev=>ev.stopPropagation()));
  d.querySelectorAll('.og .b2').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.k,v=b.dataset.v;OPT[k]=v;saveOpt();
