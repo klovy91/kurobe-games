@@ -552,6 +552,7 @@ function splat(x,z,r){splatN(x,0,z,r,0,1,0)}
 function sand(p,n,c,k=1,pr=1,sp=.5){const bd=c===BLOOD;if(bd&&GORE==='off'){c=DUST;pr=0}for(let i=0;i<n;i++){const j=sN++%NP;sC[j*3]=c[0];sC[j*3+1]=c[1];sC[j*3+2]=c[2];sT[j]=((bd||c[1]<.2)&&Math.random()<pr)?1:0;
  sP[j*3]=p.x+(Math.random()-.5)*sp;sP[j*3+1]=p.y+(Math.random()-.5)*sp;sP[j*3+2]=p.z+(Math.random()-.5)*sp;
  sV[j*3]=(Math.random()-.5)*1.6*k;sV[j*3+1]=Math.random()*1.2*k+(k>1?1.4:0);sV[j*3+2]=(Math.random()-.5)*1.6*k;sL[j]=3.4}}
+const NOTES=[[3.45,2.95,.45,.31],[4.6,2.85,.36,.26]];
 function stepSand(dt){for(let j=0;j<NP;j++){if(sL[j]<=0){sP[j*3+1]=-50;continue}sL[j]-=dt;sV[j*3+1]-=5*dt;
  sP[j*3]+=sV[j*3]*dt;sP[j*3+1]+=sV[j*3+1]*dt;sP[j*3+2]+=sV[j*3+2]*dt;
  const px=sP[j*3],py=sP[j*3+1],pz=sP[j*3+2],rr=.12+Math.random()*.34;
@@ -561,12 +562,14 @@ function stepSand(dt){for(let j=0;j<NP;j++){if(sL[j]<=0){sP[j*3+1]=-50;continue}
   if(px>5.93){if(!(pz>-4.24&&pz<-2.56&&py<2.16)){sT[j]=0;splatN(5.942,py,pz,rr,-1,0,0);sL[j]=0;continue}
    if(px>9.0){sT[j]=0;splatN(9.042,py,pz,rr,-1,0,0);sL[j]=0;continue}}
   if(pz<-5.9&&Math.abs(px)<2.72&&py>1.12&&py<2.72){sT[j]=0;splatN(px,py,-5.903,rr,0,0,1);sL[j]=0;continue}
+  if(pz<-5.93&&Math.hypot(px+2.9,py-3)<.19){sT[j]=0;splatN(px,py,-5.929,rr*.35,0,0,1);sL[j]=0;continue}
+  if(pz<-5.975&&NOTES.some(n=>Math.abs(px-n[0])<n[2]&&Math.abs(py-n[1])<n[3])){sT[j]=0;splatN(px,py,-5.981,rr*.6,0,0,1);sL[j]=0;continue}
   if(pz<-5.98){sT[j]=0;splatN(px,py,-5.992,rr,0,0,1);sL[j]=0;continue}
   if(pz>7.98){sT[j]=0;splatN(px,py,7.992,rr,0,0,-1);sL[j]=0;continue}
   if(py>3.43){sT[j]=0;splatN(px,3.442,pz,rr,0,-1,0);sL[j]=0;continue}}
  if(py<.02){if(sT[j]){sT[j]=0;splat(px,pz,rr);sL[j]=0}sP[j*3+1]=.02;sV[j*3+1]=0;sV[j*3]*=.9;sV[j*3+2]*=.9}}
  sGeo.attributes.position.needsUpdate=true;sGeo.attributes.color.needsUpdate=true}
-const BLOOD=[.72,.04,.07],DUST=[.65,.5,.3],FIRE=[1,.55,.15],FLESHC=new THREE.Color(0x8d1a22);
+const BLOOD=[.72,.04,.07],DUST=[.65,.5,.3],FIRE=[1,.55,.15],FLESHC=new THREE.Color(0x8d1a22),GRAYC=new THREE.Color(0x707070);
 function gush(x,y,z){sand({x,y,z},175,BLOOD,3.6,1,.45);for(let i=0;i<32;i++)splat(x+(Math.random()-.5)*3,z+(Math.random()-.5)*3,.26+Math.random()*.72)}
 const NS=600,SCM=new THREE.InstancedMesh(BG,new THREE.MeshBasicMaterial({color:0x1d1714,map:BL.material.map,transparent:true,alphaTest:.3,depthWrite:false,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-3}),NS);
 SCM.count=0;SCM.frustumCulled=false;scene.add(SCM);let sn=0;
@@ -682,9 +685,9 @@ function perfTick(ms){const P=QW;P.ws=performance.now();queueMicrotask(()=>{if(s
  else if(OPT.gfx==='auto'&&QL===1&&P.wg>=10&&since>P.upWait){setQ(0);P.last=P.lastUp=P.now;P.good=0;P.wg=0}
  if(FPSD)FPSD.textContent='通常 '+(P.nf||'-')+'fps / スロー '+(P.sf||'-')+'fps\n'+QN()+'  処理 '+(P.wm<99?P.wm.toFixed(1)+'ms':'-')+'\n破片 '+gib.length+' / 上限 '+GIBMAX+(NOREC?'\n録画OFF':'')}
 function mkRagdoll(map,vel){const made={};MADE=made;
- for(const k in map)if(map[k].parts.length){const o=mkPiece(map[k].parts,vel,0,.13);if(o)made[k]=o}
+ for(const k in map)if(map[k].parts.length){const o=mkPiece(map[k].parts,vel,0,.13);if(o){o.bk=+k;made[k]=o}}
  for(const k in map){const o=made[k];if(!o)continue;const d=BONE[k];if(!d||d.p<0)continue;const q=made[d.p];if(!q)continue;
-  const jw=new THREE.Vector3(d.j[0],d.j[1],d.j[2]).applyMatrix4(map[k].par.matrixWorld);
+  const jw=new THREE.Vector3(d.j[0],d.j[1],d.j[2]).applyMatrix4(map[k].par.matrixWorld);o.j0=jw.clone();
   const c=new CANNON.PointToPointConstraint(o.b,new CANNON.Vec3(jw.x-o.b.position.x,jw.y-o.b.position.y,jw.z-o.b.position.z),q.b,new CANNON.Vec3(jw.x-q.b.position.x,jw.y-q.b.position.y,jw.z-q.b.position.z),1.5e4);
   c.collideConnected=false;world.addConstraint(c);o.con.push(c);q.con.push(c)}}
 function mkPiece(parts,vel,nc,spin){const CAP=nc?CUW:CU;parts=parts.filter(p=>p.v.length);if(!parts.length)return;const all=[];parts.forEach(p=>{p.v.forEach(x=>all.push(x));p.c.forEach(x=>all.push(x))});
@@ -702,26 +705,35 @@ function mkPiece(parts,vel,nc,spin){const CAP=nc?CUW:CU;parts=parts.filter(p=>p.
  b.mass=Math.max(1.5,vol*140);b.updateMassProperties();b.position.set(cen.x,cen.y+Math.max(0,.01-gb.min.y),cen.z);b.velocity.set(vel.x,vel.y,vel.z);const sp=spin===undefined?1:spin;b.angularVelocity.set(rnd()*sp,rnd()*sp,rnd()*sp);
  b.linearDamping=.12;b.angularDamping=.45;
  scene.add(g);world.addBody(b);g.userData.body=b;g.position.copy(b.position);g.quaternion.copy(b.quaternion);
- const o={mesh:g,b,bleed:nc?0:1.6,nc:nc?1:0,con:[],pc:1};if(nc)o.vt=6+Math.random()*2;gib.push(o);return o}
+ const o={mesh:g,b,bleed:nc?0:1.6,nc:nc?1:0,con:[],pc:1,p0:new THREE.Vector3(b.position.x,b.position.y,b.position.z)};if(nc)o.vt=6+Math.random()*2;gib.push(o);return o}
 let MADE=null,CARRY=[];
 function cutEnemy(e,nx,ny,s,hitY){const dA=dirAt(s.x1,s.y1),dB=dirAt(s.x2,s.y2);let n=dA.clone().cross(dB);if(n.lengthSq()<1e-9)n=nW(nx,ny);n.normalize();
  e.g.updateMatrixWorld(true);const C=cam.position,sd=[{},{}],ms=[];e.g.traverse(o=>{if(o.isMesh&&!o.userData.nocut)ms.push(o)});
  ms.forEach(m=>{const bo=m.userData.bone||0,r=sliceMesh(m,C,n),c=capTris(r.ip,n);
   for(let k=0;k<2;k++){const t=sd[k][bo]||(sd[k][bo]={parts:[],par:m.parent});t.parts.push({v:r.out[k],vn:r.on[k],vu:r.ou[k],mat:m.material,c})}});
  // legs only? = the cut plane misses the pelvis, chest and head, and the blade touched below the pelvis
- let leg=-1;if(hitY!==undefined&&e.ty!==0&&!e.bomb&&!e.legless&&e.cf){const dd=v=>n.x*(v.x-C.x)+n.y*(v.y-C.y)+n.z*(v.z-C.z),P=[.9,1.3,1.66].map(y=>e.inr.localToWorld(new THREE.Vector3(0,y,0))),sg=P.map(dd);
-  if((sg.every(v=>v>0)||sg.every(v=>v<0))&&hitY<P[0].y)leg=sg[0]>0?0:1}
- [0,1].forEach(k=>{const sg=k?-1:1;mkRagdoll(sd[k],{x:n.x*.62*sg,y:n.y*.62*sg+.3,z:n.z*.62*sg-.18});if(k===leg)CARRY.push({cf:e.cf,ty:e.ty,made:MADE,x:e.x,z:e.z})});
+ let leg=-1,hip=null;if(hitY!==undefined&&e.ty!==0&&!e.bomb&&!e.legless&&e.cf){const dd=v=>n.x*(v.x-C.x)+n.y*(v.y-C.y)+n.z*(v.z-C.z),P=[.9,1.3,1.66].map(y=>e.inr.localToWorld(new THREE.Vector3(0,y,0))),sg=P.map(dd);
+  if((sg.every(v=>v>0)||sg.every(v=>v<0))&&hitY<P[0].y){leg=sg[0]>0?0:1;hip=P[0]}}
+ [0,1].forEach(k=>{const sg=k?-1:1;mkRagdoll(sd[k],{x:n.x*.62*sg,y:n.y*.62*sg+.3,z:n.z*.62*sg-.18});if(k===leg){Object.values(MADE).forEach(o=>o.carry=1);CARRY.push({cf:e.cf,ty:e.ty,made:MADE,x:e.x,z:e.z,ry:e.g.rotation.y,hip:hip.clone(),sc:e.inr.scale.x})}});
  gush(e.x,1.25,e.z);sCut();scene.remove(e.g);disposeTree(e.g);En.splice(En.indexOf(e),1);if(leg<0)S++;if(e.bomb)explode(e.x,e.z)}
 /* a zombie that lost only its legs: its fallen upper body is replaced by a legless crawler at the start of the next wave */
-function spawnCrawlers(){const L=CARRY;CARRY=[];L.forEach(c=>{const t=c.made&&c.made[0];let x=c.x,z=c.z;if(t&&gib.includes(t)){x=t.b.position.x;z=t.b.position.z}
-  Object.values(c.made||{}).forEach(o=>{const i=gib.indexOf(o);if(i>=0){dropGib(o);gib.splice(i,1)}});
-  x=Math.max(-5.2,Math.min(5.2,x));z=Math.max(-5.4,Math.min(3.4,z));
-  const cf=c.cf,g=new THREE.Group(),inr=zombieMesh(cf);inr.children.filter(o=>o.userData.bone===5||o.userData.bone===6).forEach(o=>{inr.remove(o);o.geometry.dispose()});
-  const sc=cf.s*(c.ty===2?1.42:1)*.95;inr.rotation.x=1.35;inr.position.y=.42*sc/(.95*cf.s);inr.scale.setScalar(sc);g.add(inr);
-  const shd=new THREE.Mesh(new THREE.CircleGeometry(.36*sc,16),SHADOWM);shd.rotation.x=-Math.PI/2;shd.position.y=.02;shd.userData.nocut=1;g.add(shd);
-  g.position.set(x,0,z);g.rotation.y=Math.atan2(-x,6-z);scene.add(g);puff(x,.2,z,0x8f8068,'s',.4,.35,0);
-  En.push({g,x,z,ty:0,bomb:false,lt:null,v:(.7+Math.random()*.5)*.42,inr,shd,rh:1.05*sc,cf,legless:1})})}
+function spawnCrawlers(){const L=CARRY;CARRY=[];L.forEach(c=>{const M=c.made||{},ok=o=>o&&gib.includes(o)&&o.dieT===undefined&&o.sink===undefined,t=M[0];
+  // blown up, cut apart again or gone: it stays dead (and now counts as a kill)
+  if(!ok(t)||!c.hip){S++;return}
+  const ps=Object.keys(M).map(k=>M[k]).filter(ok);
+  ps.forEach(o=>{if(o.con){o.con.forEach(rmCon);o.con=[]}world.remove(o.b);gib.splice(gib.indexOf(o),1)});
+  let x=Math.max(-5.2,Math.min(5.2,t.b.position.x)),z=Math.max(-5.4,Math.min(3.4,t.b.position.z));
+  const G=new THREE.Group(),Pg=new THREE.Group();G.add(Pg);G.position.set(x,0,z);G.rotation.y=Math.atan2(-x,6-z);Pg.rotation.x=1.35;Pg.position.y=.17*c.sc;scene.add(G);G.updateMatrixWorld(true);
+  const qy=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),-c.ry),arms=[],dc=new THREE.Vector3(),dq=new THREE.Quaternion(),ds=new THREE.Vector3();
+  const parts=ps.map(o=>{const m=o.mesh,r={m,sp:m.position.clone(),sq:m.quaternion.clone(),lp:o.p0.clone().sub(c.hip).applyQuaternion(qy),lq:qy.clone()};
+   scene.remove(m);Pg.add(m);new THREE.Matrix4().compose(r.lp,r.lq,new THREE.Vector3(1,1,1)).premultiply(Pg.matrixWorld).decompose(dc,dq,ds);r.tp=dc.clone();r.tq=dq.clone();
+   if((o.bk===3||o.bk===4)&&o.j0){r.J=o.j0.clone().sub(c.hip).applyQuaternion(qy);r.ph=o.bk===3?0:Math.PI;arms.push(r)}return r});
+  const e={g:G,x,z,ty:0,bomb:false,lt:null,v:(.7+Math.random()*.5)*.42,inr:Pg,shd:null,rh:0,cf:c.cf,legless:1,ru:0,parts,arms,Pinv:new THREE.Matrix4().copy(Pg.matrixWorld).invert(),ph:Math.random()*6};
+  crawlSet(e,0);En.push(e)})}
+/* u 0..1: every piece moves from where it lay to its place in the crawling pose (the body pulls itself together and gets up) */
+const CRM=new THREE.Matrix4(),CRP=new THREE.Vector3(),CRQ=new THREE.Quaternion(),CR1=new THREE.Vector3(1,1,1),XAX=new THREE.Vector3(1,0,0);
+function crawlSet(e,u){const k=u*u*(3-2*u);e.parts.forEach((r,i)=>{CRP.copy(r.sp).lerp(r.tp,k);CRP.y+=Math.sin(Math.PI*k)*.18;CRQ.copy(r.sq).slerp(r.tq,k);
+ CRM.compose(CRP,CRQ,CR1).premultiply(e.Pinv);CRM.decompose(r.m.position,r.m.quaternion,r.m.scale)})}
 function cutGib(q,nx,ny,s){const dA=dirAt(s.x1,s.y1),dB=dirAt(s.x2,s.y2);let n=dA.clone().cross(dB);if(n.lengthSq()<1e-9)n=nW(nx,ny);n.normalize();
  q.mesh.updateMatrixWorld(true);const C=cam.position,sd=[[],[]],ms=[];q.mesh.traverse(o=>{if(o.isMesh)ms.push(o)});
  ms.forEach(m=>{const r=sliceMesh(m,C,n),c=m.userData.cap?[]:capTris(r.ip,n);for(let k=0;k<2;k++)sd[k].push({v:r.out[k],vn:r.on[k],vu:r.ou[k],mat:m.material,c,cap:m.userData.cap})});
@@ -964,6 +976,8 @@ function frame(now){requestAnimationFrame(frame);perfTick(now-last);const dr=Mat
   if(holdT>0)holdT-=dr;
   if(st==='after'&&!cleared&&rushT>0){rushT-=dr;if(rushT<=0)En.forEach(q=>{q.v=q.v*5+5.5})}
   const RISE=.8;let rising=false;
+  En.forEach(e=>{if(e.ru===undefined)return;if(e.ru===0){puff(e.x,.2,e.z,0x8f8068,'s',.4,.35,0);sMoan()}e.ru+=dt;const u=Math.min(1,e.ru/1.1);crawlSet(e,u);
+   if(u<1)rising=true;else{e.ru=undefined;e.parts.forEach(r=>{r.m.position.copy(r.lp);r.m.quaternion.copy(r.lq);r.m.scale.set(1,1,1)})}});
   En.forEach(e=>{if(e.rt===undefined)return;const was=e.rt;e.rt+=dt;
    if(was<0&&e.rt>=0){crack(e.x,e.z,(e.ty===2?2.3:1.7)*e.rh/1.95+.4);sand({x:e.x,y:.06,z:e.z},22,DUST,1.25,0,.55);puff(e.x,.25,e.z,0x8f8068,'s',.55,.45,0);if(riseMoan){riseMoan=0;sMoan()}}
    if(e.rt<0){rising=true;return}
@@ -974,9 +988,12 @@ function frame(now){requestAnimationFrame(frame);perfTick(now-last);const dr=Mat
   En.forEach(e=>{if(holdT>0||rising)return;if(st==='after'&&!cleared&&rushT>0)return;const v=e.v;let ax=-e.x,az=(e===biter?6.8:5.2)-e.z;const l=Math.hypot(ax,az)||1;ax/=l;az/=l;
    e.x+=ax*dt*v;e.z+=az*dt*v;
    dyn.forEach(d=>{const ob=d.body.ob;if(!ob)return;const p=d.body.position,dx=e.x-p.x,dz=e.z-p.z,cx=Math.max(-ob[0],Math.min(ob[0],dx)),cz=Math.max(-ob[1],Math.min(ob[1],dz)),vx=dx-cx,vz=dz-cz,dd=Math.hypot(vx,vz);
-    if(dd<.4){if(dd>1e-4){e.x+=vx/dd*(.4-dd);e.z+=vz/dd*(.4-dd)}else e.x+=dx>=0?.4:-.4}});
+    if(dd<.4){const b=d.body,pw=Math.min(1,12/b.mass),ux=dd>1e-4?-vx/dd:(dx>=0?-1:1),uz=dd>1e-4?-vz/dd:0,sp=e.v*1.15*pw;
+     if(b.sleepState===CANNON.Body.SLEEPING)b.wakeUp();b.velocity.x+=(ux*sp-b.velocity.x)*.35;b.velocity.z+=(uz*sp-b.velocity.z)*.35;
+     if(dd>1e-4){e.x+=vx/dd*(.4-dd);e.z+=vz/dd*(.4-dd)}else e.x+=dx>=0?.4:-.4}});
    e.x=Math.max(-5.4,Math.min(5.4,e.x));e.z=Math.max(-5.6,e.z);if(e===biter)e.z=Math.min(e.z,6.15);
-   e.g.position.set(e.x,Math.abs(Math.sin(e.z*5))*.04,e.z);e.g.rotation.y=Math.atan2(ax,az)});
+   e.g.position.set(e.x,Math.abs(Math.sin(e.z*5))*.04,e.z);e.g.rotation.y=Math.atan2(ax,az);
+   if(e.arms&&e.arms.length){e.ph+=dt*4.2;e.arms.forEach(a=>{const q=new THREE.Quaternion().setFromAxisAngle(XAX,Math.sin(e.ph+a.ph)*.55);a.m.position.copy(a.lp).sub(a.J).applyQuaternion(q).add(a.J);a.m.quaternion.copy(q).multiply(a.lq)})}});
   if(st==='bite'){bite-=dr;if(!bl.length&&bite<.25)bloodScreen();if(bite<=0)die()}
   else if(rushT<=0){const b=En.find(e=>Math.hypot(e.x,e.z-6)<1.5);if(b){cleared=false;startBite(b)}}}
  if(st==='after'){after-=dr;if(slowT>0)slowT-=dr;if(after<=0){if(cleared){recEnd();En.forEach(e=>scene.remove(e.g));En=[];nextWave();st='ready'}else die()}}
@@ -995,7 +1012,7 @@ function frame(now){requestAnimationFrame(frame);perfTick(now-last);const dr=Mat
    if(dk<1){if(o.nc)crumble(o,1-Math.max(0,dk),dr);else{if(Math.random()<dr*20)sand(o.b.position,4,BLOOD,1.5,1,.18);o.mesh.scale.setScalar(.3+.7*Math.max(0,dk))}}
    if(o.dieT<=0){const q=o.b.position;if(o.nc){const c=o.cr;if(c)for(let k=0;k<10;k++)sand({x:c.bb.min.x+Math.random()*(c.bb.max.x-c.bb.min.x),y:.04,z:c.bb.min.z+Math.random()*(c.bb.max.z-c.bb.min.z)},1,c.col[k%c.col.length],.4,0,.05)}else sand(q,30,BLOOD,2.6,1,.32);if(!o.nc)for(let k=0;k<2;k++)splat(q.x+(Math.random()-.5)*.6,q.z+(Math.random()-.5)*.6,.2+Math.random()*.35);dropGib(o);return false}}
   if(o.nc)return true;
-  if(o.age<60&&GORE!=='off'){const k=Math.min(1,dr/8);o.mesh.traverse(m=>{if(m.isMesh&&!m.userData.cap)m.material.color.lerp(FLESHC,k)})}
+  if(o.age<60&&!o.carry){const off=GORE==='off',k=Math.min(1,dr/(off?1.5:8));o.mesh.traverse(m=>{if(m.isMesh&&!m.userData.cap)m.material.color.lerp(off?GRAYC:FLESHC,k)})}
   if(o.age>4.5&&!o.sp){o.sp=1;for(let i=0;i<4;i++)splat(o.b.position.x+(Math.random()-.5)*.75,o.b.position.z+(Math.random()-.5)*.75,.18+Math.random()*.42)}
   return true});
  stepSand(dr);stepFx(dr*Math.max(.4,ts));
