@@ -80,6 +80,10 @@
     text-align:center;
     overflow:hidden;
   }
+  /* スマホ：広告は画面の幅いっぱいの箱で中央に表示（切らない） */
+  @media (max-width:600px){
+    .ad{width:auto;max-width:none;align-self:stretch;margin:48px -20px 0;overflow:visible;display:flex;justify-content:center;}
+  }
   footer{
     margin-top:60px;
     font-size:12px;
