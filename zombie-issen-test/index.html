@@ -174,7 +174,7 @@ function zpFig(){if(ZP)return ZP;ZP=new THREE.Group();const pm=personMesh(pcfg()
  H.copy(hands[0]).add(hands[1]).multiplyScalar(.5);
  const sd=new THREE.Group(),bl=mk(.028,.95,.013,0xdfe4ec),ed=mk(.007,.95,.017,0xffffff),gu=mk(.1,.018,.062,0x26262b),hi=mk(.034,.26,.034,0x15151a),wr=mk(.038,.05,.038,0x6b2230);
  bl.position.y=.5;ed.position.set(.016,.5,0);gu.position.y=.015;hi.position.y=-.13;wr.position.y=-.06;sd.add(bl,ed,gu,hi,wr);
- const dir=new THREE.Vector3(0,.62,1).normalize();sd.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);sd.position.copy(H).addScaledVector(dir,.13);pm.add(sd);
+ const dir=new THREE.Vector3(0,.62,1).normalize();sd.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);sd.position.copy(H).addScaledVector(dir,.13);pm.add(sd);ZP.userData.sd=sd;
  pm.traverse(o=>{if(o.isMesh)o.castShadow=true});pm.rotation.y=Math.PI;pm.scale.setScalar(.9);ZP.add(pm);
  ZP.position.set(0,0,6.05);ZP.visible=false;scene.add(ZP);return ZP}
 const ZPH=new THREE.Vector3(0,1.47,6.05);
@@ -183,12 +183,35 @@ function zvStart(){const T=biter;if(!RP||!T||!T.g||RP.f.length<4)return false;co
  let i1=F.findIndex(f=>f.st==='bite');if(i1<0)i1=F.length-1;if(i1-i0<3||!F[i0].z.some(a=>a[0]===T.g))return false;
  T.g.updateMatrixWorld(true);let hd=null;T.g.traverse(o=>{if(!hd&&o.isMesh&&o.userData.bone===2&&o.geometry.type==='SphereGeometry')hd=o});
  const hw=new THREE.Vector3();if(hd)hd.getWorldPosition(hw);else hw.set(T.x,1.6,T.z);
- if(!ZC)ZC=new THREE.PerspectiveCamera(70,1,.05,60);zpFig();if(!ZS)ZS=zsMake();
+ if(!ZC)ZC=new THREE.PerspectiveCamera(70,1,.05,60);zxOff();if(ZP){scene.remove(ZP);disposeTree(ZP);ZP=null}zpFig();if(!ZS)ZS=zsMake();
  // real speed around the blade, ~2.2x through the quiet parts (slow motion / waiting)
  const sl=F.find(f=>f.sp),tS=sl?sl.sp[0]:null,a0=sl?F[iS].t-300:-1,a1=sl?(tS.end!==undefined?tS.end:F[iS].t+400)+900:-1,ta=F[i0].t,tb=F[i1].t,map=[];
  for(let tr=ta;tr<tb;){map.push(tr);tr+=10*(tr>=a0&&tr<=a1?1:2.2)}
- ZV={t0:performance.now(),t:0,T,hl:T.g.worldToLocal(hw.clone()),i0,i1,ta,tb,map,D:map.length/100+.95};return true}
-function zvOff(){ZV=null;RP=null;if(ZS)ZS.visible=false;if(ZP)ZP.visible=false}
+ ZV={t0:performance.now(),t:0,T,hl:T.g.worldToLocal(hw.clone()),i0,i1,ta,tb,map,D:map.length/100+1.95};return true}
+function zvOff(){ZV=null;RP=null;if(ZS)ZS.visible=false;if(ZP)ZP.visible=false;zxOff()}
+/* the burst: body parts + katana fly apart, a blood fountain, blood on the zombie's "lens" */
+let ZX=null;const ZBC=new THREE.Color(0x5e070b),ZC0=new THREE.Vector3(0,1.0,6.05);
+function zxOff(){if(ZX){scene.remove(ZX);disposeTree(ZX);ZX=null}}
+function zpBlood(k){ZP.traverse(o=>{if(!o.isMesh||!o.material.color)return;if(!o.userData.bl0)o.userData.bl0=o.material.color.clone();o.material.color.copy(o.userData.bl0).lerp(ZBC,k*.85)})}
+function zpBurst(){ZX=new THREE.Group();scene.add(ZX);ZP.updateMatrixWorld(true);const sd=ZP.userData.sd,list=[];
+ ZP.traverse(o=>{if(o===sd){list.push(o);return}if(!o.isMesh)return;let a=o.parent;while(a&&a!==sd)a=a.parent;if(a!==sd)list.push(o)});
+ list.forEach(o=>{const wp=o.getWorldPosition(new THREE.Vector3());ZX.attach(o);const d=wp.sub(ZC0);d.y=Math.max(d.y,0)+.3;d.normalize();
+  const v=d.multiplyScalar(2.5+Math.random()*3.5).add(new THREE.Vector3((Math.random()-.5)*1.6,2+Math.random()*2.6,1+Math.random()*1.6));
+  o.userData.zv={v,w:new THREE.Vector3((Math.random()-.5)*16,(Math.random()-.5)*16,(Math.random()-.5)*16)}});
+ const N=520,P=new Float32Array(N*3),V=new Float32Array(N*3);
+ for(let i=0;i<N;i++){const u=Math.random()*2-1,a=Math.random()*6.283,q=Math.sqrt(1-u*u),sp=1.2+Math.random()*5;
+  P[i*3]=ZC0.x+(Math.random()-.5)*.3;P[i*3+1]=ZC0.y+.3+(Math.random()-.5)*.5;P[i*3+2]=ZC0.z+(Math.random()-.5)*.3;
+  V[i*3]=q*Math.cos(a)*sp;V[i*3+1]=Math.abs(u)*sp+1.5+Math.random()*2.5;V[i*3+2]=q*Math.sin(a)*sp+.6}
+ const ge=new THREE.BufferGeometry();ge.setAttribute('position',new THREE.BufferAttribute(P,3));
+ const pt=new THREE.Points(ge,new THREE.PointsMaterial({color:0x8a0a10,size:.07,map:dotTex(),transparent:true,depthWrite:false,alphaTest:.25}));pt.frustumCulled=false;ZX.add(pt);
+ ZX.userData.bp={P,V,pt,N};
+ ZX.userData.sb=Array.from({length:16},()=>({x:.5+(Math.random()-.5)*.9,y:.45+(Math.random()-.5)*.8,r:.03+Math.pow(Math.random(),2)*.16,d:Math.random()<.5?.1+Math.random()*.35:0,t0:Math.random()*.14}))}
+function zxStep(dt){if(!ZX||dt<=0)return;ZX.children.forEach(o=>{const z=o.userData.zv;if(!z)return;z.v.y-=9.8*dt;o.position.addScaledVector(z.v,dt);
+  o.rotateX(z.w.x*dt);o.rotateY(z.w.y*dt);o.rotateZ(z.w.z*dt);
+  if(o.position.y<.06){o.position.y=.06;z.v.y=Math.abs(z.v.y)*.3;z.v.x*=.65;z.v.z*=.65;z.w.multiplyScalar(.6)}
+  if(o.position.z>7.9){o.position.z=7.9;z.v.z*=-.35}if(Math.abs(o.position.x)>5.8){o.position.x=Math.sign(o.position.x)*5.8;z.v.x*=-.35}});
+ const B=ZX.userData.bp;for(let i=0;i<B.N;i++){const j=i*3;if(B.P[j+1]<=.012)continue;B.V[j+1]-=9.8*dt;B.P[j]+=B.V[j]*dt;B.P[j+1]+=B.V[j+1]*dt;B.P[j+2]+=B.V[j+2]*dt;if(B.P[j+1]<.012)B.P[j+1]=.012}
+ B.pt.geometry.attributes.position.needsUpdate=true}
 function zvDraw(){const W=rcv.width,H=rcv.height,t=ZV.t,T=ZV.T,F=RP.f,mi=Math.floor(t*100),tm=mi<ZV.map.length?ZV.map[mi]:ZV.tb+(t-ZV.map.length/100)*1000;
  let i=ZV.i0;while(i<ZV.i1&&F[i+1].t<=tm)i++;const f=F[i],lg=Math.max(0,(tm-ZV.tb)/1000);
  // stage the recorded moment
@@ -200,20 +223,29 @@ function zvDraw(){const W=rcv.width,H=rcv.height,t=ZV.t,T=ZV.T,F=RP.f,mi=Math.fl
  const za=f.z.find(a=>a[0]===T.g)||ZV.za;ZV.za=za;T.g.visible=false;
  const c=Math.cos(za[4]),sn=Math.sin(za[4]),hl=ZV.hl,eye=new THREE.Vector3(za[1]+hl.x*c+hl.z*sn,za[2]+hl.y,za[3]-hl.x*sn+hl.z*c);
  const dir=ZPH.clone().sub(eye).normalize();eye.addScaledVector(dir,.14);
- if(lg>0){const k=Math.min(1,lg/.42);eye.lerp(ZPH.clone().addScaledVector(dir,-.2),k*k);eye.x+=(Math.random()-.5)*.03*k;eye.y+=(Math.random()-.5)*.03*k}
- ZC.position.copy(eye);ZC.lookAt(ZPH.x+Math.sin(t*1.3)*.06,ZPH.y-.04+Math.sin(t*2.6)*.03,ZPH.z);ZC.rotateZ(Math.sin(t*1.7)*.05);
- ZC.fov=lg>0?70-15*Math.min(1,lg/.42):70;ZC.aspect=cam.aspect;ZC.updateProjectionMatrix();ZC.updateMatrixWorld();
+ // lunge (0-0.32 s after the bite starts), the body turns bloody, then it bursts; the zombie's head jerks back to watch
+ const dtz=Math.min(.05,Math.max(0,t-(ZV.lt===undefined?t:ZV.lt))),LB=.32;ZV.lt=t;
+ if(lg>0&&lg<LB){const k=lg/LB;eye.lerp(ZPH.clone().addScaledVector(dir,-.35),k*k);eye.x+=(Math.random()-.5)*.03*k;eye.y+=(Math.random()-.5)*.03*k;if(lg>.12)zpBlood(Math.min(1,(lg-.12)/.2))}
+ if(lg>=LB){if(!ZX){zpBlood(1);ZV.e1=ZPH.clone().addScaledVector(dir,-.35);ZV.d0=dir.clone();zpBurst()}
+  const e=lg-LB,k=Math.min(1,e/.35),kk=k*k*(3-2*k),sh=Math.max(0,.07*(1-e/.6));eye.copy(ZV.e1).addScaledVector(ZV.d0,-.75*kk);eye.y+=.18*kk+(Math.random()-.5)*sh;eye.x+=(Math.random()-.5)*sh;zxStep(dtz)}
+ ZC.position.copy(eye);
+ if(lg>=LB)ZC.lookAt(0,.95+.1*Math.min(1,(lg-LB)/.4),6.05);else ZC.lookAt(ZPH.x+Math.sin(t*1.3)*.06,ZPH.y-.04+Math.sin(t*2.6)*.03,ZPH.z);
+ ZC.rotateZ(Math.sin(t*1.7)*.05);
+ ZC.fov=lg>=LB?62:lg>0?70-15*(lg/LB):70;ZC.aspect=cam.aspect;ZC.updateProjectionMatrix();ZC.updateMatrixWorld();
  ZP.visible=true;
  if(f.sp){const sl=f.sp[0],ua=f.sp[2]>0?Math.max(0,1-f.sp[2]/1.3):1;zsSet(sl,Math.max(.02,f.sp[1]));ZS.material.uniforms.uA.value=ua;ZS.material.uniforms.uT.value=f.sp[2]>0?.35+f.sp[2]*.55:f.sp[1]*.35;ZS.visible=ua>0}
  const bc=BL.count;BL.count=Math.min(bc,f.bn);
- R.render(scene,ZC);rcx.globalAlpha=1;rcx.shadowBlur=0;rcx.drawImage(R.domElement,0,0,W,H);
+ if(ZX)ZX.visible=true;R.render(scene,ZC);if(ZX)ZX.visible=false;rcx.globalAlpha=1;rcx.shadowBlur=0;rcx.drawImage(R.domElement,0,0,W,H);
  // put everything back, then redraw the player's own view before the browser shows this frame
  BL.count=bc;ZS.visible=false;ZP.visible=false;
  for(let k=keep.length-1;k>=0;k--){const[m,par,p,q,sc,v]=keep[k];m.position.copy(p);m.quaternion.copy(q);m.scale.copy(sc);m.visible=v;if(!par)scene.remove(m)}
  hide.forEach(m=>m.visible=true);R.render(scene,cam);
  rcx.fillStyle='rgba(0,0,0,.14)';rcx.fillRect(0,0,W,H);
  const g=rcx.createRadialGradient(W/2,H/2,Math.min(W,H)*.22,W/2,H/2,Math.hypot(W,H)/2);g.addColorStop(0,'rgba(20,60,25,0)');g.addColorStop(1,'rgba(14,48,18,.8)');rcx.fillStyle=g;rcx.fillRect(0,0,W,H);
- if(lg>.25){rcx.fillStyle='rgba(150,0,8,'+Math.min(.85,(lg-.25)*3).toFixed(3)+')';rcx.fillRect(0,0,W,H)}
+ if(ZX&&ZX.userData.sb){const e=lg-LB;ZX.userData.sb.forEach(b=>{const q=e-b.t0;if(q<=0)return;const r=b.r*Math.min(W,H)*Math.min(1,q/.1),x=b.x*W,y=b.y*H;
+   const g2=rcx.createRadialGradient(x,y,0,x,y,r);g2.addColorStop(0,'rgba(110,4,10,.92)');g2.addColorStop(.75,'rgba(120,6,12,.85)');g2.addColorStop(1,'rgba(120,6,12,0)');rcx.fillStyle=g2;rcx.beginPath();rcx.arc(x,y,r,0,6.283);rcx.fill();
+   if(b.d>0){const L=b.d*H*Math.min(1,q/1.2);rcx.strokeStyle='rgba(105,4,10,.85)';rcx.lineWidth=Math.max(2,r*.28);rcx.lineCap='round';rcx.beginPath();rcx.moveTo(x,y);rcx.lineTo(x,y+L);rcx.stroke()}})}
+ if(lg>1.25){rcx.fillStyle='rgba(150,0,8,'+Math.min(.85,(lg-1.25)*2.5).toFixed(3)+')';rcx.fillRect(0,0,W,H)}
  const fd=Math.max(0,1-t/.25,(t-(ZV.D-.4))/.4);if(fd>0){rcx.fillStyle='rgba(0,0,0,'+Math.min(1,fd).toFixed(3)+')';rcx.fillRect(0,0,W,H)}}
 function recSnap(){const o={b:null,u:''};REC.snap=o;
  try{rcv.toBlob(b=>{o.b=b;if(HL&&HL.img===o)hlUI()},'image/jpeg',.9)}catch(e){}}
@@ -663,7 +695,7 @@ function banner(t,ms,sz,tw){const b=$('bn');b.style.fontSize=(sz||34)+'px';b.sty
  else b.innerHTML=t;
  setTimeout(()=>{b.style.opacity=0},ms)}
 function waveBanner(){sDing();banner('WAVE '+wave+'<br><span style="font-size:17px;opacity:.92">ゾンビ '+En.length+'体</span>',1500)}
-function nextWave(){wave++;refurnish();spawnWave();MAXL=bladeLen(wave);waveBanner()}
+function nextWave(){wave++;spawnWave();MAXL=bladeLen(wave);waveBanner()}
 const MSG=['…と、そこで目が覚めた。','チャイムが鳴った。妄想終了。','次の授業は体育だった。','先生「ここ、テストに出るぞ」'];
 function bloodScreen(){bl=[];bt0=performance.now();const S0=Math.min(innerWidth,innerHeight)/390;
  for(let i=0;i<66;i++)bl.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:(26+Math.random()*120)*S0,d:Math.random()*.09});
