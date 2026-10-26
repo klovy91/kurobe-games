@@ -103,7 +103,7 @@ function sThud(){if(!A())return;const t=AC.currentTime,o=AC.createOscillator(),g
  const s=nz(.3),f=AC.createBiquadFilter(),g2=AC.createGain();f.type='lowpass';f.frequency.value=700;ev(g2,t,.005,.28,.5);s.connect(f);f.connect(g2);g2.connect(MG);s.start(t);s.stop(t+.34)}
 function sChime(){if(!A())return;const t=AC.currentTime;[659.3,587.3,493.9,392].forEach((fq,i)=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=fq;ev(g,t+i*.52,.02,1.5,.22);o.connect(g);g.connect(MG);o.start(t+i*.52);o.stop(t+i*.52+1.6)})}
 function sDing(){if(!A())return;const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=988;ev(g,t,.008,.5,.16);o.connect(g);g.connect(MG);o.start(t);o.stop(t+.6)}
-const R=new THREE.WebGLRenderer({canvas:$('gl'),antialias:true});R.setPixelRatio(Math.min(devicePixelRatio,/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Mac/.test(navigator.platform||''))?1.5:2));
+const R=new THREE.WebGLRenderer({canvas:$('gl'),antialias:true});const PR0=Math.min(devicePixelRatio,/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Mac/.test(navigator.platform||''))?1.5:2);R.setPixelRatio(PR0);
 const scene=new THREE.Scene();scene.background=new THREE.Color(0xdfe6ee);
 const cam=new THREE.PerspectiveCamera(68,1,.1,60);cam.position.set(0,1.15,6);cam.lookAt(0,.82,-8);cam.updateMatrixWorld();
 scene.add(new THREE.HemisphereLight(0xdce7ff,0x4a3f2a,.62));
@@ -442,7 +442,22 @@ function dropGib(o){if(o.con)o.con.forEach(rmCon);scene.remove(o.mesh);world.rem
 function freezeGib(o){if(o.fz)return;if(o.con){o.con.forEach(rmCon);o.con=[]}const b=o.b;o.m0=b.mass;b.type=CANNON.Body.STATIC;b.mass=0;b.updateMassProperties();
  b.velocity.set(0,0,0);b.angularVelocity.set(0,0,0);o.mesh.position.copy(b.position);o.mesh.quaternion.copy(b.quaternion);o.fz=1;o.bleed=0}
 function thawGib(o){if(!o.fz)return;const b=o.b;b.type=CANNON.Body.DYNAMIC;b.mass=o.m0||1;b.updateMassProperties();b.wakeUp();o.fz=0;o.st=0}
-const GIBMAX=300;
+let GIBMAX=300;
+/* ---- auto quality: watch the frame time; step the load down while slow, back up once fast again ----
+   level 0 normal / 1 lower resolution / 2 pieces cap 200 / 3 cap 120 / 4 pieces turn into props sooner */
+const FZ={s:1,a:1.5,l:5,f:10},PRL=Math.min(PR0,1),QS=[{pr:PR0,cap:300,fz:0},{pr:PRL,cap:300,fz:0},{pr:PRL,cap:200,fz:0},{pr:PRL,cap:120,fz:0},{pr:PRL,cap:120,fz:1}];
+let QL=0;const QW={a:[],t:0,bad:0,good:0,now:0,last:0,lastUp:-99,upWait:8,med:0};
+const FPSD=/[?&]fps\b/.test(location.search)?(()=>{const d=document.createElement('div');d.style.cssText='position:fixed;left:6px;bottom:6px;z-index:9999;font:12px/1.3 monospace;color:#3f3;background:rgba(0,0,0,.6);padding:2px 6px;pointer-events:none;white-space:pre';d.textContent='fps …';document.body.appendChild(d);return d})():null;
+function setQ(l){QL=Math.max(0,Math.min(QS.length-1,l));const q=QS[QL];if(R.getPixelRatio()!==q.pr){R.setPixelRatio(q.pr);resize()}GIBMAX=q.cap;
+ if(q.fz){FZ.s=.5;FZ.a=1;FZ.l=3;FZ.f=6}else{FZ.s=1;FZ.a=1.5;FZ.l=5;FZ.f=10}}
+function perfTick(ms){if(!(ms>0&&ms<250))return;const P=QW;P.now+=ms/1000;
+ if(st==='ready'||st==='cut'||st==='after'||st==='bite'){P.a.push(ms);P.t+=ms}
+ if(P.t<1000)return;const a=P.a.sort((x,y)=>x-y),med=a[a.length>>1];P.a=[];P.t=0;P.med=med;
+ if(med>25){P.bad++;P.good=0}else if(med<18.5){P.good++;P.bad=0}else{P.bad=0;P.good=0}
+ const since=P.now-P.last;
+ if(P.bad>=2&&since>3&&QL<QS.length-1){if(P.now-P.lastUp<15)P.upWait=Math.min(64,P.upWait*2);setQ(QL+1);P.last=P.now;P.bad=0}
+ else if(P.good>=5&&since>P.upWait&&QL>0){setQ(QL-1);P.last=P.lastUp=P.now;P.good=0}
+ if(FPSD)FPSD.textContent=Math.round(1000/med)+'fps  段階'+QL+'\n破片 '+gib.length+' / 上限 '+GIBMAX}
 function mkRagdoll(map,vel){const made={};
  for(const k in map)if(map[k].parts.length){const o=mkPiece(map[k].parts,vel,0,.13);if(o)made[k]=o}
  for(const k in map){const o=made[k];if(!o)continue;const d=BONE[k];if(!d||d.p<0)continue;const q=made[d.p];if(!q)continue;
@@ -620,7 +635,7 @@ function endStroke(){if(st!=='cut'||!stroke)return;
 addEventListener('pointerup',endStroke);addEventListener('pointercancel',endStroke);
 /* ---- loop ---- */
 let zv=0,rushT=0,bite=0,biter=null,bl=[],bt0=0,introT=0,introS=0,iAct=[],iZom=[],kq=[],kqT=0,holdT=0,slowT=0,seenIntro=false;
-function frame(now){requestAnimationFrame(frame);const dr=Math.min(.05,(now-last)/1000);last=now;
+function frame(now){requestAnimationFrame(frame);perfTick(now-last);const dr=Math.min(.05,(now-last)/1000);last=now;
  TR.forEach(t=>t.a-=dr*(st==='cut'?.8:3));TR=TR.filter(t=>t.a>0);
  if(st==='cut'){const hit=new Set();
   if(slashA){slashA.p+=dr/(slashA.p<1?.1:1.8);
@@ -687,13 +702,13 @@ function frame(now){requestAnimationFrame(frame);const dr=Math.min(.05,(now-last
  if(st==='after'){after-=dr;if(slowT>0)slowT-=dr;if(after<=0){if(cleared){recEnd();En.forEach(e=>scene.remove(e.g));En=[];nextWave();st='ready'}else die()}}
  if(st!=='title'){const sdt=dr*ts,fs=Math.min(1/90,Math.max(1/240,sdt));world.step(fs,sdt,6)}
  {let np=0;for(const o of gib)if(o.pc&&o.sink===undefined)np++;
-  for(let i=0;i<gib.length&&np>GIBMAX;i++){const o=gib[i];if(o.pc&&o.fz&&o.sink===undefined){o.sink=0;world.remove(o.b);np--}}}
+  for(let i=0,k=0;i<gib.length&&np>GIBMAX&&k<15;i++){const o=gib[i];if(o.pc&&o.fz&&o.sink===undefined){o.sink=0;world.remove(o.b);np--;k++}}}
  gib=gib.filter(o=>{o.age=(o.age||0)+dr;
   if(o.sink!==undefined){o.sink+=dr;o.mesh.position.y-=dr*.45;if(o.sink>1.6){scene.remove(o.mesh);disposeTree(o.mesh);return false}return true}
   if(!o.fz&&o.dieT===undefined){const v=o.b.velocity,w=o.b.angularVelocity;
-   const v2=v.x*v.x+v.y*v.y+v.z*v.z,w2=w.x*w.x+w.y*w.y+w.z*w.z,lim=o.age>5?4:1;
-   if(v2<.004*lim*lim&&w2<.03*lim*lim){o.st=(o.st||0)+dr;if(o.st>1&&o.age>1.5)freezeGib(o)}else o.st=0;
-   if(o.age>10&&Math.abs(v.y)<.5&&o.b.position.y<3.6)freezeGib(o)}
+   const v2=v.x*v.x+v.y*v.y+v.z*v.z,w2=w.x*w.x+w.y*w.y+w.z*w.z,lim=o.age>FZ.l?4:1;
+   if(v2<.004*lim*lim&&w2<.03*lim*lim){o.st=(o.st||0)+dr;if(o.st>FZ.s&&o.age>FZ.a)freezeGib(o)}else o.st=0;
+   if(o.age>FZ.f&&Math.abs(v.y)<.5&&o.b.position.y<3.6)freezeGib(o)}
   if(o.bleed>0&&ts>.3){o.bleed-=dr;sand(o.b.position,3,BLOOD,1,.75,.18)}
   if(o.dieT!==undefined){o.dieT-=dr;if(o.dieT<=0){sand(o.b.position,14,o.nc?DUST:BLOOD,2,o.nc?0:1,.25);dropGib(o);return false}}
   if(o.nc)return true;
