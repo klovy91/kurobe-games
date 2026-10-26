@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>マイゲームズ</title>
+<style>
+  :root{color-scheme:dark;}
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:#0b0c10;
+    color:#eee;
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:48px 20px 80px;
+  }
+  h1{
+    font-size:28px;
+    letter-spacing:.05em;
+    margin:0 0 6px;
+  }
+  .sub{
+    color:#888;
+    font-size:14px;
+    margin:0 0 40px;
+  }
+  .grid{
+    width:100%;
+    max-width:720px;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+    gap:18px;
+  }
+  a.card{
+    display:block;
+    text-decoration:none;
+    color:#eee;
+    background:#15171c;
+    border:1px solid #262a33;
+    border-radius:14px;
+    padding:22px 20px;
+    transition:transform .15s,border-color .15s,background .15s;
+  }
+  a.card:hover,a.card:active{
+    transform:translateY(-2px);
+    border-color:#555;
+    background:#1b1e26;
+  }
+  .card .title{
+    font-size:18px;
+    font-weight:700;
+    margin:0 0 8px;
+  }
+  .card .desc{
+    font-size:13px;
+    color:#999;
+    line-height:1.5;
+    margin:0;
+  }
+  footer{
+    margin-top:60px;
+    font-size:12px;
+    color:#555;
+  }
+</style>
+</head>
+<body>
+  <h1>マイゲームズ</h1>
+  <p class="sub">ブラウザで遊べる自作ゲーム集</p>
+
+  <div class="grid">
+    <a class="card" href="/zombie-slash/">
+      <p class="title">ゾンビ一閃</p>
+      <p class="desc">一太刀で斬り抜ける、一人称ゾンビ斬撃アクション。</p>
+    </a>
+    <!-- 新しいゲームを追加するときは、ここに同じ形式でカードを追加してください -->
+  </div>
+
+  <footer>&copy; 2026</footer>
+</body>
+</html>
