@@ -776,7 +776,7 @@ function spawnWave(){spawnCrawlers();const n=waveCount(wave),pb=Math.min(.16,.02
  else if(ty===2){sc*=1.42;vm=.85}
  inr.scale.setScalar(sc);
  const rh=(ty===0?1.05:1.95)*sc;
- const shd=new THREE.Mesh(new THREE.CircleGeometry(.36*sc,16),SHADOWM);shd.rotation.x=-Math.PI/2;shd.position.y=.02+rh;shd.userData.nocut=1;g.add(shd);
+ const shd=new THREE.Mesh(new THREE.CircleGeometry(.36*sc,16),SHADOWM);shd.rotation.x=-Math.PI/2;shd.position.y=.02+rh;shd.userData.nocut=1;shd.visible=false;g.add(shd);
  g.position.set(x,-rh,z);g.rotation.y=Math.atan2(-x,6-z)+(Math.random()-.5)*.5;scene.add(g);
  En.push({g,x,z,ty,bomb,lt,cf,v:(.7+Math.random()*.5)*vm,inr,shd,rh,rt:-.01-(n>1?Math.random()*.6:0)})}riseMoan=1}
 function blowEnemy(e,cx,cz){const dx=e.x-cx,dz=e.z-cz,d=Math.hypot(dx,dz)||1,f=Math.max(4,13-d*1.4);
@@ -897,7 +897,7 @@ function introSlash(){const ang=-.3,dx=Math.cos(ang),dy=Math.sin(ang),LN=Math.ma
   TR.push({x1:s.x1,y1:s.y1,x2:s.x2,y2:s.y2,w:false,a:1});swA={x1:s.x1,y1:s.y1,x2:s.x2,y2:s.y2,p:0};
   sliceGroup(o.g,o.g.position.x,o.g.position.z,s)});
  iZom=[]}
-function endIntro(){seenIntro=true;roomOff();kq=[];holdT=1.3;$('lb1').style.height='0';$('lb2').style.height='0';if(DOOR)DOOR.position.z=-5.02;iAct.forEach(a=>scene.remove(a));iAct=[];iZom.forEach(z=>scene.remove(z.g));iZom=[];if(!En.length)spawnWave();cam.position.set(0,1.15,6);cam.lookAt(0,.82,-8);cam.updateMatrixWorld();MAXL=bladeLen(1);st='ready';waveBanner()}
+function endIntro(){seenIntro=true;roomOff();kq=[];holdT=1.3;$('lb1').style.height='0';$('lb2').style.height='0';if(DOOR)DOOR.position.z=-5.02;iAct.forEach(a=>scene.remove(a));iAct=[];iZom.forEach(z=>scene.remove(z.g));iZom=[];if(!En.length){spawnWave();En.forEach(e=>{if(e.rt!==undefined)e.rt-=1.5})}cam.position.set(0,1.15,6);cam.lookAt(0,.82,-8);cam.updateMatrixWorld();MAXL=bladeLen(1);st='ready';waveBanner()}
 /* ads: zombie-issen/ad.html holds the AdMax tag (it can only be written while a page loads, so it lives in its own page) */
 const ADS={title:{sp:[300,250],pc:[300,250]},over:{sp:[320,50],pc:[728,90]}};
 function adSlot(where){const sp=/iPhone|iPod|Android.+Mobile|Windows Phone/i.test(navigator.userAgent),sz=ADS[where][sp?'sp':'pc'];
@@ -992,7 +992,7 @@ function frame(now){requestAnimationFrame(frame);perfTick(now-last);const dr=Mat
   En.forEach(e=>{if(e.ru===undefined)return;if(e.ru===0){puff(e.x,.2,e.z,0x8f8068,'s',.4,.35,0);sMoan()}e.ru+=dt;const u=Math.min(1,e.ru/1.1);crawlSet(e,u);
    if(u<1)rising=true;else{e.ru=undefined;e.parts.forEach(r=>{r.m.position.copy(r.lp);r.m.quaternion.copy(r.lq);r.m.scale.set(1,1,1)})}});
   En.forEach(e=>{if(e.rt===undefined)return;const was=e.rt;e.rt+=dt;
-   if(was<0&&e.rt>=0){crack(e.x,e.z,(e.ty===2?2.3:1.7)*e.rh/1.95+.4);sand({x:e.x,y:.06,z:e.z},22,DUST,1.25,0,.55);puff(e.x,.25,e.z,0x8f8068,'s',.55,.45,0);if(riseMoan){riseMoan=0;sMoan()}}
+   if(was<0&&e.rt>=0){e.shd.visible=true;crack(e.x,e.z,(e.ty===2?2.3:1.7)*e.rh/1.95+.4);sand({x:e.x,y:.06,z:e.z},22,DUST,1.25,0,.55);puff(e.x,.25,e.z,0x8f8068,'s',.55,.45,0);if(riseMoan){riseMoan=0;sMoan()}}
    if(e.rt<0){rising=true;return}
    const u=Math.min(1,e.rt/RISE),k=1-Math.pow(1-u,3),y=-e.rh*(1-k);
    e.g.position.set(e.x,y,e.z);e.shd.position.y=.02-y;e.inr.rotation.z=Math.sin(e.rt*21)*.04*(1-u);
