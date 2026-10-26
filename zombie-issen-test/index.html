@@ -978,7 +978,7 @@ function frame(now){requestAnimationFrame(frame);perfTick(now-last);const dr=Mat
   if(introS===0&&t>.3){introS=1;banner('退屈な授業中。',2000,34,1)}
   else if(introS===1&&t>2.4){introS=2;banner('廊下が、騒がしい。',1900,34,1);sMoan()}
   else if(introS===2&&t>4.6){introS=3;banner('——なんだ、あれ。',1700,34,1)}
-  else if(introS===3&&t>6.5){introS=4;killActor(iAct[0]);banner('先生ッ！！',1800,34,1);flash(.3);sCut();sMoan();play('bite',.95)}
+  else if(introS===3&&t>6.5){introS=4;roomOff();killActor(iAct[0]);banner('先生ッ！！',1800,34,1);flash(.3);sCut();sMoan();play('bite',.95)}
   else if(introS===4&&t>8.6){introS=5;fleeAll(t);play('flee',.85);banner('——みんな逃げろっ！！',1900,34,1)}
   else if(introS===5&&t>10.8){introS=6;banner('この名刀「一閃」で切り伏せる…',2400,21)}
   else if(introS===6&&t>13.4){introS=7;play('shout',1);sWhoosh();setTimeout(()=>sCut(),240);introSlash();banner('一閃。',2000);flash(.42)}
