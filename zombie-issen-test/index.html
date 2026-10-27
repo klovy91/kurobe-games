@@ -88,7 +88,7 @@ function applyMute(){if(MU)MU.gain.value=muted?0:1;const b=document.getElementBy
 function toggleMute(e){e.stopPropagation();e.preventDefault();muted=!muted;
  try{localStorage.setItem('zi_mute',muted?'1':'0')}catch(e2){}
  if(!muted)A();applyMute()}
-const SFX={ready:'../zombie-issen/sfx/ready.mp3',cut:'../zombie-issen/sfx/cut.mp3',bite:'../zombie-issen/sfx/bite.mp3',boom:'../zombie-issen/sfx/boom.mp3',moan1:'../zombie-issen/sfx/moan1.mp3',moan2:'../zombie-issen/sfx/moan2.mp3',moan3:'../zombie-issen/sfx/moan3.mp3',room:'../zombie-issen/sfx/room.mp3',flee:'../zombie-issen/sfx/flee.mp3',shout:'../zombie-issen/sfx/shout.mp3',over:'../zombie-issen/sfx/over.mp3',dog1:'../zombie-issen/sfx/dog1.mp3',dog2:'../zombie-issen/sfx/dog2.mp3',splat:'../zombie-issen/sfx/splat.mp3'};
+const SFX={ready:'../zombie-issen/sfx/ready.mp3',cut:'../zombie-issen/sfx/cut.mp3',bite:'../zombie-issen/sfx/bite.mp3',boom:'../zombie-issen/sfx/boom.mp3',moan1:'../zombie-issen/sfx/moan1.mp3',moan2:'../zombie-issen/sfx/moan2.mp3',moan3:'../zombie-issen/sfx/moan3.mp3',room:'../zombie-issen/sfx/room.mp3',flee:'../zombie-issen/sfx/flee.mp3',shout:'../zombie-issen/sfx/shout.mp3',over:'../zombie-issen/sfx/over.mp3',dog1:'../zombie-issen/sfx/dog1.mp3',dog2:'../zombie-issen/sfx/dog2.mp3',splat:'../zombie-issen/sfx/splat.mp3',clang:'../zombie-issen/sfx/clang.mp3'};
 const BUF={};let roomSrc=null;
 function loadSfx(){for(const k in SFX){fetch(SFX[k]).then(r=>r.arrayBuffer()).then(b=>new Promise((res,rej)=>AC.decodeAudioData(b,res,rej))).then(d=>{BUF[k]=d;if(k==='room'&&st==='intro')roomOn()}).catch(()=>{})}}
 function A(){if(AC===null){try{const C=window.AudioContext||window.webkitAudioContext;AC=new C();MG=AC.createGain();MG.gain.value=.5;MU=AC.createGain();MU.gain.value=muted?0:1;MG.connect(MU);MU.connect(AC.destination);try{RD=AC.createMediaStreamDestination();RG=AC.createGain();MG.connect(RG);RG.connect(RD)}catch(e2){RD=null}}catch(e){AC=false}if(AC)loadSfx()}
@@ -612,6 +612,23 @@ function lensSplat(x,y){const W=innerWidth,H=innerHeight,A=W*H;let tgt=A*(.03+Ma
  SPL.push({c,x:x+x0,y:y+y0,ar:tgt,a:.7+Math.random()*.2,t:0,L:2+Math.random()})}
 function bsTick(dr){if(!SPL.length&&!bsTick.dirty)return;bsX.clearRect(0,0,bsC.width,bsC.height);bsTick.dirty=SPL.length>0;
  for(let i=SPL.length-1;i>=0;i--){const q=SPL[i];q.t+=Math.max(0,dr);if(q.t>=q.L){SPL.splice(i,1);continue}bsX.globalAlpha=Math.min(1,Math.max(0,q.a*splF(q)));bsX.drawImage(q.c,q.x,q.y)}bsX.globalAlpha=1}
+function shieldMesh(cf){const z=zombieMesh(Object.assign({},cf,{shirt:0x56606a,pant:0x4b545c})),CP=SM(0x3f4851,.9),
+ MT=new THREE.MeshStandardMaterial({color:0xaab1b8,roughness:.5,metalness:.15}),DK=SM(0x2a2e33,.7),WL=SM(0xe8e6df,.8);
+ const B=(w,h,d,m,x,y,q,par,b)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,q);o.castShadow=true;if(par){o.userData.nocut=1;par.add(o)}else{o.userData.bone=b;z.add(o)}return o};
+ B(.36,.08,.38,CP,0,1.83,0,null,2);B(.3,.02,.14,CP,0,1.8,.21,null,2);
+ const G=new THREE.Group();G.position.set(0,.95,.66);z.add(G);
+ B(.9,1,.03,MT,0,0,0,G);[.3,.36,.42].forEach(y=>B(.42,.022,.01,DK,0,y,.018,G));B(.05,.13,.03,DK,.34,-.02,.03,G);B(.16,.06,.006,WL,0,.16,.018,G);
+ B(.88,.02,.02,MT,0,.49,.02,G);B(.88,.02,.02,MT,0,-.49,.02,G);
+ z.userData.shield=G;return z}
+/* the door's height on the zombie: 0.95 normal (head and shins open), 1.4 high (legs open), 0.55 low (head and chest open).
+   It moves in real time, so the change of guard shows even in the zone. */
+function shPose(e,dr){const H=e.sh;H.y+=(H.ty-H.y)*Math.min(1,dr*14);H.g.position.y=H.y;e.inr.rotation.x=.06+.1*Math.max(0,(.95-H.y)/.4)}
+function shieldCut(s){const S=En.filter(e=>e.sh).map(e=>e.sh.g);if(!S.length)return null;const l=Math.hypot(s.x2-s.x1,s.y2-s.y1),n=Math.max(1,Math.ceil(l/5));
+ for(let i=0;i<=n;i++){const px=s.x1+(s.x2-s.x1)*i/n,py=s.y1+(s.y2-s.y1)*i/n;rayAt(px,py);const h=rc.intersectObjects(S,true);if(h.length)return {x:px,y:py,p:h[0].point.clone()}}return null}
+function dropShield(e){const G=e.sh.g,p=new THREE.Vector3(),q=new THREE.Quaternion();G.updateMatrixWorld(true);G.getWorldPosition(p);G.getWorldQuaternion(q);scene.attach(G);
+ const b=new CANNON.Body({mass:5,shape:new CANNON.Box(new CANNON.Vec3(.45,.5,.025))});b.position.set(p.x,p.y,p.z);b.quaternion.set(q.x,q.y,q.z,q.w);
+ b.velocity.set((Math.random()-.5)*.6,.3,.7);b.angularVelocity.set((Math.random()-.5)*1.5,0,(Math.random()-.5)*.6);b.linearDamping=.12;b.angularDamping=.45;world.addBody(b);
+ G.userData.body=b;gib.push({mesh:G,b,age:2.6,nc:1,vt:8,ns:1})}
 function zekTex(){const c=document.createElement('canvas');c.width=64;c.height=48;const x=c.getContext('2d');x.fillStyle='#f2f0ea';x.fillRect(0,0,64,48);
  x.fillStyle='#111';x.font='bold 30px sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(String(1+(Math.random()*99|0)),32,26);return new THREE.CanvasTexture(c)}
 function jumperMesh(cf){const z=zombieMesh(Object.assign({},cf,{shirt:pick([0xf0a81c,0x1f74d6,0xd8322a,0x1d9a6c]),pant:0x1b2340})),kids=z.children.slice(),R=new THREE.Group(),V0=new THREE.Vector3();
@@ -853,11 +870,11 @@ function cutEnemy(e,nx,ny,s,hitY){const dA=dirAt(s.x1,s.y1),dB=dirAt(s.x2,s.y2);
  ms.forEach(m=>{const bo=m.userData.bone||0,r=sliceMesh(m,C,n),c=capTris(r.ip,n);
   for(let k=0;k<2;k++){const t=sd[k][bo]||(sd[k][bo]={parts:[],par:m.parent,jw:m.userData.jl&&m.userData.jp?m.userData.jp.localToWorld(m.userData.jl.clone()):null});t.parts.push({v:r.out[k],vn:r.on[k],vu:r.ou[k],mat:m.material,c})}});
  // legs only? = the cut plane misses the pelvis, chest and head, and the blade touched below the pelvis
- let leg=-1,hip=null;if(hitY!==undefined&&e.ty!==0&&!e.dog&&!e.jm&&!e.ky&&!e.bomb&&!e.legless&&e.cf){const dd=v=>n.x*(v.x-C.x)+n.y*(v.y-C.y)+n.z*(v.z-C.z),P=[.9,1.3,1.66].map(y=>e.inr.localToWorld(new THREE.Vector3(0,y,0))),sg=P.map(dd);
+ let leg=-1,hip=null;if(hitY!==undefined&&e.ty!==0&&!e.dog&&!e.jm&&!e.ky&&!e.sh&&!e.bomb&&!e.legless&&e.cf){const dd=v=>n.x*(v.x-C.x)+n.y*(v.y-C.y)+n.z*(v.z-C.z),P=[.9,1.3,1.66].map(y=>e.inr.localToWorld(new THREE.Vector3(0,y,0))),sg=P.map(dd);
   if((sg.every(v=>v>0)||sg.every(v=>v<0))&&hitY<P[0].y&&Math.random()<Math.min(.7,(wave-1)*.02)){leg=sg[0]>0?0:1;hip=P[0]}}
  const jv=e.jm&&e.jm.m==='air'?e.jm.vel:{x:0,y:0,z:0};
  [0,1].forEach(k=>{const sg=k?-1:1;mkRagdoll(sd[k],{x:n.x*.62*sg+jv.x,y:n.y*.62*sg+.3+jv.y,z:n.z*.62*sg-.18+jv.z});if(k===leg){Object.values(MADE).forEach(o=>o.carry=1);CARRY.push({cf:e.cf,ty:e.ty,made:MADE,x:e.x,z:e.z,ry:e.g.rotation.y,hip:hip.clone(),sc:e.inr.scale.x})}});
- gush(e.x,e.dog?.5:e.jm?e.g.position.y+.9:1.25,e.z);if(e.ky)sand({x:e.x,y:.95,z:e.z},90,BLOOD,1.3,1,.3);sCut();scene.remove(e.g);disposeTree(e.g);En.splice(En.indexOf(e),1);if(leg<0)S++;if(e.bomb)explode(e.x,e.z)}
+ if(e.sh)dropShield(e);gush(e.x,e.dog?.5:e.jm?e.g.position.y+.9:1.25,e.z);if(e.ky)sand({x:e.x,y:.95,z:e.z},90,BLOOD,1.3,1,.3);sCut();scene.remove(e.g);disposeTree(e.g);En.splice(En.indexOf(e),1);if(leg<0)S++;if(e.bomb)explode(e.x,e.z)}
 /* a zombie that lost only its legs: its fallen upper body is replaced by a legless crawler at the start of the next wave */
 function spawnCrawlers(){const L=CARRY;CARRY=[];L.forEach(c=>{const M=c.made||{},ok=o=>o&&gib.includes(o)&&o.dieT===undefined&&o.sink===undefined,t=M[0],dead=()=>{S++;Object.values(M).forEach(o=>{if(o)o.carry=0})};
   // blown up, cut apart again or gone: it stays dead (and now counts as a kill)
@@ -897,13 +914,13 @@ function zNear(r){const T=Math.tan(cam.fov*Math.PI/360)*cam.aspect;return Math.m
 const SRC=new THREE.Raycaster(),SEYE=new THREE.Vector3(0,1.6,6);
 function seenFrom(x,y,z){const d=new THREE.Vector3(x,y,z).sub(SEYE),L=d.length();SRC.set(SEYE,d.normalize());SRC.far=L;return !SRC.intersectObjects(dyn.map(o=>o.mesh),true).length}
 function freeSpot(x,z){return !dyn.some(d=>{const ob=d.body.ob;if(!ob)return false;const q=d.body.position;return Math.abs(x-q.x)<ob[0]+.32&&Math.abs(z-q.z)<ob[1]+.32})}
-function spawnWave(){spawnCrawlers();const n=waveCount(wave),pb=Math.min(.16,.02+wave*.005),maxB=1,nd=wave===10?3:wave>10&&wave!==20&&wave!==30?[0,1].slice(0,wave>=20?2:1).filter(()=>Math.random()<.4).length:0,nj=wave===20?3:wave>20&&wave!==30?[0,1].slice(0,wave>=30?2:1).filter(()=>Math.random()<.4).length:0,nk=wave===30?5:wave>30?[0,1,2,3,4].filter(()=>Math.random()<.4).length:0,N=wave===30?5:wave===10||wave===20?3:n;let nb=0;for(let i=0;i<N;i++){
- const dog=i<nd,jmp=!dog&&i<nd+nj,kyu=!dog&&!jmp&&i<nd+nj+nk,cf=zcfg(),bomb=!dog&&!jmp&&!kyu&&nb<maxB&&Math.random()<pb;if(bomb)nb++;let lt=null;
- const rt0=Math.random(),ty=dog?3:jmp?4:kyu?5:bomb?1:rt0<.1?0:rt0<.3?2:1;let vm=1,sc=cf.s;
+function spawnWave(){spawnCrawlers();const n=waveCount(wave),pb=Math.min(.16,.02+wave*.005),maxB=1,nd=wave===10?3:wave>10&&wave!==20&&wave!==30&&wave!==40?[0,1].slice(0,wave>=20?2:1).filter(()=>Math.random()<.4).length:0,nj=wave===20?3:wave>20&&wave!==30&&wave!==40?[0,1].slice(0,wave>=30?2:1).filter(()=>Math.random()<.4).length:0,nk=wave===30?5:wave>30&&wave!==40?[0,1,2,3,4].filter(()=>Math.random()<.4).length:0,ns=wave===40?2:0,N=wave===40?2:wave===30?5:wave===10||wave===20?3:n;let nb=0;for(let i=0;i<N;i++){
+ const dog=i<nd,jmp=!dog&&i<nd+nj,kyu=!dog&&!jmp&&i<nd+nj+nk,shz=!dog&&!jmp&&!kyu&&i<nd+nj+nk+ns,cf=zcfg(),bomb=!dog&&!jmp&&!kyu&&!shz&&nb<maxB&&Math.random()<pb;if(bomb)nb++;let lt=null;
+ const rt0=Math.random(),ty=dog?3:jmp?4:kyu?5:shz?6:bomb?1:rt0<.1?0:rt0<.3?2:1;let vm=1,sc=cf.s;
  const r=dog?.76*cf.s:.56*cf.s*(ty===2?1.42:ty===0?1.45:1),zn=zNear(r);
  let x,z,tries=0;do{z=-5.4+Math.random()*(zn+5.4);x=(Math.random()*2-1)*halfW(z,r);tries++}
  while(tries<60&&(En.some(o=>Math.hypot(o.x-x,o.z-z)<1.05)||!freeSpot(x,z)||(dog&&!seenFrom(x,1.05*cf.s,z))||(jmp&&!seenFrom(x,1.15*cf.s,z))));
- const g=new THREE.Group(),inr=dog?dogMesh():jmp?jumperMesh(cf):kyu?kyuMesh(cf):zombieMesh(cf);g.add(inr);
+ const g=new THREE.Group(),inr=dog?dogMesh():jmp?jumperMesh(cf):kyu?kyuMesh(cf):shz?shieldMesh(cf):zombieMesh(cf);g.add(inr);
  if(bomb){const bb=new THREE.Mesh(new THREE.SphereGeometry(.21,12,10),SM(0x15151a,.6));bb.position.set(0,1.22,.25);inr.add(bb);
   const bs=new THREE.Mesh(new THREE.BoxGeometry(.5,.07,.05),SM(0x2b2420,.9));bs.position.set(0,1.3,.1);inr.add(bs);
   lt=new THREE.Mesh(new THREE.SphereGeometry(.05,8,6),new THREE.MeshBasicMaterial({color:0xff2b2b}));lt.position.set(0,1.34,.44);inr.add(lt);vm=.8}
@@ -912,11 +929,12 @@ function spawnWave(){spawnCrawlers();const n=waveCount(wave),pb=Math.min(.16,.02
  else if(dog)sc*=1.7;
  else if(jmp)vm=1.15;
  else if(kyu)vm=.8;
+ else if(shz)vm=.8;
  inr.scale.setScalar(sc);
  const rh=(ty===0?1.05:dog?.82:jmp?1.45:1.95)*sc;
  const shd=new THREE.Mesh(new THREE.CircleGeometry((dog?.3:.36)*sc,16),SHADOWM);shd.rotation.x=-Math.PI/2;shd.position.y=.02+rh;shd.userData.nocut=1;shd.visible=false;g.add(shd);
  g.position.set(x,-rh,z);g.rotation.y=Math.atan2(-x,6-z)+(Math.random()-.5)*.5;scene.add(g);
- En.push({g,x,z,ty,bomb,lt,cf,v:dog?1.2:(.7+Math.random()*.5)*vm,inr,shd,rh,dog:dog?Object.assign(Math.random()<.6?{m:'hop',t:0,n:1+(Math.random()*4|0)}:{m:'growl',t:.4+Math.random()*.4,n:0},{er:.3+Math.random()*.2,eh:.4+Math.random()*.4,ht:0,dx:1,y:0,ph:0}):null,jm:jmp?{m:'walk',t:.6+Math.random()*1.2,y:0,u:0,ph:Math.random()*6,p:Object.assign({},JA),vel:{x:0,y:0,z:0}}:null,ky:kyu?{m:'walk',t:1.3+Math.random()*1.2,ar:0,ph:Math.random()*6}:null,rt:-.01-(N>1?Math.random()*(jmp?1.2:.6):0)})}riseMoan=1}
+ En.push({g,x,z,ty,bomb,lt,cf,v:dog?1.2:(.7+Math.random()*.5)*vm,inr,shd,rh,dog:dog?Object.assign(Math.random()<.6?{m:'hop',t:0,n:1+(Math.random()*4|0)}:{m:'growl',t:.4+Math.random()*.4,n:0},{er:.3+Math.random()*.2,eh:.4+Math.random()*.4,ht:0,dx:1,y:0,ph:0}):null,jm:jmp?{m:'walk',t:.6+Math.random()*1.2,y:0,u:0,ph:Math.random()*6,p:Object.assign({},JA),vel:{x:0,y:0,z:0}}:null,sh:shz?{g:inr.userData.shield,y:.95,ty:.95}:null,ky:kyu?{m:'walk',t:1.3+Math.random()*1.2,ar:0,ph:Math.random()*6}:null,rt:-.01-(N>1?Math.random()*(jmp?1.2:.6):0)})}riseMoan=1}
 function blowEnemy(e,cx,cz){const dx=e.x-cx,dz=e.z-cz,d=Math.hypot(dx,dz)||1,f=Math.max(4,13-d*1.4);
  const n=new THREE.Vector3(Math.random()-.5,Math.random()-.5,Math.random()-.5).normalize();
  const C=new THREE.Vector3(e.x,e.dog?.3+Math.random()*.3:e.jm?e.g.position.y+.4+Math.random()*.5:.9+Math.random()*.6,e.z);
@@ -924,7 +942,7 @@ function blowEnemy(e,cx,cz){const dx=e.x-cx,dz=e.z-cz,d=Math.hypot(dx,dz)||1,f=M
  ms.forEach(m=>{const bo=m.userData.bone||0,r=sliceMesh(m,C,n),c=capTris(r.ip,n);
   for(let k=0;k<2;k++){const t=sd[k][bo]||(sd[k][bo]={parts:[],par:m.parent,jw:m.userData.jl&&m.userData.jp?m.userData.jp.localToWorld(m.userData.jl.clone()):null});t.parts.push({v:r.out[k],vn:r.on[k],vu:r.ou[k],mat:m.material,c})}});
  [0,1].forEach(k=>{const sg=k?-1:1;mkRagdoll(sd[k],{x:dx/d*f+n.x*2.5*sg,y:3.5+Math.random()*3+n.y*2.5*sg,z:dz/d*f+n.z*2.5*sg})});
- gush(e.x,e.dog?.5:e.jm?e.g.position.y+.9:1.2,e.z);scene.remove(e.g);disposeTree(e.g);En.splice(En.indexOf(e),1);S++}
+ if(e.sh)dropShield(e);gush(e.x,e.dog?.5:e.jm?e.g.position.y+.9:1.2,e.z);scene.remove(e.g);disposeTree(e.g);En.splice(En.indexOf(e),1);S++}
 function explode(cx,cz){flash(.92,'#fff6e4');shakeT=.95;fireball(cx,1.25,cz);sBoom();
  setTimeout(()=>{if(st!=='over'&&st!=='title')flash(.45,'#ff7a1a')},110);
  for(let i=0;i<12;i++)scorch(cx+(Math.random()-.5)*4.2,cz+(Math.random()-.5)*4.2,.35+Math.random()*1.15);
@@ -946,7 +964,7 @@ function banner(t,ms,sz,tw){const b=$('bn');b.style.fontSize=(sz||34)+'px';b.sty
  if(tw){let i=0;b.textContent='';bnT=setInterval(()=>{i++;b.textContent=t.slice(0,i);if(i>=t.length){clearInterval(bnT);bnT=null}},45)}
  else b.innerHTML=t;
  if(bnH)clearTimeout(bnH);bnH=setTimeout(()=>{b.style.opacity=0;bnH=null},ms)}
-function waveBanner(){sDing();banner('WAVE '+wave+'<br><span style="font-size:17px;opacity:.92">'+(wave===10?'犬ゾンビ出現':wave===20?'体育会系ゾンビ出現':wave===30?'給食当番ゾンビ出現':'ゾンビ '+En.length+'体')+'</span>',wave===10||wave===20||wave===30?1900:1500)}
+function waveBanner(){sDing();banner('WAVE '+wave+'<br><span style="font-size:17px;opacity:.92">'+(wave===10?'犬ゾンビ出現':wave===20?'体育会系ゾンビ出現':wave===30?'給食当番ゾンビ出現':wave===40?'盾持ちゾンビ出現':'ゾンビ '+En.length+'体')+'</span>',wave===10||wave===20||wave===30||wave===40?1900:1500)}
 function nextWave(){wave++;spawnWave();MAXL=bladeLen(wave);waveBanner()}
 const MSG=['…と、そこで目が覚めた。','チャイムが鳴った。妄想終了。','次の授業は体育だった。','先生「ここ、テストに出るぞ」'];
 function bloodScreen(){bl=[];bt0=performance.now();const S0=Math.min(innerWidth,innerHeight)/390;
@@ -1060,6 +1078,7 @@ function howTo(){if($('ht'))return;const d=document.createElement('div');d.id='h
  '<p class="tip">犬ゾンビは左右に跳ね、止まって唸り、また跳ねる。ゾーン中も少し動くので、動きを読んで斬れ。</p>'+
  '<p class="tip">体育会系ゾンビは、深くしゃがんで力をためてから大きく跳ぶ。跳んでいる間は高い位置にいる。</p>'+
  '<p class="tip">給食当番ゾンビは食缶の血を投げつけてくる。画面についた血は少しずつ薄れる。</p>'+
+ '<p class="tip">盾持ちゾンビの鉄の盾は斬れず、刃はそこで止まる。構えると盾を上げ下げするので、隙間を狙え。</p>'+
  '<button type="button" class="b2 cl" id="htc">閉じる</button></div>';
  document.body.appendChild(d);['pointerdown','pointerup','click'].forEach(n=>d.addEventListener(n,ev=>ev.stopPropagation()));
  $('htc').addEventListener('click',()=>d.remove())}
@@ -1071,12 +1090,12 @@ function title(){$('scr').innerHTML='<h1>ゾンビ一閃</h1><p>退屈な授業�
 const rc=new THREE.Raycaster();
 function rayAt(px,py){rc.setFromCamera(new THREE.Vector2(px/innerWidth*2-1,-(py/innerHeight)*2+1),cam)}
 let fin=false,slashA=null,swA=null;const TQ=new THREE.Quaternion();
-addEventListener('pointerdown',e=>{A();if(st==='title')return;if(st==='over')return;if(st==='intro'){introS=7;endIntro();return}if(st!=='ready')return;if(En.some(e=>e.rt!==undefined||e.ru!==undefined))return;st='cut';sZone();stroke={x:e.clientX,y:e.clientY,ex:e.clientX,ey:e.clientY,len:0};recStart()});
+addEventListener('pointerdown',e=>{A();if(st==='title')return;if(st==='over')return;if(st==='intro'){introS=7;endIntro();return}if(st!=='ready')return;if(En.some(e=>e.rt!==undefined||e.ru!==undefined))return;st='cut';sZone();En.forEach(q=>{if(q.sh)q.sh.ty=Math.random()<.5?1.4:.55});stroke={x:e.clientX,y:e.clientY,ex:e.clientX,ey:e.clientY,len:0};recStart()});
 addEventListener('pointermove',e=>{if(!stroke||st!=='cut')return;let dx=e.clientX-stroke.x,dy=e.clientY-stroke.y,d=Math.hypot(dx,dy);
  if(d>MAXL){dx*=MAXL/d;dy*=MAXL/d;d=MAXL}
  stroke.ex=stroke.x+dx;stroke.ey=stroke.y+dy;stroke.len=d});
 function endStroke(){if(st!=='cut'||!stroke)return;
- if(stroke.len>22){slashA={x1:stroke.x,y1:stroke.y,x2:stroke.ex,y2:stroke.ey,p:0};stroke=null;sWhoosh()}
+ if(stroke.len>22){slashA={x1:stroke.x,y1:stroke.y,x2:stroke.ex,y2:stroke.ey,p:0};const bk=shieldCut(slashA);if(bk){slashA.x2=bk.x;slashA.y2=bk.y;slashA.blk=bk.p}stroke=null;sWhoosh()}
  else{stroke=null;st='ready';recAbort()}}
 addEventListener('pointerup',endStroke);addEventListener('pointercancel',endStroke);
 /* ---- loop ---- */
@@ -1085,6 +1104,7 @@ function frame(now){requestAnimationFrame(frame);perfTick(now-last);const dr=Mat
  TR.forEach(t=>t.a-=dr*(st==='cut'?.8:3));TR=TR.filter(t=>t.a>0);
  if(st==='cut'){const hit=new Set();
   if(slashA){slashA.p+=dr/(slashA.p<1?.1:1.8);
+   if(slashA.p>=1&&slashA.blk&&!slashA.bkd){slashA.bkd=1;play('clang',.9,.95+Math.random()*.1);sand(slashA.blk,34,FIRE,2.4,0,.3);puff(slashA.blk.x,slashA.blk.y,slashA.blk.z,0xffd27a,'s',.25,.2,0)}
    if(slashA.p>=1){slashA.d=(slashA.d||0)+dr;
     if(slashA.d>=.2){pend.push({x1:slashA.x1,y1:slashA.y1,x2:slashA.x2,y2:slashA.y2,w:false});swA=slashA;slashA=null;fin=true}}}
   pend.forEach(s=>{const l=Math.hypot(s.x2-s.x1,s.y2-s.y1);TR.push({x1:s.x1,y1:s.y1,x2:s.x2,y2:s.y2,w:s.w,a:s.w?.3:1});if(s.w||l<1)return;
@@ -1092,7 +1112,7 @@ function frame(now){requestAnimationFrame(frame);perfTick(now-last);const dr=Mat
    {const dA=dirAt(s.x1,s.y1),dB=dirAt(s.x2,s.y2),nn=dA.clone().cross(dB);if(nn.lengthSq()>1e-12){nn.normalize();const hz=[];
     En.forEach(e=>{const y=wedgeHit(e.g,cam.position,dA,dB,nn);if(y!==null)hz.push([e,y])});hz.forEach(([e,y])=>{if(En.includes(e))cutEnemy(e,nx,ny,s,y)})}}
    for(let i=0;i<=n;i++){rayAt(s.x1+(s.x2-s.x1)*i/n,s.y1+(s.y2-s.y1)*i/n);
-    const gg=rc.intersectObjects(gib.filter(o=>o.sink===undefined).map(o=>o.mesh),true);
+    const gg=rc.intersectObjects(gib.filter(o=>o.sink===undefined&&!o.ns).map(o=>o.mesh),true);
     if(gg.length){let o=gg[0].object;while(o&&!gib.some(q=>q.mesh===o))o=o.parent;const q=gib.find(q=>q.mesh===o);if(q)cutGib(q,nx,ny,s)}
     const gd=rc.intersectObjects(dyn.map(d=>d.mesh),true);
     if(gd.length){let o=gd[0].object;while(o&&!o.userData.body)o=o.parent;if(o&&!hit.has(o)){hit.add(o);const b=o.userData.body,k=b.mass*6,w=nW(nx,ny),d=rc.ray.direction,p=gd[0].point;
@@ -1147,7 +1167,7 @@ function frame(now){requestAnimationFrame(frame);perfTick(now-last);const dr=Mat
      if(b.sleepState===CANNON.Body.SLEEPING)b.wakeUp();b.velocity.x+=(ux*sp-b.velocity.x)*.35;b.velocity.z+=(uz*sp-b.velocity.z)*.35;
      if(dd>1e-4){e.x+=vx/dd*(.4-dd);e.z+=vz/dd*(.4-dd)}else e.x+=dx>=0?.4:-.4}});
    e.x=Math.max(-5.4,Math.min(5.4,e.x));e.z=Math.max(-5.6,e.z);if(e===biter)e.z=Math.min(e.z,6.15);
-   if(e.dog)dogPose(e,ax,az);else if(e.jm)jumpPose(e,ax,az);else if(e.ky)kyuPose(e,ax,az);else{e.g.position.set(e.x,Math.abs(Math.sin(e.z*5))*.04,e.z);e.g.rotation.y=Math.atan2(ax,az)}
+   if(e.dog)dogPose(e,ax,az);else if(e.jm)jumpPose(e,ax,az);else if(e.ky)kyuPose(e,ax,az);else{e.g.position.set(e.x,Math.abs(Math.sin(e.z*5))*.04,e.z);e.g.rotation.y=Math.atan2(ax,az);if(e.sh)shPose(e,dr)}
    if(e.arms&&e.arms.length){e.ph+=dt*4.2;e.arms.forEach(a=>{const q=new THREE.Quaternion().setFromAxisAngle(XAX,Math.sin(e.ph+a.ph)*.55);a.m.position.copy(a.lp).sub(a.J).applyQuaternion(q).add(a.J);a.m.quaternion.copy(q).multiply(a.lq)})}});
   stepBlobs(dt);
   if(st==='bite'){bite-=dr;if(!bl.length&&bite<.25)bloodScreen();if(bite<=0)die()}
