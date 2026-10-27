@@ -30,7 +30,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 #zt{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 58px);text-align:center;color:#fff;font-weight:900;letter-spacing:.5em;font-size:15px;text-shadow:0 0 10px #4fc3ff,0 0 4px #000;opacity:0;pointer-events:none}
 #scr{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:10px;background:rgba(10,12,20,.55);color:#fff;text-align:center;padding:calc(env(safe-area-inset-top,0px) + 58px) 24px calc(env(safe-area-inset-bottom,0px) + 24px);pointer-events:auto;overflow-y:auto;touch-action:pan-y;-webkit-overflow-scrolling:touch}
 #scr>:first-child{margin-top:auto}#scr>:last-child{margin-bottom:auto}
-#scr h1{margin:0;font-size:30px}#scr p{margin:0;font-size:15px;line-height:1.6;opacity:.92}
+#scr h1{margin:0;font-size:30px}#scr p{margin:0;font-size:15px;line-height:1.6;opacity:.92}#scr p.hint{font-size:13px;line-height:1.6;opacity:.78;max-width:320px;padding:6px 10px;border-left:3px solid #c81e2a;background:rgba(255,255,255,.05);border-radius:0 8px 8px 0;text-align:left}
 #bn{position:fixed;left:0;right:0;top:40%;text-align:center;color:#fff;font-weight:900;font-size:34px;text-shadow:0 2px 12px rgba(0,0,0,.6);opacity:0;transition:opacity .25s;pointer-events:none}
 #fl{position:fixed;inset:0;background:#8d0b12;opacity:0;transition:opacity .5s;pointer-events:none}
 #lb1,#lb2{position:fixed;left:0;right:0;height:0;background:#000;transition:height .55s ease;pointer-events:none;z-index:4}
@@ -340,8 +340,19 @@ function saveFile(f){const a=document.createElement('a'),u=URL.createObjectURL(f
  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),60000)}
 function noProp(el){if(el)['pointerdown','pointerup','click'].forEach(n=>el.addEventListener(n,ev=>ev.stopPropagation()))}
 function canShareFile(f){if(!MOB||!f||!navigator.canShare)return false;try{return navigator.canShare({files:[f]})}catch(e){return false}}
+/* 死んだときのヒント: 噛んだゾンビ→場にいた特殊ゾンビの順。ボス戦中は出さない */
+const HINTS={sh:'用務員の盾は斬れない。構えると盾が動く。隙間を狙え。',ky:'給食当番は血を投げてくる。画面の血は少しずつ薄れる。',jm:'体育会系は、しゃがんで力をためてから大きく跳ぶ。跳んでいる間は高い位置にいる。',dog:'犬は左右に跳ねて止まる。ゾーン中も少し動くので、動きを読め。',bomb:'赤く光る爆弾ゾンビを斬ると爆発し、周りも巻き込める。',legless:'足だけを斬ると、次の WAVE で脚のない這うゾンビになる。這うゾンビは遅い。'};
+let lastHint='';
+function hintKind(e){return e?e.sh?'sh':e.ky?'ky':e.jm?'jm':e.dog?'dog':e.bomb?'bomb':e.legless?'legless':'':''}
+function pickHint(){if(BOSS)return '';
+ const b=hintKind(biter);if(b&&b!==lastHint){lastHint=b;return HINTS[b]}
+ const have=[];['sh','ky','jm','dog','bomb','legless'].forEach(k=>{if(En.some(e=>hintKind(e)===k))have.push(k)});
+ if(b&&!have.includes(b))have.push(b);
+ const c=have.filter(k=>k!==lastHint),p=c.length?c:have;if(!p.length)return '';
+ const k=p[Math.floor(Math.random()*p.length)];lastHint=k;return HINTS[k]}
 function overUI(){
- $('scr').innerHTML='<h1>斬り残した。</h1><p>'+MSG[Math.floor(Math.random()*MSG.length)]+'</p><p>WAVE '+wave+'　撃退 '+S+'<br>ベスト WAVE '+best+'</p>'
+ const hint=pickHint();
+ $('scr').innerHTML='<h1>斬り残した。</h1><p>'+MSG[Math.floor(Math.random()*MSG.length)]+'</p>'+(hint?'<p class="hint">'+hint+'</p>':'')+'<p>WAVE '+wave+'　撃退 '+S+'<br>ベスト WAVE '+best+'</p>'
   +'<div id="hl"></div>'
   +'<button id="rt" type="button">もう一閃</button>'
   +'<a id="sh" target="_blank" rel="noopener" href="https://x.com/intent/post?text='+encodeURIComponent(shTxt())+'&amp;url='+encodeURIComponent(shUrl())+'">'+(MOB?'結果をシェア':'𝕏 でシェア')+'</a>'
@@ -512,6 +523,9 @@ function swordSlash(a){const p=Math.min(1,a.p),e=p*p*(3-2*p);
  sw.visible=true;sw.position.copy(swA2).addScaledVector(swD,-.55+2.1*e+ext);
  sw.quaternion.setFromUnitVectors(swUp,swD)}
 let riseMoan=0,st='title',wave=1,S=0,ts=.02,En=[],gib=[],corpses=[],dyn=[],TR=[],pend=[],stroke=null,last=performance.now(),after=0,cleared=false,best=0,MAXL=1100;
+/* ベスト WAVE 一斉リセット: RESET_V の数字を変えて公開すると、次に開いた端末で一度だけ消える */
+const RESET_V='1';
+try{if(localStorage.getItem('zi_rv')!==RESET_V){localStorage.removeItem('ht_best');localStorage.setItem('zi_rv',RESET_V)}}catch(e){}
 try{best=+localStorage.getItem('ht_best')||0}catch(e){}
 const FH=1.15; // furniture height scale
 function addDyn(m,b){scene.add(m);world.addBody(b);m.userData.body=b;dyn.push({mesh:m,body:b})}
@@ -1588,12 +1602,6 @@ function howTo(){if($('ht'))return;const d=document.createElement('div');d.id='h
  '<li>離すと一閃。線の上のゾンビを斬る。</li>'+
  '<li>1体でも斬り残すと、ゾンビが一気に押し寄せてきて終わり。</li></ol>'+
  '<p class="tip">重なったゾンビは、まとめて斬れる。</p>'+
- '<p class="tip">足だけを斬ると、次の WAVE で脚のないゾンビになって這ってくることがある（WAVE が進むほど起きやすい）。這うゾンビは遅い。</p>'+
- '<p class="tip">赤く光る爆弾を背負ったゾンビを斬ると爆発し、周りのゾンビも巻き込む。</p>'+
- '<p class="tip">犬ゾンビは左右に跳ね、止まって唸り、また跳ねる。ゾーン中も少し動くので、動きを読んで斬れ。</p>'+
- '<p class="tip">体育会系ゾンビは、深くしゃがんで力をためてから大きく跳ぶ。跳んでいる間は高い位置にいる。</p>'+
- '<p class="tip">給食当番ゾンビは食缶の血を投げつけてくる。画面についた血は少しずつ薄れる。</p>'+
- '<p class="tip">用務員ゾンビの鉄の盾は斬れず、刃はそこで止まる。構えると盾を上げ下げするので、隙間を狙え。</p>'+
  '<button type="button" class="b2 cl" id="htc">閉じる</button></div>';
  document.body.appendChild(d);['pointerdown','pointerup','click'].forEach(n=>d.addEventListener(n,ev=>ev.stopPropagation()));
  $('htc').addEventListener('click',()=>d.remove())}
