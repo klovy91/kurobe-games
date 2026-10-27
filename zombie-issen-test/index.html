@@ -640,7 +640,13 @@ function shieldMesh(cf){const z=zombieMesh(Object.assign({},cf,{shirt:0x2f5d9c,p
 /* the door's height on the zombie: 0.95 normal (head and shins open), 1.4 high (legs open), 0.55 low (head and chest open).
    It moves in real time, so the change of guard shows even in the zone. */
 function shPose(e,dr){const H=e.sh;{const d=H.ty-H.y,st=dr*(H.sp||.95);H.y=Math.abs(d)<=st?H.ty:H.y+Math.sign(d)*st}H.g.position.y=H.y;e.inr.rotation.x=.06+.1*Math.max(0,(.95-H.y)/.4)}
-function shieldCut(s){const S=En.filter(e=>e.sh).map(e=>e.sh.g);if(BOSS&&BOSS.gd)S.push(BOSS.U.sd);if(!S.length)return null;const l=Math.hypot(s.x2-s.x1,s.y2-s.y1),n=Math.max(1,Math.ceil(l/5));
+/* janitor shields: the parts of the stroke (0..1) that run over a shield on screen -> nothing behind them is cut there */
+function shieldGaps(s){const S=En.filter(e=>e.sh).map(e=>{e.g.updateMatrixWorld(true);return e.sh.g});if(!S.length)return null;const l=Math.hypot(s.x2-s.x1,s.y2-s.y1),n=Math.max(1,Math.ceil(l/5)),I=[];let a=-1,p0=null;
+ for(let i=0;i<=n;i++){const t=i/n;rayAt(s.x1+(s.x2-s.x1)*t,s.y1+(s.y2-s.y1)*t);const h=rc.intersectObjects(S,true);
+  if(h.length){if(a<0){a=Math.max(0,t-.5/n);if(!p0)p0=h[0].point.clone()}}else if(a>=0){I.push([a,t-.5/n]);a=-1}}
+ if(a>=0)I.push([a,1]);return I.length?{I,p:p0}:null}
+function freeSegs(I){if(!I||!I.length)return [[0,1]];const F=[];let t=0;I.forEach(([a,b])=>{if(a>t+.002)F.push([t,a]);t=Math.max(t,b)});if(t<.998)F.push([t,1]);return F}
+function shieldCut(s){const S=[];if(BOSS&&BOSS.gd)S.push(BOSS.U.sd);if(!S.length)return null;const l=Math.hypot(s.x2-s.x1,s.y2-s.y1),n=Math.max(1,Math.ceil(l/5));
  for(let i=0;i<=n;i++){const px=s.x1+(s.x2-s.x1)*i/n,py=s.y1+(s.y2-s.y1)*i/n;rayAt(px,py);const h=rc.intersectObjects(S,true);if(h.length)return {x:px,y:py,p:h[0].point.clone()}}return null}
 function dropShield(e){const G=e.sh.g,p=new THREE.Vector3(),q=new THREE.Quaternion();G.updateMatrixWorld(true);G.getWorldPosition(p);G.getWorldQuaternion(q);scene.attach(G);
  const b=new CANNON.Body({mass:5,shape:new CANNON.Box(new CANNON.Vec3(.45,.5,.025))});b.position.set(p.x,p.y,p.z);b.quaternion.set(q.x,q.y,q.z,q.w);
@@ -1603,7 +1609,7 @@ addEventListener('pointermove',e=>{if(PAUSED||!stroke||st!=='cut'||e.pointerId!=
  if(d>MAXL){dx*=MAXL/d;dy*=MAXL/d;d=MAXL}
  stroke.ex=stroke.x+dx;stroke.ey=stroke.y+dy;stroke.len=d});
 function endStroke(e){if(PAUSED||st!=='cut'||!stroke)return;if(e&&e.pointerId!==undefined&&e.pointerId!==stroke.id)return;
- if(stroke.len>45){slashA={x1:stroke.x,y1:stroke.y,x2:stroke.ex,y2:stroke.ey,p:0};if(BOSS&&wave<=51)BOSS.pr=bossParry(slashA);const bk=shieldCut(slashA);if(bk){slashA.x2=bk.x;slashA.y2=bk.y;slashA.blk=bk.p}stroke=null;sWhoosh()}
+ if(stroke.len>45){slashA={x1:stroke.x,y1:stroke.y,x2:stroke.ex,y2:stroke.ey,p:0};if(BOSS&&wave<=51)BOSS.pr=bossParry(slashA);const bk=shieldCut(slashA);if(bk){slashA.x2=bk.x;slashA.y2=bk.y;slashA.blk=bk.p}const sg=shieldGaps(slashA);if(sg){slashA.blkI=sg.I;if(!slashA.blk)slashA.blk=sg.p}stroke=null;sWhoosh()}
  else{stroke=null;st='ready';recAbort()}}
 addEventListener('pointerup',endStroke);addEventListener('pointercancel',endStroke);
 /* ---- loop ---- */
@@ -1614,12 +1620,13 @@ function frame(now){requestAnimationFrame(frame);if(PAUSED){last=now;return}{con
   if(slashA){slashA.p+=dr/(slashA.p<1?.1:1.8);
    if(slashA.p>=1&&slashA.blk&&!slashA.bkd){slashA.bkd=1;play('clang',.9,.95+Math.random()*.1);sand(slashA.blk,34,FIRE,2.4,0,.3);puff(slashA.blk.x,slashA.blk.y,slashA.blk.z,0xffd27a,'s',.25,.2,0)}
    if(slashA.p>=1){slashA.d=(slashA.d||0)+dr;
-    if(slashA.d>=.2){pend.push({x1:slashA.x1,y1:slashA.y1,x2:slashA.x2,y2:slashA.y2,w:false});swA=slashA;slashA=null;fin=true}}}
+    if(slashA.d>=.2){pend.push({x1:slashA.x1,y1:slashA.y1,x2:slashA.x2,y2:slashA.y2,w:false,blkI:slashA.blkI});swA=slashA;slashA=null;fin=true}}}
   pend.forEach(s=>{const l=Math.hypot(s.x2-s.x1,s.y2-s.y1);TR.push({x1:s.x1,y1:s.y1,x2:s.x2,y2:s.y2,w:s.w,a:s.w?.3:1});if(s.w||l<1)return;
    const nx=-(s.y2-s.y1)/l,ny=(s.x2-s.x1)/l,n=Math.max(1,Math.ceil(l/8));
    {const dA=dirAt(s.x1,s.y1),dB=dirAt(s.x2,s.y2),nn=dA.clone().cross(dB);if(nn.lengthSq()>1e-12){nn.normalize();const hz=[];
-    En.forEach(e=>{const y=wedgeHit(e.g,cam.position,dA,dB,nn);if(y!==null)hz.push([e,y])});if(BOSS&&wave===52&&BOSS.m==='guard'&&!BOSS.hit){if(wedgeHit(BOSS.g,cam.position,dA,dB,nn)!==null)BOSS.hit={C:cam.position.clone(),n:nn.clone()}}if(BOSS&&(wave===53||wave===54)&&BOSS.tn&&!BOSS.th&&(BOSS.m==='tw'||BOSS.m==='punch')){const T=BOSS.tn[BOSS.ai];for(let k=0;k<T.n;k++)if(wedgeHit(T.segs[k],cam.position,dA,dB,nn)!==null){BOSS.th={k};break}if(!BOSS.th&&T.fist&&wedgeHit(T.fist,cam.position,dA,dB,nn)!==null)BOSS.th={k:T.n-1};if(BOSS.th){BOSS.th.C=cam.position.clone();BOSS.th.n=nn.clone()}}if(BOSS&&wave===55&&BOSS.m==='still'&&!BOSS.hit){if(wedgeHit(BOSS.g,cam.position,dA,dB,nn)!==null)BOSS.hit=1}if(BOSS&&BOSS.f3)fWedge(BOSS,dA,dB,nn);hz.forEach(([e,y])=>{if(En.includes(e))cutEnemy(e,nx,ny,s,y)})}}
-   for(let i=0;i<=n;i++){rayAt(s.x1+(s.x2-s.x1)*i/n,s.y1+(s.y2-s.y1)*i/n);
+    const FS=freeSegs(s.blkI).map(([a,b])=>[a?dirAt(s.x1+(s.x2-s.x1)*a,s.y1+(s.y2-s.y1)*a):dA,b<1?dirAt(s.x1+(s.x2-s.x1)*b,s.y1+(s.y2-s.y1)*b):dB]);
+    En.forEach(e=>{let y=null;FS.forEach(([a,b])=>{const h=wedgeHit(e.g,cam.position,a,b,nn);if(h!==null&&(y===null||h<y))y=h});if(y!==null)hz.push([e,y])});if(BOSS&&wave===52&&BOSS.m==='guard'&&!BOSS.hit){if(wedgeHit(BOSS.g,cam.position,dA,dB,nn)!==null)BOSS.hit={C:cam.position.clone(),n:nn.clone()}}if(BOSS&&(wave===53||wave===54)&&BOSS.tn&&!BOSS.th&&(BOSS.m==='tw'||BOSS.m==='punch')){const T=BOSS.tn[BOSS.ai];for(let k=0;k<T.n;k++)if(wedgeHit(T.segs[k],cam.position,dA,dB,nn)!==null){BOSS.th={k};break}if(!BOSS.th&&T.fist&&wedgeHit(T.fist,cam.position,dA,dB,nn)!==null)BOSS.th={k:T.n-1};if(BOSS.th){BOSS.th.C=cam.position.clone();BOSS.th.n=nn.clone()}}if(BOSS&&wave===55&&BOSS.m==='still'&&!BOSS.hit){if(wedgeHit(BOSS.g,cam.position,dA,dB,nn)!==null)BOSS.hit=1}if(BOSS&&BOSS.f3)fWedge(BOSS,dA,dB,nn);hz.forEach(([e,y])=>{if(En.includes(e))cutEnemy(e,nx,ny,s,y)})}}
+   for(let i=0;i<=n;i++){if(s.blkI&&s.blkI.some(([a,b])=>i/n>=a&&i/n<=b))continue;rayAt(s.x1+(s.x2-s.x1)*i/n,s.y1+(s.y2-s.y1)*i/n);
     const gg=rc.intersectObjects(gib.filter(o=>o.sink===undefined&&!o.ns).map(o=>o.mesh),true);
     if(gg.length){let o=gg[0].object;while(o&&!gib.some(q=>q.mesh===o))o=o.parent;const q=gib.find(q=>q.mesh===o);if(q)cutGib(q,nx,ny,s)}
     const gd=rc.intersectObjects(dyn.map(d=>d.mesh),true);
