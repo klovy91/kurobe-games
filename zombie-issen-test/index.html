@@ -129,6 +129,7 @@ const R=new THREE.WebGLRenderer({canvas:$('gl'),antialias:true});const PR0=Math.
 const scene=new THREE.Scene();scene.background=new THREE.Color(0xdfe6ee);
 const cam=new THREE.PerspectiveCamera(68,1,.1,60);cam.position.set(0,1.6,6);cam.lookAt(0,.9,-8);cam.updateMatrixWorld();
 const HEM=new THREE.HemisphereLight(0xdce7ff,0x4a3f2a,.62);scene.add(HEM);
+let CEILM=null,HALLM=null,LAMPM=null;
 const sun=new THREE.DirectionalLight(0xfff2dd,1.15);sun.position.set(-8.5,6.5,1.5);sun.target.position.set(1,.6,-1.5);scene.add(sun);scene.add(sun.target);
 R.shadowMap.enabled=true;R.localClippingEnabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;
 sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.bias=-.0016;
@@ -356,7 +357,7 @@ const WALL=SMat(0xe7e2d4,.95),WALL2=SMat(0xefebe0,.95),FRM=SMat(0xdde2e7,.55),WO
  for(let i=0;i<12;i++){const f=bx(1.04,.1,17,fm[i%4],-5.5+i,-.05,-.5);f.receiveShadow=true}}
 bx(12,3.5,.1,WALL2,0,1.75,-6.05).receiveShadow=true;
 bx(12,3.5,.12,WALL,0,1.75,8.06).receiveShadow=true;
-bx(12,.1,17,new THREE.MeshBasicMaterial({color:0xdedacd}),0,3.5,-.5);
+bx(12,.1,17,CEILM=new THREE.MeshBasicMaterial({color:0xdedacd}),0,3.5,-.5);
 {const LW=-6.02,bays=[[-5.5,-3.3],[-2.9,-.7],[-.3,1.9],[2.3,4.5]];
  bx(.14,.9,17,WALL,LW,.45,-.5).receiveShadow=true;bx(.14,.95,17,WALL,LW,3.03,-.5).receiveShadow=true;
  let prev=-6.05;bays.forEach(([a,b])=>{if(a>prev+.01){const p=bx(.14,1.7,a-prev,WALL,LW,1.75,(prev+a)/2);p.castShadow=true;p.receiveShadow=true}prev=b});
@@ -381,7 +382,7 @@ bx(12,.1,17,new THREE.MeshBasicMaterial({color:0xdedacd}),0,3.5,-.5);
  bx(.14,1.35,1.6,WALL,RW,2.83,-3.4).receiveShadow=true;
  {const CF=SMat(0x8c8678,.9),CW=SMat(0xaaa392,.95),GL2=new THREE.MeshStandardMaterial({color:0xcfe6f5,roughness:.08,metalness:.1,transparent:true,opacity:.22});
   bx(3.12,.1,19,CF,7.62,-.05,-1).receiveShadow=true;
-  bx(3.12,.1,19,new THREE.MeshBasicMaterial({color:0x8a857a}),7.62,3.5,-1);
+  bx(3.12,.1,19,HALLM=new THREE.MeshBasicMaterial({color:0x8a857a}),7.62,3.5,-1);
   bx(.12,.9,19,CW,9.16,.45,-1);bx(.12,.95,19,CW,9.16,3.03,-1);
   const cb=[[-7,-4.8],[-4.2,-2],[-1.4,.8],[1.4,3.6],[4.2,6.4]];let pz2=-10.5;
   cb.forEach(([a,b])=>{if(a>pz2)bx(.12,1.7,a-pz2,CW,9.16,1.75,(pz2+a)/2);pz2=b});
@@ -461,7 +462,7 @@ const CLK=(()=>{const g=new THREE.Group(),c=document.createElement('canvas');c.w
  g.position.set(-2.9,3,-6);scene.add(g);
  return {tick(){const d=new Date(),sc=d.getSeconds()+d.getMilliseconds()/1000,mn=d.getMinutes()+sc/60,hr=d.getHours()%12+mn/60;
   S.rotation.z=-sc/60*6.283;M.rotation.z=-mn/60*6.283;H.rotation.z=-hr/12*6.283}}})();
-[-2.6,2.6].forEach(x=>{bx(.46,.12,4.4,SMat(0xd6d6d0,.7),x,3.44,-1.6);bx(.32,.05,4.2,new THREE.MeshBasicMaterial({color:0xfffbe8}),x,3.38,-1.6)});
+[-2.6,2.6].forEach(x=>{bx(.46,.12,4.4,SMat(0xd6d6d0,.7),x,3.44,-1.6);bx(.32,.05,4.2,LAMPM||(LAMPM=new THREE.MeshBasicMaterial({color:0xfffbe8})),x,3.38,-1.6)});
 {
  for(let i=0;i<9;i++){const nb=bx(.23,.016,.31,SMat(0xf3f1e6,1),-5+Math.random()*10,.012,-5.4+Math.random()*10);nb.rotation.y=Math.random()*3.1}}
 scene.add(cam);
@@ -638,7 +639,8 @@ let BOSS=null;
 const bossW=()=>!!BOSS&&wave>=50&&wave<=52;
 const KD0=new THREE.Vector3(0,.62,1).normalize(),YAX=new THREE.Vector3(0,1,0),BCOL=[HEM.color.clone(),sun.color.clone()];
 function bossMood(dim,red){HEM.intensity=.62*dim;sun.intensity=1.15*dim;fil.intensity=.34*dim;
- HEM.color.copy(BCOL[0]).lerp(new THREE.Color(0xff8c8c),red);sun.color.copy(BCOL[1]).lerp(new THREE.Color(0xff9a88),red)}
+ HEM.color.copy(BCOL[0]).lerp(new THREE.Color(0xff8c8c),red);sun.color.copy(BCOL[1]).lerp(new THREE.Color(0xff9a88),red);
+ const tn=new THREE.Color(1,1-.45*red,1-.5*red),k=Math.max(.1,dim);[[CEILM,0xdedacd],[HALLM,0x8a857a],[LAMPM,0xfffbe8]].forEach(([m,c])=>{if(m)m.color.setHex(c).multiply(tn).multiplyScalar(k)})}
 function katMesh(){const g=new THREE.Group(),bl=mk(.028,.95,.013,0xdfe4ec),ed=mk(.007,.95,.017,0xffffff),gu=mk(.1,.018,.062,0x26262b),hi=mk(.034,.26,.034,0x15151a);
  bl.position.y=.5;ed.position.set(.016,.5,0);gu.position.y=.015;hi.position.y=-.13;g.add(bl,ed,gu,hi);g.traverse(o=>{if(o.isMesh){o.userData.nocut=1;o.castShadow=true}});return g}
 function tchMake(){const c=pcfg(1),pm=personMesh(c,0),G=new THREE.Group(),U={};
@@ -717,7 +719,7 @@ function bossCine(B,dr){const t=(B.t+=dr),sm=x=>{x=Math.min(1,Math.max(0,x));ret
  if(B.k===2&&t>3){B.k=3;play('trev',1);shakeT=.5}
  const u=sm((t-3)/2.2);B.g.position.y=-1.95*(1-u);U.pm.rotation.z=t>3&&t<5.2?Math.sin(t*19)*.05:0;
  B.sx=t<5.4?-2.4+1.2*u:-1.2+1.2*sm((t-5.4)/.8);B.r=t<5.4?.5:.5*(1-sm((t-5.4)/.8));
- if(B.k===3&&t>5.4){B.k=4;B.sk.visible=false;U.sd.visible=true;play('clang',.6,.7)}
+ if(B.k===3&&t>5.4){B.k=4;B.sk.visible=false;U.sd.visible=true}
  U.eyes.forEach(e=>e.scale.setScalar(t>5.9?1+.8*Math.max(0,1-(t-5.9)/.6):1));
  if(B.k===4&&t>6.6){B.k=5;$('lb1').style.height='0';$('lb2').style.height='0'}
  if(t>7.1){B.g.position.y=0;U.pm.rotation.z=0;st='ready';bossGo();waveBanner()}}
@@ -1074,7 +1076,7 @@ function banner(t,ms,sz,tw){const b=$('bn');b.style.fontSize=(sz||34)+'px';b.sty
  if(tw){let i=0;b.textContent='';bnT=setInterval(()=>{i++;b.textContent=t.slice(0,i);if(i>=t.length){clearInterval(bnT);bnT=null}},45)}
  else b.innerHTML=t;
  if(bnH)clearTimeout(bnH);bnH=setTimeout(()=>{b.style.opacity=0;bnH=null},ms)}
-function waveBanner(){if(BOSS&&BOSS.m==='cine')return;if(wave===50||wave===52){const w=wave,tx=w===50?'攻撃の隙がない…':'攻撃のチャンスだ！';setTimeout(()=>{if(wave===w&&BOSS&&st!=='over')banner(tx,2000,24)},1700)}sDing();banner('WAVE '+wave+'<br><span style="font-size:17px;opacity:.92">'+(wave===50?'先生、復活':wave===51||wave===52?'先生':wave===10?'犬ゾンビ出現':wave===20?'体育会系ゾンビ出現':wave===30?'給食当番ゾンビ出現':wave===40?'用務員ゾンビ出現':'ゾンビ '+En.length+'体')+'</span>',wave===10||wave===20||wave===30||wave===40?1900:1500)}
+function waveBanner(){if(BOSS&&BOSS.m==='cine')return;if(wave===50||wave===52){const w=wave,L=w===50?[['攻撃の隙がない…',1700],['防御に徹しよう…',3900]]:[['攻撃のチャンスだ！',1700]];L.forEach(([tx,ms])=>setTimeout(()=>{if(wave===w&&BOSS&&st!=='over')banner(tx,2000,24)},ms))}sDing();banner('WAVE '+wave+'<br><span style="font-size:17px;opacity:.92">'+(wave===50?'先生、復活':wave===51||wave===52?'先生':wave===10?'犬ゾンビ出現':wave===20?'体育会系ゾンビ出現':wave===30?'給食当番ゾンビ出現':wave===40?'用務員ゾンビ出現':'ゾンビ '+En.length+'体')+'</span>',wave===10||wave===20||wave===30||wave===40?1900:1500)}
 function nextWave(){wave++;spawnWave();MAXL=bladeLen(wave);waveBanner()}
 const MSG=['…と、そこで目が覚めた。','チャイムが鳴った。妄想終了。','次の授業は体育だった。','先生「ここ、テストに出るぞ」'];
 function bloodScreen(){bl=[];bt0=performance.now();const S0=Math.min(innerWidth,innerHeight)/390;
