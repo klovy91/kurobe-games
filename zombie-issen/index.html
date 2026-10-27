@@ -129,14 +129,14 @@ const R=new THREE.WebGLRenderer({canvas:$('gl'),antialias:true});const PR0=Math.
 const scene=new THREE.Scene();scene.background=new THREE.Color(0xdfe6ee);
 const cam=new THREE.PerspectiveCamera(68,1,.1,60);cam.position.set(0,1.6,6);cam.lookAt(0,.9,-8);cam.updateMatrixWorld();
 const HEM=new THREE.HemisphereLight(0xdce7ff,0x4a3f2a,.62);scene.add(HEM);
-let CEILM=null,HALLM=null,LAMPM=null;
+let CEILM=null,HALLM=null,LAMPM=null,BSK=1,QT=0,SFR=0;const AUXL=[];
 const sun=new THREE.DirectionalLight(0xfff2dd,1.15);sun.position.set(-8.5,6.5,1.5);sun.target.position.set(1,.6,-1.5);scene.add(sun);scene.add(sun.target);
 R.shadowMap.enabled=true;R.localClippingEnabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;
 sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.bias=-.0016;
 {const sc=sun.shadow.camera;sc.left=-11;sc.right=11;sc.top=9;sc.bottom=-2;sc.near=.5;sc.far=32;sc.updateProjectionMatrix()}
 const fil=new THREE.DirectionalLight(0x86adff,.34);fil.position.set(-4,3.2,-5);scene.add(fil);
 const ov=$('ov'),oc=ov.getContext('2d');
-function resize(){const w=innerWidth,h=innerHeight;R.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix();ov.width=w;ov.height=h;{const b=document.getElementById('bs');if(b){b.width=w;b.height=h}}try{if(st!=='title')MAXL=bladeLen(wave)}catch(e){}}
+function resize(){const w=innerWidth,h=innerHeight;R.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix();ov.width=w;ov.height=h;{const b=document.getElementById('bs');if(b){b.width=Math.ceil(w*BSK);b.height=Math.ceil(h*BSK)}}try{if(st!=='title')MAXL=bladeLen(wave)}catch(e){}}
 addEventListener('resize',resize);resize();
 /* ---- highlight recorder ---- */
 const rcv=document.createElement('canvas'),rcx=rcv.getContext('2d'),flE=$('fl');
@@ -394,8 +394,8 @@ bx(12,.1,17,CEILM=new THREE.MeshBasicMaterial({color:0xdedacd}),0,3.5,-.5);
   for(let i=0;i<7;i++){const h=1.5+Math.random()*1.6,z=-13+i*4;bx(.3,1,.3,SMat(0x6b4a2e,1),10.5,.5,z);bx(1,h,1,SMat(0x4e7a3c,1),10.5,1+h/2,z)}
   [-8.6,-6.5,.6,2.7,4.8].forEach(z=>{bx(.46,1.8,1.9,SMat(0x6f7a86,.7),6.42,.9,z).castShadow=true;bx(.03,1.72,1.8,SMat(0x59646f,.7),6.66,.9,z)});
   
-  {const cl=new THREE.PointLight(0xffe9c4,.3,16);cl.position.set(7.6,3,-2.6);scene.add(cl)}
-  {const c2=new THREE.PointLight(0xffe9c4,.25,16);c2.position.set(7.6,3,2.4);scene.add(c2)}}
+  {const cl=new THREE.PointLight(0xffe9c4,.3,16);cl.position.set(7.6,3,-2.6);scene.add(cl);AUXL.push(cl)}
+  {const c2=new THREE.PointLight(0xffe9c4,.25,16);c2.position.set(7.6,3,2.4);scene.add(c2);AUXL.push(c2)}}
  bx(.1,2.2,.12,FRM,RW-.01,1.1,-4.26);bx(.1,2.2,.12,FRM,RW-.01,1.1,-2.54);bx(.13,.12,1.85,FRM,RW-.01,2.19,-3.4);
  const FG=new THREE.MeshStandardMaterial({color:0xe6eef2,roughness:.45,transparent:true,opacity:.6});
  DOOR=new THREE.Group();scene.add(DOOR);
@@ -612,7 +612,7 @@ function lensSplat(x,y,snd){const W=innerWidth,H=innerHeight,A=W*H;let tgt=A*(.0
   for(let k=0;k<(i?2:7);k++){const a=Math.random()*6.28,d=r*(.95+Math.random()*.3),rr=r*(.05+Math.random()*.1);g.beginPath();g.arc(cx+Math.cos(a)*d,cy+Math.sin(a)*d,rr,0,6.28);g.fill()}
   if(!i)g.fillRect(cx-r*.08,cy,r*.16,r*1.2)});
  SPL.push({c,x:x+x0,y:y+y0,ar:tgt,a:.7+Math.random()*.2,t:0,L:2+Math.random()})}
-function bsTick(dr){if(!SPL.length&&!bsTick.dirty)return;bsX.clearRect(0,0,bsC.width,bsC.height);bsTick.dirty=SPL.length>0;
+function bsTick(dr){if(!SPL.length&&!bsTick.dirty)return;bsX.setTransform(1,0,0,1,0,0);bsX.clearRect(0,0,bsC.width,bsC.height);bsX.setTransform(BSK,0,0,BSK,0,0);bsTick.dirty=SPL.length>0;
  for(let i=SPL.length-1;i>=0;i--){const q=SPL[i];q.t+=Math.max(0,dr);if(q.t>=q.L){SPL.splice(i,1);continue}bsX.globalAlpha=Math.min(1,Math.max(0,q.a*splF(q)));bsX.drawImage(q.c,q.x,q.y)}bsX.globalAlpha=1}
 function shieldMesh(cf){const z=zombieMesh(Object.assign({},cf,{shirt:0x2f5d9c,pant:0x284a7c})),CP=SM(0x24416e,.9),
  MT=new THREE.MeshStandardMaterial({color:0xaab1b8,roughness:.5,metalness:.15}),DK=SM(0x2a2e33,.7),WL=SM(0xe8e6df,.8);
@@ -639,7 +639,7 @@ function dropShield(e){const G=e.sh.g,p=new THREE.Vector3(),q=new THREE.Quaterni
 let BOSS=null;
 const bossW=()=>!!BOSS&&wave>=50&&wave<=60;
 let EYEG=null;const KD0=new THREE.Vector3(0,.62,1).normalize(),YAX=new THREE.Vector3(0,1,0),BCOL=[HEM.color.clone(),sun.color.clone()];
-function bossMood(dim,red){HEM.intensity=.62*dim;sun.intensity=1.15*dim;fil.intensity=.34*dim;
+function bossMood(dim,red){HEM.intensity=.62*dim*(QT===2?1.12:1);sun.intensity=1.15*dim;fil.intensity=.34*dim;
  HEM.color.copy(BCOL[0]).lerp(new THREE.Color(0xff8c8c),red);sun.color.copy(BCOL[1]).lerp(new THREE.Color(0xff9a88),red);
  const tn=new THREE.Color(1,1-.45*red,1-.5*red),k=Math.max(.1,dim);[[CEILM,0xdedacd],[HALLM,0x8a857a],[LAMPM,0xfffbe8]].forEach(([m,c])=>{if(m)m.color.setHex(c).multiply(tn).multiplyScalar(k)})}
 function katMesh(){const g=new THREE.Group(),bl=mk(.028,.95,.013,0xdfe4ec),ed=mk(.007,.95,.017,0xffffff),gu=mk(.1,.018,.062,0x26262b),hi=mk(.034,.26,.034,0x15151a);
@@ -767,7 +767,7 @@ function flopGeo(arr,inv,nr,uv){const f=new Float32Array(arr.length*3);arr.forEa
  if(nr&&nr.length===arr.length){const nm=new THREE.Matrix3().getNormalMatrix(inv),h=new Float32Array(nr.length*3);nr.forEach((x,i)=>{TCV.copy(x).applyMatrix3(nm).normalize();h[i*3]=TCV.x;h[i*3+1]=TCV.y;h[i*3+2]=TCV.z});ge.setAttribute('normal',new THREE.BufferAttribute(h,3))}else ge.computeVertexNormals();
  if(uv&&uv.length===arr.length){const u=new Float32Array(uv.length*2);uv.forEach((x,i)=>{u[i*2]=x.x;u[i*2+1]=x.y});ge.setAttribute('uv',new THREE.BufferAttribute(u,2))}return ge}
 function flopCut(m,C,n,inv,out){const r=sliceMesh(m,C,n),c=capTris(r.ip,n);for(let q=0;q<2;q++){if(!r.out[q].length)continue;const mt=m.material.clone();mt.userData={};if(mt.emissive)mt.emissive.setRGB(0,0,0);
- const a=new THREE.Mesh(flopGeo(r.out[q],inv,r.on[q],r.ou[q]),mt);a.castShadow=true;out[q].push(a);if(c.length)out[q].push(new THREE.Mesh(flopGeo(c,inv),CU))}}
+ const a=new THREE.Mesh(flopGeo(r.out[q],inv,r.on[q],r.ou[q]),mt);a.castShadow=QT<2;out[q].push(a);if(c.length)out[q].push(new THREE.Mesh(flopGeo(c,inv),CU))}}
 function tnSlice(T,th){const k=Math.max(0,Math.min(T.n-1,th.k)),segs=T.segs.slice(k,T.n),P=T.P.slice(k,k+segs.length+1).map(v=>v.clone()),L=[[],[]],F=[[],[]];
  segs.forEach(m=>{m.updateMatrixWorld(true);const inv=m.matrixWorld.clone().invert(),o=[[],[]];m.traverse(c=>{if(c.isMesh)flopCut(c,th.C,th.n,inv,o)});for(let q=0;q<2;q++)L[q].push({ms:o[q],l:m.scale.y})});
  if(T.fist){T.fist.updateMatrixWorld(true);const inv=T.fist.matrixWorld.clone().invert();T.fist.traverse(o=>{if(o.isMesh){o.updateMatrixWorld(true);flopCut(o,th.C,th.n,inv,F)}})}
@@ -1085,10 +1085,10 @@ function sand(p,n,c,k=1,pr=1,sp=.5){const bd=c===BLOOD;if(bd&&GORE==='off'){c=DU
  sP[j*3]=p.x+(Math.random()-.5)*sp;sP[j*3+1]=p.y+(Math.random()-.5)*sp;sP[j*3+2]=p.z+(Math.random()-.5)*sp;
  sV[j*3]=(Math.random()-.5)*1.6*k;sV[j*3+1]=Math.random()*1.2*k+(k>1?1.4:0);sV[j*3+2]=(Math.random()-.5)*1.6*k;sL[j]=3.4}}
 const NOTES=[[3.45,2.95,.45,.31],[4.6,2.85,.36,.26]];
-function stepSand(dt){for(let j=0;j<NP;j++){if(sL[j]<=0){sP[j*3+1]=-50;continue}sL[j]-=dt;sV[j*3+1]-=5*dt;
+function stepSand(dt){SFR^=1;for(let j=0;j<NP;j++){if(sL[j]<=0){sP[j*3+1]=-50;continue}sL[j]-=dt;sV[j*3+1]-=5*dt;
  sP[j*3]+=sV[j*3]*dt;sP[j*3+1]+=sV[j*3+1]*dt;sP[j*3+2]+=sV[j*3+2]*dt;
  const px=sP[j*3],py=sP[j*3+1],pz=sP[j*3+2],rr=.12+Math.random()*.34;
- if(sT[j]){
+ if(sT[j]&&(QT<2||((j+SFR)&1)===0)){
   if(py>3.33&&py<3.54&&Math.abs(Math.abs(px)-2.6)<.25&&pz>-3.85&&pz<.65){sT[j]=0;splatN(px,3.352,pz,rr*.65,0,-1,0);sL[j]=0;continue}
   if(px<-5.93){sT[j]=0;splatN(-5.942,py,pz,rr,1,0,0);sL[j]=0;continue}
   if(px>5.93){if(!(pz>-4.24&&pz<-2.56&&py<2.16)){sT[j]=0;splatN(5.942,py,pz,rr,-1,0,0);sL[j]=0;continue}
@@ -1205,12 +1205,16 @@ function thawGib(o){if(!o.fz)return;const b=o.b;b.type=CANNON.Body.DYNAMIC;b.mas
 let GIBMAX=300;
 /* ---- auto quality: watch the frame time; step the load down while slow, back up once fast again ----
    level 0 normal / 1 lower resolution / 2 pieces cap 200 / 3 cap 120 / 4 pieces turn into props sooner */
-const FZ={s:1,a:1.5,l:5,f:10},PRL=Math.min(PR0,1),PRH=Math.min(devicePixelRatio,2),QS=[{pr:PRH,cap:300,fz:-1},{pr:PR0,cap:300,fz:0},{pr:PRL,cap:300,fz:0},{pr:PRL,cap:200,fz:0},{pr:PRL,cap:120,fz:0},{pr:PRL,cap:120,fz:1}];
+const FZ={s:1,a:1.5,l:5,f:10},PRL=Math.min(PR0,1),PRH=Math.min(devicePixelRatio,2),QS=[{pr:PRH,cap:300,fz:-1},{pr:PR0,cap:300,fz:0},{pr:PRL,cap:300,fz:0},{pr:PRL,cap:200,fz:0},{pr:PRL*.75,cap:120,fz:0},{pr:PRL*.75,cap:120,fz:1}];
 const OPT=(()=>{const o={gfx:'auto',gore:'on'};try{Object.assign(o,JSON.parse(localStorage.getItem('zi_opt')||'{}'))}catch(e){}return o})(),GFXL={auto:0,high:0,std:1,low:4};
 let GORE='on',GC=null;
 let QL=0;const QW={w:[],wg:0,ws:0,a:[],t:0,bad:0,good:0,now:0,last:0,lastUp:-99,upWait:8,med:0,n:[],sl:[],nf:0,sf:0};
 const FPSD=/[?&]fps\b/.test(location.search)?(()=>{const d=document.createElement('div');d.style.cssText='position:fixed;left:6px;bottom:6px;z-index:9999;font:12px/1.3 monospace;color:#3f3;background:rgba(0,0,0,.6);padding:2px 6px;pointer-events:none;white-space:pre';d.textContent='fps …';document.body.appendChild(d);return d})():null;
-function setQ(l){QL=Math.max(0,Math.min(QS.length-1,l));const q=QS[QL];if(R.getPixelRatio()!==q.pr){R.setPixelRatio(q.pr);resize()}GIBMAX=q.cap;
+function setQ(l){QL=Math.max(0,Math.min(QS.length-1,l));const q=QS[QL];const qt=QL===0?0:QL<=3?1:2,tc=qt!==QT;QT=qt;BSK=[1,.75,.5][QT];
+ if(R.getPixelRatio()!==q.pr||tc){R.setPixelRatio(q.pr);resize()}GIBMAX=q.cap;
+ {const ms=[1024,768,384][QT],ty=[THREE.PCFSoftShadowMap,THREE.PCFShadowMap,THREE.BasicShadowMap][QT];if(sun.shadow.mapSize.x!==ms){if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null}sun.shadow.mapSize.set(ms,ms)}
+  if(R.shadowMap.type!==ty){R.shadowMap.type=ty;scene.traverse(o=>{if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.needsUpdate=true)})}}
+ AUXL.forEach(L=>L.visible=QT<2);if(!BOSS)HEM.intensity=.62*(QT===2?1.12:1);
  if(q.fz>0){FZ.s=.5;FZ.a=1;FZ.l=3;FZ.f=6}else if(q.fz<0){FZ.s=FZ.a=FZ.l=FZ.f=1e9}else{FZ.s=1;FZ.a=1.5;FZ.l=5;FZ.f=10}}
 const QN=()=>QL?'段階'+(QL-1):'高画質';
 setQ(GFXL[OPT.gfx]);
