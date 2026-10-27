@@ -1075,7 +1075,7 @@ function bossCine(B,dr){const t=(B.t+=dr),sm=x=>{x=Math.min(1,Math.max(0,x));ret
   cam.quaternion.slerpQuaternions(CQ0,CQ1,k);cam.updateMatrixWorld()}
  if(B.k===0&&t>1.6){B.k=1;crack(B.x,B.z,2.4)}
  if(B.k===1&&t>2.2){B.k=2;sand({x:B.x,y:.1,z:B.z+.3},18,DUST,1,0,.3);puff(B.x,.15,B.z+.3,0x8f8068,'s',.4,.35,0)}
- if(B.k===2&&t>3){B.k=3;play('trev',1);shakeT=.5}
+ if(B.k===2&&t>3){B.k=3;shakeT=.5}if(!B.trv&&t>6.1){B.trv=1;play('trev',1)}
  const u=sm((t-3)/2.2);B.g.position.y=t<3?-3.2+1.25*sm((t-2.1)/.9):-1.95*(1-u);U.pm.rotation.z=t>3&&t<5.2?Math.sin(t*19)*.05:0;
  B.sx=t<5.4?Math.sin(t*7)*.03*(1-u):0;B.r=0;B.kd=t<6.3?KDV.copy(KDLOW).lerp(KD0,sm((t-5.4)/.8)).normalize():null;
  if(B.k===3&&t>5.4){B.k=4;U.sd.visible=true;play('tpull',1)}
