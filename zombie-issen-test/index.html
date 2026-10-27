@@ -1008,8 +1008,8 @@ function endTick(dr){const E=ENDM,B=E.B;if(!E.h)E.h=(B.halves||[]).slice();const
  const lk=sm((t-3)/3);if(t>3)bossMood(.8+.2*lk,.45*(1-lk));
  if(t>6&&!E.rf){E.rf=1;rainOff(4)}if(t>6){RAINL.material.opacity=.45*(1-sm((t-6)/4));SKYK=1-sm((t-6.5)/3.5);if(t>10)RAINL.visible=false}
  {const k=t<8?0:t<14?sm((t-8)/2.5)*.8:.8*(1-sm((t-14)/1.8));if(t>8){CM4.lookAt(cam.position,new THREE.Vector3(0,.9,-8),YAX);CQ0.setFromRotationMatrix(CM4);CM4.lookAt(cam.position,new THREE.Vector3(-6,1.65,.2),YAX);CQ1.setFromRotationMatrix(CM4);cam.quaternion.slerpQuaternions(CQ0,CQ1,k);cam.updateMatrixWorld()}}
- if(t>10.5&&!E.s1){E.s1=1;banner('……終わった。',2400,26,1)}
- if(t>13.1&&!E.s2){E.s2=1;banner('さようなら、先生。',2600,26,1)}
+ if(t>10.5&&!E.s1){E.s1=1;banner('先生…',2400,26,1)}
+ if(t>13.1&&!E.s2){E.s2=1;banner('…ありがとう',2600,26,1)}
  if(t>15.8&&!E.lb){E.lb=1;$('lb1').style.height='0';$('lb2').style.height='0'}}
 /* one half of his body bursts into ~8 chunks (3 random cuts through its middle), thrown outward */
 function burstHalf(o){const i=gib.indexOf(o);if(i>=0)gib.splice(i,1);world.remove(o.b);o.mesh.updateMatrixWorld(true);
