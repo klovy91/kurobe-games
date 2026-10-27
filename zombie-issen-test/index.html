@@ -637,7 +637,7 @@ function dropShield(e){const G=e.sh.g,p=new THREE.Vector3(),q=new THREE.Quaterni
    (it stops the blade); get a stroke onto his body around it = he is cut deep and starts to change.  No stroke in 8 s = he attacks. */
 let BOSS=null;
 const bossW=()=>!!BOSS&&wave>=50&&wave<=55;
-const KD0=new THREE.Vector3(0,.62,1).normalize(),YAX=new THREE.Vector3(0,1,0),BCOL=[HEM.color.clone(),sun.color.clone()];
+let EYEG=null;const KD0=new THREE.Vector3(0,.62,1).normalize(),YAX=new THREE.Vector3(0,1,0),BCOL=[HEM.color.clone(),sun.color.clone()];
 function bossMood(dim,red){HEM.intensity=.62*dim;sun.intensity=1.15*dim;fil.intensity=.34*dim;
  HEM.color.copy(BCOL[0]).lerp(new THREE.Color(0xff8c8c),red);sun.color.copy(BCOL[1]).lerp(new THREE.Color(0xff9a88),red);
  const tn=new THREE.Color(1,1-.45*red,1-.5*red),k=Math.max(.1,dim);[[CEILM,0xdedacd],[HALLM,0x8a857a],[LAMPM,0xfffbe8]].forEach(([m,c])=>{if(m)m.color.setHex(c).multiply(tn).multiplyScalar(k)})}
@@ -648,7 +648,8 @@ function tchMake(){const c=pcfg(1),pm=personMesh(c,0),G=new THREE.Group(),U={};
  SKm.color.set(0x9aa58c);
  if(GORE!=='off'){const SL=GORE==='green'?STX.green:STX.red;SHm.map=SL[Math.random()*SL.length|0];PAm.map=SL[Math.random()*SL.length|0];
   kids0.forEach(o=>{if((o.material===SHm||o.material===PAm)&&o.geometry.type==='BoxGeometry')stainUV(o.geometry)})}
- const eyes=[-1,1].map(sx=>{const ey=new THREE.Mesh(new THREE.SphereGeometry(.026,8,6),new THREE.MeshBasicMaterial({color:0xff2a1a}));ey.position.set(.064*sx,1.6,.19);ey.userData.bone=2;pm.add(ey);return ey});
+ const eyes=[-1,1].map(sx=>{const ey=new THREE.Mesh(new THREE.SphereGeometry(.026,8,6),new THREE.MeshBasicMaterial({color:0xff2a1a}));ey.position.set(.064*sx,1.6,.19);ey.userData.bone=2;pm.add(ey);
+  const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:EYEG||(EYEG=dotTex()),color:0xff2a14,blending:THREE.AdditiveBlending,transparent:true,depthWrite:false}));gl.scale.setScalar(.16);gl.position.z=.012;ey.add(gl);return ey});
  const kids=pm.children.slice(),hip=new THREE.Group(),upper=new THREE.Group(),swing=new THREE.Group();hip.position.set(0,.9,0);swing.position.set(0,.48,0);swing.rotation.order='ZYX';
  const into=(par,o,ox,oy,oz)=>{o.position.x-=ox;o.position.y-=oy;o.position.z-=oz;par.add(o)};
  kids.forEach(o=>{const b=o.userData.bone;if(b===0||b===2)into(upper,o,0,.9,0);else if(b===1)into(hip,o,0,.9,0)});
