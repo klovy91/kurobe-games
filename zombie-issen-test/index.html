@@ -648,7 +648,7 @@ function tchMake(){const c=pcfg(1),pm=personMesh(c,0),G=new THREE.Group(),U={};
  SKm.color.set(0x9aa58c);
  if(GORE!=='off'){const SL=GORE==='green'?STX.green:STX.red;SHm.map=SL[Math.random()*SL.length|0];PAm.map=SL[Math.random()*SL.length|0];
   kids0.forEach(o=>{if((o.material===SHm||o.material===PAm)&&o.geometry.type==='BoxGeometry')stainUV(o.geometry)})}
- const eyes=[-1,1].map(sx=>{const ey=new THREE.Mesh(new THREE.SphereGeometry(.026,8,6),SM(0x4a0c0c,.6));ey.position.set(.066*sx,1.69,.172);ey.userData.bone=2;pm.add(ey);return ey});
+ const eyes=[-1,1].map(sx=>{const ey=new THREE.Mesh(new THREE.SphereGeometry(.026,8,6),SM(0x4a0c0c,.6));ey.position.set(.064*sx,1.6,.19);ey.userData.bone=2;pm.add(ey);return ey});
  const kids=pm.children.slice(),hip=new THREE.Group(),upper=new THREE.Group(),swing=new THREE.Group();hip.position.set(0,.9,0);swing.position.set(0,.48,0);swing.rotation.order='ZYX';
  const into=(par,o,ox,oy,oz)=>{o.position.x-=ox;o.position.y-=oy;o.position.z-=oz;par.add(o)};
  kids.forEach(o=>{const b=o.userData.bone;if(b===0||b===2)into(upper,o,0,.9,0);else if(b===1)into(hip,o,0,.9,0)});
