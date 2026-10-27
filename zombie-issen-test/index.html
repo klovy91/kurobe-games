@@ -585,12 +585,12 @@ function jmCry(r){const k='moan'+(1+(Math.random()*3|0));play(k,.7,r)}
 function jumpStep(e,ax,az,d){const J=e.jm,dist=Math.hypot(e.x,e.z-6);J.ph+=d*7;let T=JW;
  if(e===biter){e.x+=ax*d*e.v;e.z+=az*d*e.v;J.y+=(.45-J.y)*Math.min(1,d*10);J.m='bite';T=JA}
  else if(e.v>4){e.x+=ax*d*e.v;e.z+=az*d*e.v;J.y+=(0-J.y)*Math.min(1,d*10);J.m='walk'}
- else if(J.m==='walk'){e.x+=ax*d*e.v;e.z+=az*d*e.v;J.y=0;J.t-=d;if(J.t<=0&&dist>2.2){J.m='charge';J.t=.8;jmCry(1.35);puff(e.x,.12,e.z,0x8f8068,'s',.45,.35,0)}}
+ else if(J.m==='walk'){e.x+=ax*d*e.v;e.z+=az*d*e.v;J.y=0;J.t-=d;if(J.t<=0&&dist>2.2){J.m='charge';J.t=.5+Math.random()*.7;jmCry(1.35);puff(e.x,.12,e.z,0x8f8068,'s',.45,.35,0)}}
  else if(J.m==='charge'){J.t-=d;T=JC;if(Math.random()<d*12)sand({x:e.x+(Math.random()-.5)*.5,y:.05,z:e.z+(Math.random()-.5)*.5},3,DUST,1,0,.3);
   if(J.t<=0){J.m='air';J.u=0;J.vel={x:ax*1.5/.7,y:0,z:az*1.5/.7};jmCry(1.6);puff(e.x,.15,e.z,0x8f8068,'s',.6,.45,0)}}
  else if(J.m==='air'){T=JA;J.u+=d/.7;const u=Math.min(1,J.u);e.x+=J.vel.x*d;e.z+=J.vel.z*d;J.y=5*u*(1-u);J.vel.y=5*(1-2*u)/.7;
   if(J.u>=1){J.y=0;J.m='land';J.t=.25;puff(e.x,.12,e.z,0x8f8068,'s',.5,.4,0)}}
- else if(J.m==='land'){J.t-=d;T=JL;if(J.t<=0){if(J.nc&&dist>2.2){J.nc=0;J.m='charge';J.t=.8;jmCry(1.35);puff(e.x,.12,e.z,0x8f8068,'s',.45,.35,0)}else{J.nc=0;J.m='walk';J.t=1.2+Math.random()*1.2}}}
+ else if(J.m==='land'){J.t-=d;T=JL;if(J.t<=0){if(J.nc===1&&dist>2.2){J.nc=0;J.m='charge';J.t=.5+Math.random()*.7;jmCry(1.35);puff(e.x,.12,e.z,0x8f8068,'s',.45,.35,0)}else{J.m='walk';J.t=J.nc===2?.3+Math.random()*.7:1.2+Math.random()*1.2;J.nc=0}}}
  const k=Math.min(1,d*(J.m==='air'?14:9));['a','k','l','r'].forEach(q=>J.p[q]+=(T[q]-J.p[q])*k);
  const wk=J.m==='walk'?1:0;J.p.sw=Math.sin(J.ph)*.22*wk;J.p.as=Math.sin(J.ph)*.3*wk}
 function jumpPose(e,ax,az){const J=e.jm;e.g.position.set(e.x,J.y,e.z);e.g.rotation.y=Math.atan2(ax,az);jpSet(e.inr,J.p);e.inr.position.x=J.m==='charge'?(Math.random()-.5)*.035:0}
@@ -865,7 +865,7 @@ function spawnWave(){spawnCrawlers();const n=waveCount(wave),pb=Math.min(.16,.02
  const rh=(ty===0?1.05:dog?.82:jmp?1.45:1.95)*sc;
  const shd=new THREE.Mesh(new THREE.CircleGeometry((dog?.3:.36)*sc,16),SHADOWM);shd.rotation.x=-Math.PI/2;shd.position.y=.02+rh;shd.userData.nocut=1;shd.visible=false;g.add(shd);
  g.position.set(x,-rh,z);g.rotation.y=Math.atan2(-x,6-z)+(Math.random()-.5)*.5;scene.add(g);
- En.push({g,x,z,ty,bomb,lt,cf,v:dog?1.2:(.7+Math.random()*.5)*vm,inr,shd,rh,dog:dog?{m:'hop',t:0,n:2+(Math.random()*3|0),ht:0,dx:1,y:0,ph:0}:null,jm:jmp?{m:'walk',t:.6+Math.random()*1.2,y:0,u:0,ph:Math.random()*6,p:Object.assign({},JA),vel:{x:0,y:0,z:0}}:null,rt:-.01-(N>1?Math.random()*.6:0)})}riseMoan=1}
+ En.push({g,x,z,ty,bomb,lt,cf,v:dog?1.2:(.7+Math.random()*.5)*vm,inr,shd,rh,dog:dog?Object.assign(Math.random()<.6?{m:'hop',t:0,n:1+(Math.random()*4|0)}:{m:'growl',t:.4+Math.random()*.4,n:0},{er:.3+Math.random()*.2,eh:.4+Math.random()*.4,ht:0,dx:1,y:0,ph:0}):null,jm:jmp?{ea:4.2+Math.random()*2.8,m:'walk',t:.6+Math.random()*1.2,y:0,u:0,ph:Math.random()*6,p:Object.assign({},JA),vel:{x:0,y:0,z:0}}:null,rt:-.01-(N>1?Math.random()*.6:0)})}riseMoan=1}
 function blowEnemy(e,cx,cz){const dx=e.x-cx,dz=e.z-cz,d=Math.hypot(dx,dz)||1,f=Math.max(4,13-d*1.4);
  const n=new THREE.Vector3(Math.random()-.5,Math.random()-.5,Math.random()-.5).normalize();
  const C=new THREE.Vector3(e.x,e.dog?.3+Math.random()*.3:e.jm?e.g.position.y+.4+Math.random()*.5:.9+Math.random()*.6,e.z);
@@ -1083,11 +1083,11 @@ function frame(now){requestAnimationFrame(frame);perfTick(now-last);const dr=Mat
   En.forEach(e=>{if(e.rt===undefined)return;const was=e.rt;e.rt+=dt;
    if(was<0&&e.rt>=0){e.shd.visible=true;crack(e.x,e.z,(e.ty===2?2.3:1.7)*e.rh/1.95+.4);sand({x:e.x,y:.06,z:e.z},22,DUST,1.25,0,.55);puff(e.x,.25,e.z,0x8f8068,'s',.55,.45,0);if(riseMoan){riseMoan=0;if(e.dog)play('dog1',.8,1);else sMoan()}}
    if(e.rt<0){rising=true;return}
-   const u=Math.min(1,e.rt/(e.dog?.4:e.jm?.7:RISE)),k=1-Math.pow(1-u,3),y=e.dog?-e.rh*(1-u)+Math.sin(Math.PI*u)*.6:e.jm?-e.rh*(1-u)+5.6*u*(1-u):-e.rh*(1-k);
+   const u=Math.min(1,e.rt/(e.dog?e.dog.er:e.jm?.7:RISE)),k=1-Math.pow(1-u,3),y=e.dog?-e.rh*(1-u)+Math.sin(Math.PI*u)*e.dog.eh:e.jm?-e.rh*(1-u)+e.jm.ea*u*(1-u):-e.rh*(1-k);
    if(e.dog)e.inr.rotation.x=-.45*(1-u);if(e.jm)jpSet(e.inr,e.jm.p);
    e.g.position.set(e.x,y,e.z);e.shd.position.y=.02-y;e.inr.rotation.z=Math.sin(e.rt*21)*.04*(1-u);
    if(u<1){rising=true;if(Math.random()<dt*14)sand({x:e.x+(Math.random()-.5)*.5,y:.05,z:e.z+(Math.random()-.5)*.5},3,DUST,.9,0,.3)}
-   else{e.rt=undefined;e.inr.rotation.z=0;e.shd.position.y=.02;if(e.jm){e.jm.m='land';e.jm.t=.25;e.jm.nc=1;puff(e.x,.12,e.z,0x8f8068,'s',.5,.4,0)}}});
+   else{e.rt=undefined;e.inr.rotation.z=0;e.shd.position.y=.02;if(e.jm){e.jm.m='land';e.jm.t=.25;e.jm.nc=Math.random()<.5?1:2;puff(e.x,.12,e.z,0x8f8068,'s',.5,.4,0)}}});
   En.forEach(e=>{if(holdT>0||rising)return;if(st==='after'&&!cleared&&rushT>0)return;const v=e.v;let ax=-e.x,az=(e===biter?6.8:5.2)-e.z;const l=Math.hypot(ax,az)||1;ax/=l;az/=l;
    if(e.dog)dogStep(e,ax,az,Math.max(dt,dr*.25));else if(e.jm)jumpStep(e,ax,az,dt);else{e.x+=ax*dt*v;e.z+=az*dt*v}
    if(!(e.jm&&e.jm.m==='air'))dyn.forEach(d=>{const ob=d.body.ob;if(!ob)return;const p=d.body.position,dx=e.x-p.x,dz=e.z-p.z,cx=Math.max(-ob[0],Math.min(ob[0],dx)),cz=Math.max(-ob[1],Math.min(ob[1],dz)),vx=dx-cx,vz=dz-cz,dd=Math.hypot(vx,vz);
