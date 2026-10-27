@@ -108,7 +108,7 @@ function rainOn(){if(!A()||!BUF.rain)return;const v=WBRK?.85:.5;if(!RAINS){const
  const t=AC.currentTime,G=RAING.gain;G.cancelScheduledValues(t);G.setValueAtTime(G.value,t);G.linearRampToValueAtTime(v,t+1.5)}
 function rainOff(fd){if(!RAINS)return;const s=RAINS,G=RAING.gain,t=AC.currentTime,f=fd||1.2;RAINS=null;RAING=null;G.cancelScheduledValues(t);G.setValueAtTime(G.value,t);G.linearRampToValueAtTime(0,t+f);try{s.stop(t+f+.1)}catch(e){}}
 /* BGM (boss fight: forms 1-2 = bgm1). Loops; the file is mastered loud, so it plays at about 1/5 */
-let BGMW=null,BGMS=null,BGMG=null,BGMK=null;const BGMV={bgm3:.15,bgm0:.14,bgm1:.2,bgm2:.3};
+let BGMW=null,BGMS=null,BGMG=null,BGMK=null;const BGMV={bgm3:.15,bgm0:.14,bgm1:.2,bgm2:.48};
 function bgmOn(k){BGMW=k;if(BGMK===k||!A()||!BUF[k])return;bgmOff(.6,1);const s=AC.createBufferSource();s.buffer=BUF[k];s.loop=true;const g=AC.createGain(),t=AC.currentTime;g.gain.setValueAtTime(BGMV[k]||.2,t);s.connect(g);g.connect(MG);s.start();BGMS=s;BGMG=g;BGMK=k}
 function bgmOff(fd,keep){if(!keep)BGMW=null;if(!BGMS)return;const s=BGMS,G=BGMG.gain,t=AC.currentTime,f=fd||1.2;BGMS=null;BGMG=null;BGMK=null;G.cancelScheduledValues(t);G.setValueAtTime(G.value,t);G.linearRampToValueAtTime(0,t+f);try{s.stop(t+f+.05)}catch(e){}}
 function roomOff(){if(roomSrc){try{roomSrc.stop()}catch(e){}roomSrc=null}}
