@@ -869,7 +869,7 @@ function fLimb(N,r0,r1,mat,hand){const g=new THREE.Group(),segs=[];for(let k=0;k
 function fHead(mat){const h=new THREE.Group(),S=r=>new THREE.SphereGeometry(r,20,14),hd=new THREE.Mesh(S(.34),mat);hd.scale.set(1,1.1,1);hd.userData.bone=2;h.add(hd);
  const gum=new THREE.Mesh(S(.2),SM(FC.gum,.6));gum.position.set(0,-.17,.24);gum.scale.set(1.2,.6,.6);h.add(gum);h.userData.gum=gum;const TE=SM(FC.teeth,.5);
  for(let k=0;k<9;k++){const a=new THREE.Mesh(new THREE.BoxGeometry(.04,.07,.03),TE);a.position.set(-.16+k*.04,-.1,.36);h.add(a);const b=new THREE.Mesh(new THREE.BoxGeometry(.04,.06,.03),TE);b.position.set(-.16+k*.04,-.24,.34);h.add(b);(h.userData.low=h.userData.low||[]).push(b)}
- [-1,1].forEach(s=>{const ey=new THREE.Mesh(S(.045),new THREE.MeshBasicMaterial({color:0xff2a1a}));ey.position.set(.12*s,.08,.3);h.add(ey);
+ [-1,1].forEach(s=>{const em=new THREE.MeshBasicMaterial({color:0xff2a1a});em.userData.eye=1;const ey=new THREE.Mesh(S(.045),em);ey.position.set(.12*s,.08,.3);h.add(ey);
   const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:EYEG||(EYEG=dotTex()),color:0xff2a14,blending:THREE.AdditiveBlending,transparent:true,depthWrite:false}));gl.scale.setScalar(.32);ey.add(gl)});
  for(let k=0;k<6;k++){const c=new THREE.Mesh(new THREE.BoxGeometry(.015,.25,.02),SM(FC.flesh,.6));c.position.set((Math.random()-.5)*.4,.15+Math.random()*.15,.22);c.rotation.z=(Math.random()-.5)*1.4;h.add(c)}
  h.traverse(o=>{if(o.isMesh)o.castShadow=true});return h}
@@ -990,12 +990,15 @@ function endTick(dr){const E=ENDM,B=E.B;if(!E.h)E.h=(B.halves||[]).slice();const
  WFALL.forEach(o=>{if(o.gone)return;const k=sm(t/2.5);o.g.scale.setScalar(Math.max(.02,1-k*.98));o.g.position.y-=dr*.25;if(R()<dr*14)sand(o.g.position,8,BLOOD,1.6,1,.4);if(k>=1){scene.remove(o.g);disposeTree(o.g);o.gone=1}});
  if(t>2.5&&!E.wh){E.wh=1;(B.W||[]).forEach(w=>{w.h.visible=false;w.m.visible=false})}
  if(t>1.5&&E.bx===undefined){E.bx=0;bodyBurst(E,0)}else if(E.bx===0){E.bx=1;bodyBurst(E,1)}
+ (E.ch||[]).forEach(o=>{if(o.gone||t<5)return;if(!o.out){o.out=1;const i=gib.indexOf(o);if(i>=0){gib.splice(i,1);world.remove(o.b)}if(o.con){o.con.forEach(rmCon);o.con=[]}o.dl=Math.random()*.7;o.y0=o.mesh.position.y;const bb=new THREE.Box3().setFromObject(o.mesh);o.hd=o.y0-bb.min.y+bb.max.y-bb.min.y+.1}
+  const k=sm((t-5-o.dl)/2.8),p=o.mesh.position;p.y=o.y0-o.hd*k;if(k>0&&k<1){if(R()<dr*7)splat(p.x+(R()-.5)*.9,p.z+(R()-.5)*.9,.35+R()*.7);if(R()<dr*6)sand({x:p.x,y:.08,z:p.z},6,BLOOD,1.1,1,.4)}
+  if(k>=1){scene.remove(o.mesh);disposeTree(o.mesh);o.gone=1}});
  const lk=sm((t-3)/3);if(t>3)bossMood(.8+.2*lk,.45*(1-lk));
  if(t>6&&!E.rf){E.rf=1;rainOff(4)}if(t>6){RAINL.material.opacity=.45*(1-sm((t-6)/4));SKYK=1-sm((t-6.5)/3.5);if(t>10)RAINL.visible=false}
- {const k=t<6?0:t<13?sm((t-6)/3.5)*.8:.8*(1-sm((t-13)/1.8));if(t>6){CM4.lookAt(cam.position,new THREE.Vector3(0,.9,-8),YAX);CQ0.setFromRotationMatrix(CM4);CM4.lookAt(cam.position,new THREE.Vector3(-6,1.65,.2),YAX);CQ1.setFromRotationMatrix(CM4);cam.quaternion.slerpQuaternions(CQ0,CQ1,k);cam.updateMatrixWorld()}}
- if(t>9.8&&!E.s1){E.s1=1;banner('……終わった。',2400,26,1)}
- if(t>12.4&&!E.s2){E.s2=1;banner('さようなら、先生。',2600,26,1)}
- if(t>14.8&&!E.lb){E.lb=1;$('lb1').style.height='0';$('lb2').style.height='0'}}
+ {const k=t<8?0:t<14?sm((t-8)/2.5)*.8:.8*(1-sm((t-14)/1.8));if(t>8){CM4.lookAt(cam.position,new THREE.Vector3(0,.9,-8),YAX);CQ0.setFromRotationMatrix(CM4);CM4.lookAt(cam.position,new THREE.Vector3(-6,1.65,.2),YAX);CQ1.setFromRotationMatrix(CM4);cam.quaternion.slerpQuaternions(CQ0,CQ1,k);cam.updateMatrixWorld()}}
+ if(t>10.5&&!E.s1){E.s1=1;banner('……終わった。',2400,26,1)}
+ if(t>13.1&&!E.s2){E.s2=1;banner('さようなら、先生。',2600,26,1)}
+ if(t>15.8&&!E.lb){E.lb=1;$('lb1').style.height='0';$('lb2').style.height='0'}}
 /* one half of his body bursts into ~8 chunks (3 random cuts through its middle), thrown outward */
 function burstHalf(o){const i=gib.indexOf(o);if(i>=0)gib.splice(i,1);world.remove(o.b);o.mesh.updateMatrixWorld(true);
  const bb=new THREE.Box3().setFromObject(o.mesh),C=bb.getCenter(new THREE.Vector3());let E=[];
@@ -1008,13 +1011,13 @@ function burstHalf(o){const i=gib.indexOf(o);if(i>=0)gib.splice(i,1);world.remov
    for(let q=0;q<2;q++){if(r.out[q].length)N.push({v:r.out[q],vn:r.on[q],vu:r.ou[q],mat:e.mat,cap:e.cap,cell:e.cell|(q<<pl)});if(c.length)N.push({v:c,vn:null,vu:null,mat:CU,cap:true,cell:e.cell|(q<<pl)})}});E=N}
  const cells={};E.forEach(e=>{(cells[e.cell]=cells[e.cell]||[]).push({v:e.v,vn:e.vn,vu:e.vu,mat:e.mat,c:[],cap:e.cap})});
  Object.values(cells).forEach(parts=>{const cen=new THREE.Vector3();let n=0;parts.forEach(p=>p.v.forEach(x=>{cen.add(x);n++}));if(!n)return;cen.multiplyScalar(1/n);
-  const d=cen.clone().sub(C);d.y=Math.max(d.y,0)+.25;d.normalize().multiplyScalar(3.5+Math.random()*3.5);const q=mkPiece(parts,{x:d.x,y:d.y+1.5,z:d.z},0,1.2);if(q){q.bleed=4;fEyeGlow(q)}});
+  const d=cen.clone().sub(C);d.y=Math.max(d.y,0)+.25;d.normalize().multiplyScalar(3.5+Math.random()*3.5);const q=mkPiece(parts,{x:d.x,y:d.y+1.5,z:d.z},0,1.2);if(q){q.bleed=4;fEyeGlow(q);if(ENDM)(ENDM.ch=ENDM.ch||[]).push(q)}});
  scene.remove(o.mesh);disposeTree(o.mesh);o.gone=1;return C}
 function bodyBurst(E,k){const R=Math.random,o=E.h[k];if(!o||o.gone)return;const cs=[burstHalf(o)];if(k)return void cs.forEach(C=>{for(let i=0;i<10;i++){const p=C.clone().add(new THREE.Vector3((R()-.5)*1.2,(R()-.5)*1.2,(R()-.5)*1.2));gush(p.x,p.y,p.z);sand(p,260,BLOOD,6,1,1)}});
  flash(.7);shakeT=Math.max(shakeT,1.4);play('fsplat',1,.75);play('boom',.55,.7);play('splat',1,.6);
  cs.forEach(C=>{for(let i=0;i<10;i++){const p=C.clone().add(new THREE.Vector3((R()-.5)*1.2,(R()-.5)*1.2,(R()-.5)*1.2));gush(p.x,p.y,p.z);sand(p,260,BLOOD,6,1,1)}});
  SPLMAX=.6;for(let i=0;i<10;i++)setTimeout(()=>{if(st!=='over')lensSplat(innerWidth*(.1+R()*.8),innerHeight*(.12+R()*.76),'fsplat')},60+i*90);setTimeout(()=>{SPLMAX=.2},4000)}
-function endFinish(){const E=ENDM;if(!E)return;ENDM=null;(E.h||E.B.halves||[]).forEach(o=>{if(o.gone)return;const i=gib.indexOf(o);if(i>=0){gib.splice(i,1);world.remove(o.b)}scene.remove(o.mesh);disposeTree(o.mesh)});
+function endFinish(){const E=ENDM;if(!E)return;ENDM=null;(E.ch||[]).forEach(o=>{if(o.gone)return;const i=gib.indexOf(o);if(i>=0){gib.splice(i,1);world.remove(o.b)}scene.remove(o.mesh);disposeTree(o.mesh)});(E.h||E.B.halves||[]).forEach(o=>{if(o.gone)return;const i=gib.indexOf(o);if(i>=0){gib.splice(i,1);world.remove(o.b)}scene.remove(o.mesh);disposeTree(o.mesh)});
  WFALL.forEach(o=>{if(!o.gone){scene.remove(o.g);disposeTree(o.g)}});WFALL=[];(E.B.W||[]).forEach(w=>{w.h.visible=false;w.m.visible=false});
  RAINL.visible=false;cam.position.set(0,1.6,6);cam.lookAt(0,.9,-8);cam.updateMatrixWorld();$('lb1').style.height='0';$('lb2').style.height='0'}
 function endSkip(){if(!ENDM)return;$('bn').style.opacity=0;after=.05;slowT=0}
@@ -1033,7 +1036,7 @@ function fJudge(B){
 function fCounter(B){if(B.m==='fglow'){bossGlow(B,0);fAttack(B);return}if(B.m==='fga'){B.GA.forEach(a=>{if(a.ph==='app')a.u=Math.max(a.u,.9)});return}if(B.m==='fidle'||B.m==='ftw')fAttack(B)}
 /* glow (yellow) on everything of him: the teacher, his tumours, his limbs and head */
 function bossGlow(B,k){const f=m=>{if(m.isMesh&&m.material&&m.material.emissive)m.material.emissive.setRGB(k,k*.82,0)};B.g.traverse(f);if(B.farms)B.farms.forEach(L=>L.g.traverse(f));if(B.fneck)B.fneck.g.traverse(f)}
-function fEyeGlow(o){o.mesh.traverse(m=>{if(m.isMesh&&m.material&&m.material.isMeshBasicMaterial&&m.material.color.r>.9&&m.material.color.g<.3){m.geometry.computeBoundingSphere();
+function fEyeGlow(o){o.mesh.traverse(m=>{if(m.isMesh&&m.material&&m.material.isMeshBasicMaterial&&(m.material.userData.eye||m.material.color.r>.9&&m.material.color.g<.3)){m.material.color.setHex(0xff2a1a);m.geometry.computeBoundingSphere();
  const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:EYEG||(EYEG=dotTex()),color:0xff2a14,blending:THREE.AdditiveBlending,transparent:true,depthWrite:false}));gl.position.copy(m.geometry.boundingSphere.center);gl.scale.setScalar(.32*FK);m.add(gl)}})}
 /* the last stroke: his whole body (and limbs, head) is cut in two along the blade; the biggest blood burst of the game */
 function fSplitAll(B){bgmOff(.12);endStart(B);const C=B.th.C,n=B.th.n,ms=[],vis=o=>{while(o){if(!o.visible)return false;o=o.parent}return true};bossGlow(B,0);
@@ -1621,7 +1624,7 @@ function frame(now){requestAnimationFrame(frame);if(PAUSED){last=now;return}{con
      b.wakeUp();const di=dyn.findIndex(x=>x.mesh===o);if(di>=0){dyn.splice(di,1);gib.push({mesh:o,b,age:2.6,nc:1,vt:8})}
      b.applyImpulse(new CANNON.Vec3((d.x+w.x*.6)*k,(d.y+w.y*.6+.5)*k,(d.z+w.z*.6)*k),new CANNON.Vec3(p.x-b.position.x,p.y-b.position.y,p.z-b.position.z))}}}});
   pend=[];
-  if(fin){fin=false;if(REC.on)REC.snapAt=now+420;cleared=bossW()?bossJudge():En.length===0;slowT=cleared?2.6:1.7;after=cleared?3.9:4.9;if(cleared&&wave===60&&BOSS){slowT=5.5;after=15.5}rushT=cleared?0:1.9;st='after'}
+  if(fin){fin=false;if(REC.on)REC.snapAt=now+420;cleared=bossW()?bossJudge():En.length===0;slowT=cleared?2.6:1.7;after=cleared?3.9:4.9;if(cleared&&wave===60&&BOSS){slowT=4;after=16.5}rushT=cleared?0:1.9;st='after'}
  }
  if(st==='intro'){introT+=dr;const t=introT,k=Math.min(1,t/15.4);
   {let px,py,pz,ly,lz;
@@ -1693,7 +1696,7 @@ function frame(now){requestAnimationFrame(frame);if(PAUSED){last=now;return}{con
    if(dk<1){if(o.nc)crumble(o,1-Math.max(0,dk),gd);else{if(Math.random()<gd*20)sand(o.b.position,4,BLOOD,1.5,1,.18);o.mesh.scale.setScalar(.3+.7*Math.max(0,dk))}}
    if(o.dieT<=0){const q=o.b.position;if(o.nc){const c=o.cr;if(c)for(let k=0;k<10;k++)sand({x:c.bb.min.x+Math.random()*(c.bb.max.x-c.bb.min.x),y:.04,z:c.bb.min.z+Math.random()*(c.bb.max.z-c.bb.min.z)},1,c.col[k%c.col.length],.4,0,.05)}else sand(q,30,BLOOD,2.6,1,.32);if(!o.nc)for(let k=0;k<2;k++)splat(q.x+(Math.random()-.5)*.6,q.z+(Math.random()-.5)*.6,.2+Math.random()*.35);dropGib(o);return false}}
   if(o.nc)return true;
-  if(o.age<60&&!o.carry){const off=GORE!=='on',k=Math.min(1,gd/(off?.5:.7));o.mesh.traverse(m=>{if(m.isMesh&&!m.userData.cap)m.material.color.lerp(off?GRAYC:FLESHC,k)})}
+  if(o.age<60&&!o.carry){const off=GORE!=='on',k=Math.min(1,gd/(off?.5:.7));o.mesh.traverse(m=>{if(m.isMesh&&!m.userData.cap&&!m.material.userData.eye)m.material.color.lerp(off?GRAYC:FLESHC,k)})}
   if(o.age>4.5&&!o.sp){o.sp=1;for(let i=0;i<4;i++)splat(o.b.position.x+(Math.random()-.5)*.75,o.b.position.z+(Math.random()-.5)*.75,.18+Math.random()*.42)}
   return true});
  stepSand(dr*ts);stepFx(dr*Math.max(.4,ts));rainTick(dr*ts);
