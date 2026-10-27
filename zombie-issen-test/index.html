@@ -641,7 +641,7 @@ const bossW=()=>!!BOSS&&wave>=50&&wave<=60;
 let EYEG=null;const KD0=new THREE.Vector3(0,.62,1).normalize(),YAX=new THREE.Vector3(0,1,0),BCOL=[HEM.color.clone(),sun.color.clone()];
 function bossMood(dim,red){HEM.intensity=.62*dim*(QT===2?1.12:1);sun.intensity=1.15*dim;fil.intensity=.34*dim;
  HEM.color.copy(BCOL[0]).lerp(new THREE.Color(0xff8c8c),red);sun.color.copy(BCOL[1]).lerp(new THREE.Color(0xff9a88),red);
- const tn=new THREE.Color(1,1-.45*red,1-.5*red),k=Math.max(.1,dim);[[CEILM,0xdedacd],[HALLM,0x8a857a],[LAMPM,0xfffbe8]].forEach(([m,c])=>{if(m)m.color.setHex(c).multiply(tn).multiplyScalar(k)})}
+ const tn=new THREE.Color(1,1-.45*red,1-.5*red),k=Math.max(.1,dim);[[CEILM,0xdedacd],[HALLM,0x8a857a],[LAMPM,0xfffbe8],[BL.material,GC?GC.bl:0x7d0a12],[SCM.material,0x1d1714],[sandPts.material,0xffffff],[BOSS&&BOSS.pool?BOSS.pool.material:null,BOSS&&BOSS.pool?BOSS.pool.userData.c0:0]].forEach(([m,c])=>{if(m)m.color.setHex(c).multiply(tn).multiplyScalar(k)})}
 function katMesh(){const g=new THREE.Group(),bl=mk(.028,.95,.013,0xdfe4ec),ed=mk(.007,.95,.017,0xffffff),gu=mk(.1,.018,.062,0x26262b),hi=mk(.034,.26,.034,0x15151a);
  bl.position.y=.5;ed.position.set(.016,.5,0);gu.position.y=.015;hi.position.y=-.13;g.add(bl,ed,gu,hi);g.traverse(o=>{if(o.isMesh){o.userData.nocut=1;o.castShadow=true}});return g}
 function tchMake(){const c=pcfg(1),pm=personMesh(c,0),G=new THREE.Group(),U={};
@@ -674,7 +674,7 @@ const GUARDS=[{sx:.1,r:-.5,D:[.78,.6,.15]},{sx:-.9,r:.9,D:[-1,.08,.1]},{sx:.35,r
 function bossMake(cine){const T=tchMake(),B={g:T.g,U:T.U,x:0,z:cine?-3.6:1,sx:0,r:0,lg:0,ph:0,t:0,m:'idle'};BOSS=B;B.g.position.set(B.x,cine?-1.95:0,B.z);
  if(cine){B.m='cine';B.t=0;B.U.sd.visible=false;
   const pool=new THREE.Mesh(new THREE.CircleGeometry(1,40),new THREE.MeshBasicMaterial({color:GORE==='off'?0x2e2a26:GORE==='green'?0x1f4a0c:0x4a0308,transparent:true,opacity:.92,depthWrite:false}));
-  pool.rotation.x=-Math.PI/2;pool.position.set(B.x,.016,B.z+.15);pool.scale.setScalar(.01);pool.userData.nocut=1;pool.userData.boss=1;scene.add(pool);B.pool=pool;
+  pool.userData.c0=pool.material.color.getHex();pool.rotation.x=-Math.PI/2;pool.position.set(B.x,.016,B.z+.15);pool.scale.setScalar(.01);pool.userData.nocut=1;pool.userData.boss=1;scene.add(pool);B.pool=pool;
   const sk=katMesh();sk.position.set(B.x+.45,.3,B.z+.55);sk.rotation.set(.25,0,-.2);sk.visible=false;sk.userData.boss=1;scene.add(sk);B.sk=sk}
  else{bossMood(.85,.35);bossGo()}tchPose(B)}
 function bossDispose(){if(!BOSS)return;const B=BOSS;[B.g,B.pool,B.sk,B.cr,B.dk].forEach(o=>{if(o){scene.remove(o);disposeTree(o)}});if(B.tn)B.tn.forEach(T=>{scene.remove(T.g);disposeTree(T.g);T.mat.dispose()});fDispose(B);BOSS=null;bossMood(1,0);$('lb1').style.height='0';$('lb2').style.height='0'}
@@ -807,7 +807,7 @@ function bossHurt2(){const B=BOSS;bossGlow(B,0);B.m='hurt2';B.t=0;sCut();bossBle
    60: his head lunges to bite: cut it in two.  Then he collapses. */
 const FK=.82;const FC={skin:0x7c3530,flesh:0x6e0c12,flesh2:0x941a20,suit:0x2a1c20,shirt:0xb89a92,tie:0x4a0a10,teeth:0xe8e2c8,gum:0x3a0a0c};
 function fMat(c,r){const m=new THREE.MeshStandardMaterial({color:c,roughness:r||.55,emissive:0x000000});m.userData.keep=1;return m}
-const bossBlock=()=>!!BOSS&&(BOSS.m==='cine'||BOSS.m==='reel'||BOSS.m==='tf'||BOSS.m==='tf3'||!!BOSS.frise);
+let NOZT=0;const bossBlock=()=>performance.now()<NOZT||!!BOSS&&(BOSS.m==='cine'||BOSS.m==='reel'||BOSS.m==='tf'||BOSS.m==='tf3'||!!BOSS.frise);
 function fClaw(mat,r){const h=new THREE.Group();h.add(new THREE.Mesh(new THREE.SphereGeometry(r,12,10),mat));
  [-1,0,1].forEach(c=>{const cl=new THREE.Mesh(new THREE.ConeGeometry(r*.25,r*1.7,6),SM(0xd9d0b5,.5));cl.position.set(c*r*.5,r*1.2,r*.3);cl.rotation.x=.3;h.add(cl)});h.traverse(o=>{if(o.isMesh)o.castShadow=true});return h}
 function fBigHand(mat){const h=new THREE.Group(),C=SM(0xd9d0b5,.45),add=(ge,m,x,y,z,rx,rz)=>{const o=new THREE.Mesh(ge,m);o.position.set(x,y,z);o.rotation.set(rx||0,0,rz||0);o.castShadow=true;h.add(o);return o};
@@ -1360,7 +1360,7 @@ function banner(t,ms,sz,tw){const b=$('bn');b.style.fontSize=(sz||34)+'px';b.sty
  if(tw){let i=0;b.textContent='';bnT=setInterval(()=>{i++;b.textContent=t.slice(0,i);if(i>=t.length){clearInterval(bnT);bnT=null}},45)}
  else b.innerHTML=t;
  if(bnH)clearTimeout(bnH);bnH=setTimeout(()=>{b.style.opacity=0;bnH=null},ms)}
-function waveBanner(){if(BOSS&&(BOSS.m==='cine'||BOSS.m==='tf'||BOSS.m==='tf3'))return;if(wave===50||wave===52){const w=wave,L=w===50?[['攻撃の隙がない…',1100]]:[['攻撃のチャンスだ！',1700]];L.forEach(([tx,ms])=>setTimeout(()=>{if(wave===w&&BOSS&&st!=='over')banner(tx,2000,24)},ms))}sDing();banner('WAVE '+wave+'<br><span style="font-size:17px;opacity:.92">'+(wave>=50&&wave<=60?['まさか、先生...!!','先生','先生、さようなら','先生...？','先生...？','こんどこそ、さようなら','先生だった何か','先生だった何か','来る...！左だ！','次は右だ！','今度こそ もう立ち上がれない'][wave-50]:wave===61?'終わりのない戦い':endSp(wave)>=0?['犬ゾンビの群れ','体育会系ゾンビの群れ','給食当番ゾンビの群れ','用務員ゾンビの群れ'][endSp(wave)]:wave===10?'犬ゾンビ出現':wave===20?'体育会系ゾンビ出現':wave===30?'給食当番ゾンビ出現':wave===40?'用務員ゾンビ出現':'ゾンビ '+En.length+'体')+'</span>',wave===10||wave===20||wave===30||wave===40||wave===61||endSp(wave)>=0?1900:1500)}
+function waveBanner(){if(BOSS&&(BOSS.m==='cine'||BOSS.m==='tf'||BOSS.m==='tf3'))return;if(wave===50||wave===52){const w=wave,L=w===50?[['攻撃の隙がない…',1100]]:[['攻撃のチャンスだ！',1700]];if(w===50)NOZT=performance.now()+1100+2000+250;L.forEach(([tx,ms])=>setTimeout(()=>{if(wave===w&&BOSS&&st!=='over')banner(tx,2000,24)},ms))}sDing();banner('WAVE '+wave+'<br><span style="font-size:17px;opacity:.92">'+(wave>=50&&wave<=60?['まさか、先生...!!','先生','先生、さようなら','先生...？','先生...？','こんどこそ、さようなら','先生だった何か','先生だった何か','来る...！左だ！','次は右だ！','今度こそ もう立ち上がれない'][wave-50]:wave===61?'終わりのない戦い':endSp(wave)>=0?['犬ゾンビの群れ','体育会系ゾンビの群れ','給食当番ゾンビの群れ','用務員ゾンビの群れ'][endSp(wave)]:wave===10?'犬ゾンビ出現':wave===20?'体育会系ゾンビ出現':wave===30?'給食当番ゾンビ出現':wave===40?'用務員ゾンビ出現':'ゾンビ '+En.length+'体')+'</span>',wave===10||wave===20||wave===30||wave===40||wave===61||endSp(wave)>=0?1900:1500)}
 function nextWave(){qFlush();wave++;spawnWave();MAXL=bladeLen(wave);waveBanner()}
 const MSG=['…と、そこで目が覚めた。','チャイムが鳴った。妄想終了。','次の授業は体育だった。','先生「ここ、テストに出るぞ」'];
 function bloodScreen(){bl=[];bt0=performance.now();const S0=Math.min(innerWidth,innerHeight)/390;
@@ -1385,7 +1385,7 @@ function hlZoom(){if($('hz')||!HL)return;const vid=!!HL.vu,d=document.createElem
  if(vid)m.play().catch(()=>{})}
 function hlStop(){{const z=$('hz');if(z){z.querySelectorAll('video').forEach(v=>{try{v.pause();v.removeAttribute('src');v.load()}catch(e){}});z.remove()}}const h=$('hl');if(h){h.querySelectorAll('video').forEach(v=>{try{v.pause();v.removeAttribute('src');v.load()}catch(e){}});h.textContent=''}
  if(HL){if(HL.vu)URL.revokeObjectURL(HL.vu);if(HL.img&&HL.img.u)URL.revokeObjectURL(HL.img.u)}}
-function start(){qFlush();adOff();CARRY=[];blobClear();bossDispose();flopClear();scene.children.slice().forEach(o=>{if(o.userData.boss){scene.remove(o);disposeTree(o)}});bossMood(1,0);{const h=$('ht');if(h)h.remove();const o=$('opt');if(o)o.remove()}recAbort();hlStop();HL=null;REC.run++;REC.pend=0;{const f0=$('fl');f0.style.transition='none';f0.style.opacity=0}roomOff();moanT=3;if(DOOR)DOOR.position.z=-3.4;bl=[];biter=null;bite=0;rushT=0;slashA=null;swA=null;slowT=0;holdT=0;clearField();bn=0;BL.count=0;for(let j=0;j<NP;j++)sL[j]=0;wave=TESTW||1;S=0;ts=1;after=0;stroke=null;pend=[];TR=[];MAXL=bladeLen(wave);layout();$('scr').style.display='none';
+function start(){qFlush();NOZT=0;adOff();CARRY=[];blobClear();bossDispose();flopClear();scene.children.slice().forEach(o=>{if(o.userData.boss){scene.remove(o);disposeTree(o)}});bossMood(1,0);{const h=$('ht');if(h)h.remove();const o=$('opt');if(o)o.remove()}recAbort();hlStop();HL=null;REC.run++;REC.pend=0;{const f0=$('fl');f0.style.transition='none';f0.style.opacity=0}roomOff();moanT=3;if(DOOR)DOOR.position.z=-3.4;bl=[];biter=null;bite=0;rushT=0;slashA=null;swA=null;slowT=0;holdT=0;clearField();bn=0;BL.count=0;for(let j=0;j<NP;j++)sL[j]=0;wave=TESTW||1;S=0;ts=1;after=0;stroke=null;pend=[];TR=[];MAXL=bladeLen(wave);layout();$('scr').style.display='none';
  if(seenIntro){endIntro();return}
  $('lb1').style.height='8.5%';$('lb2').style.height='8.5%';
  roomOn();introSetup();st='intro';introT=0;introS=0}
