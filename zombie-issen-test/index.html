@@ -913,6 +913,7 @@ function fTick(B,dt,dr){if(B.m==='tf3'&&!B.f3){fTf(B,dr);if(!B.F)return}
  // his own arms and head
  const sm=(T,f)=>{const old=T.P.length?T.P.map(v=>v.clone()):null;f();if(old&&old.length===T.P.length){const k=Math.min(1,dt*(T.fast?40:4));T.P.forEach((v,i)=>v.copy(old[i].lerp(v,k)))}};
  if(B.farms)B.farms.forEach((L,i)=>{const atk=B.fi===i,mode=atk&&B.m==='fpunch'?'punch':atk&&B.m==='ftw'?'tw':'idle';L.fast=mode==='punch';sm(L,()=>fArmPts(B,L,mode,B.u||0));tnLay(L);
+  {const k=Math.max(.001,Math.min(1,B.fg==null?1:B.fg));L.g.visible=k>.03;if(k<1){L.segs.forEach(m=>{m.scale.x*=k;m.scale.z*=k});if(L.fist)L.fist.scale.setScalar(k)}else if(L.fist&&L.fist.scale.x!==1)L.fist.scale.setScalar(1)}
   const gl=mode==='tw'||mode==='punch'?1:0;L.gl+=(gl-L.gl)*Math.min(1,dt*10);{const pk=L.gl*(atk?1:0)*(.75+.25*Math.sin(tt*14));L.mat.emissive.setRGB(pk,pk*.82,0)}if(L.n<L.N&&L.n>0&&Math.random()<dt*9)sand(L.P[L.n],7,BLOOD,1.6,1,.2)});
  if(B.fneck){const L=B.fneck,mode=B.fi===-1&&B.m==='fbite'?'bite':B.fi===-1&&B.m==='ftw'?'tw':'idle';L.fast=mode==='bite';sm(L,()=>fNeckPts(B,L,mode,B.u||0));tnLay(L);if(L.fist){L.fist.lookAt(cam.position);const gm=L.fist.userData.gum,op=mode==='tw'||mode==='bite'?1:0;if(gm)gm.scale.y+=(.6+op*.9-gm.scale.y)*Math.min(1,dt*8);(L.fist.userData.low||[]).forEach(b=>b.position.y+=((-.24-op*.14)-b.position.y)*Math.min(1,dt*8))}}
  // a cut-off arm's stump melts away in a spray of blood
