@@ -39,6 +39,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 #mt:active{background:rgba(18,20,26,.7)}
 #ps{position:fixed;right:calc(66px + env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));width:44px;height:44px;border:0;border-radius:50%;background:rgba(18,20,26,.45);color:#fff;font-size:14px;font-weight:900;letter-spacing:-2px;line-height:1;cursor:pointer;z-index:6;display:none;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
 #ps:active{background:rgba(18,20,26,.7)}
+#ps i{display:block;width:4px;height:15px;margin:0 2.5px;border-radius:1px;background:#fff}
 #pz{position:fixed;inset:0;z-index:25;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:rgba(6,8,14,.72);color:#fff;padding:24px;touch-action:none}
 #pz h2{margin:0 0 4px;font-size:26px;letter-spacing:.25em}
 #sh{pointer-events:auto;display:inline-flex;align-items:center;gap:7px;margin:2px 0;padding:11px 22px;border-radius:999px;background:#fff;color:#000;font-weight:700;font-size:15px;text-decoration:none;-webkit-tap-highlight-color:transparent}
@@ -80,7 +81,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 <div id="zn"></div><div id="fl"></div><div id="lb1"></div><div id="lb2"></div><div id="bn"></div>
 <div id="scr"></div>
 <button id="mt" type="button" aria-label="音の切り替え">🔊</button>
-<button id="ps" type="button" aria-label="一時停止">❚❚</button>
+<button id="ps" type="button" aria-label="一時停止"><i></i><i></i></button>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
@@ -93,7 +94,7 @@ function applyMute(){if(MU)MU.gain.value=muted?0:1;const b=document.getElementBy
 function toggleMute(e){e.stopPropagation();e.preventDefault();muted=!muted;
  try{localStorage.setItem('zi_mute',muted?'1':'0')}catch(e2){}
  if(!muted)A();applyMute()}
-const SFX={ready:'../zombie-issen/sfx/ready.mp3',cut:'../zombie-issen/sfx/cut.mp3',bite:'../zombie-issen/sfx/bite.mp3',boom:'../zombie-issen/sfx/boom.mp3',moan1:'../zombie-issen/sfx/moan1.mp3',moan2:'../zombie-issen/sfx/moan2.mp3',moan3:'../zombie-issen/sfx/moan3.mp3',room:'../zombie-issen/sfx/room.mp3',flee:'../zombie-issen/sfx/flee.mp3',shout:'../zombie-issen/sfx/shout.mp3',over:'../zombie-issen/sfx/over.mp3',dog1:'../zombie-issen/sfx/dog1.mp3',dog2:'../zombie-issen/sfx/dog2.mp3',splat:'../zombie-issen/sfx/splat.mp3',clang:'../zombie-issen/sfx/clang.mp3',trev:'../zombie-issen/sfx/trev.mp3',tsh1:'../zombie-issen/sfx/tsh1.mp3',tsh2:'../zombie-issen/sfx/tsh2.mp3',tstg:'../zombie-issen/sfx/tstg.mp3',ttr1:'../zombie-issen/sfx/ttr1.mp3',ttr2:'../zombie-issen/sfx/ttr2.mp3',tpull:'../zombie-issen/sfx/tpull.mp3',msprout:'../zombie-issen/sfx/msprout.mp3',mgrowl:'../zombie-issen/sfx/mgrowl.mp3',mpunch:'../zombie-issen/sfx/mpunch.mp3',froar:'../zombie-issen/sfx/froar.mp3',fcrack:'../zombie-issen/sfx/fcrack.mp3',fcrk:'../zombie-issen/sfx/fcrk.mp3',fapp:'../zombie-issen/sfx/fapp.mp3',fsplat:'../zombie-issen/sfx/fsplat.mp3',rain:'../zombie-issen/sfx/rain.mp3',thunder:'../zombie-issen/sfx/thunder.mp3',glass:'../zombie-issen/sfx/glass.mp3',bgm1:'../zombie-issen/sfx/bgm1.mp3',bgm2:'../zombie-issen/sfx/bgm2.mp3'};
+const SFX={ready:'../zombie-issen/sfx/ready.mp3',cut:'../zombie-issen/sfx/cut.mp3',bite:'../zombie-issen/sfx/bite.mp3',boom:'../zombie-issen/sfx/boom.mp3',moan1:'../zombie-issen/sfx/moan1.mp3',moan2:'../zombie-issen/sfx/moan2.mp3',moan3:'../zombie-issen/sfx/moan3.mp3',room:'../zombie-issen/sfx/room.mp3',flee:'../zombie-issen/sfx/flee.mp3',shout:'../zombie-issen/sfx/shout.mp3',over:'../zombie-issen/sfx/over.mp3',dog1:'../zombie-issen/sfx/dog1.mp3',dog2:'../zombie-issen/sfx/dog2.mp3',splat:'../zombie-issen/sfx/splat.mp3',clang:'../zombie-issen/sfx/clang.mp3',trev:'../zombie-issen/sfx/trev.mp3',tsh1:'../zombie-issen/sfx/tsh1.mp3',tsh2:'../zombie-issen/sfx/tsh2.mp3',tstg:'../zombie-issen/sfx/tstg.mp3',ttr1:'../zombie-issen/sfx/ttr1.mp3',ttr2:'../zombie-issen/sfx/ttr2.mp3',tpull:'../zombie-issen/sfx/tpull.mp3',msprout:'../zombie-issen/sfx/msprout.mp3',mgrowl:'../zombie-issen/sfx/mgrowl.mp3',mpunch:'../zombie-issen/sfx/mpunch.mp3',froar:'../zombie-issen/sfx/froar.mp3',fcrack:'../zombie-issen/sfx/fcrack.mp3',fcrk:'../zombie-issen/sfx/fcrk.mp3',fapp:'../zombie-issen/sfx/fapp.mp3',fsplat:'../zombie-issen/sfx/fsplat.mp3',rain:'../zombie-issen/sfx/rain.mp3',thunder:'../zombie-issen/sfx/thunder.mp3',glass:'../zombie-issen/sfx/glass.mp3',bgm1:'../zombie-issen/sfx/bgm1.mp3',bgm2:'../zombie-issen/sfx/bgm2.mp3',bgm0:'../zombie-issen/sfx/bgm0.mp3',bgm3:'../zombie-issen/sfx/bgm3.mp3'};
 const BUF={};let roomSrc=null;
 function loadSfx(){for(const k in SFX){fetch(SFX[k]).then(r=>r.arrayBuffer()).then(b=>new Promise((res,rej)=>AC.decodeAudioData(b,res,rej))).then(d=>{BUF[k]=d;if(k==='room'&&st==='intro')roomOn();if(k==='rain'&&RAINON&&st!=='over')rainOn();if(k===BGMW&&st!=='over')bgmOn(k)}).catch(()=>{})}}
 function A(){if(AC===null){try{const C=window.AudioContext||window.webkitAudioContext;AC=new C();MG=AC.createGain();MG.gain.value=.5;MU=AC.createGain();MU.gain.value=muted?0:1;MG.connect(MU);MU.connect(AC.destination);try{RD=AC.createMediaStreamDestination();RG=AC.createGain();MG.connect(RG);RG.connect(RD)}catch(e2){RD=null}}catch(e){AC=false}if(AC)loadSfx()}
@@ -107,7 +108,7 @@ function rainOn(){if(!A()||!BUF.rain)return;const v=WBRK?.85:.5;if(!RAINS){const
  const t=AC.currentTime,G=RAING.gain;G.cancelScheduledValues(t);G.setValueAtTime(G.value,t);G.linearRampToValueAtTime(v,t+1.5)}
 function rainOff(fd){if(!RAINS)return;const s=RAINS,G=RAING.gain,t=AC.currentTime,f=fd||1.2;RAINS=null;RAING=null;G.cancelScheduledValues(t);G.setValueAtTime(G.value,t);G.linearRampToValueAtTime(0,t+f);try{s.stop(t+f+.1)}catch(e){}}
 /* BGM (boss fight: forms 1-2 = bgm1). Loops; the file is mastered loud, so it plays at about 1/5 */
-let BGMW=null,BGMS=null,BGMG=null,BGMK=null;const BGMV={bgm1:.2,bgm2:.3};
+let BGMW=null,BGMS=null,BGMG=null,BGMK=null;const BGMV={bgm3:.15,bgm0:.14,bgm1:.2,bgm2:.48};
 function bgmOn(k){BGMW=k;if(BGMK===k||!A()||!BUF[k])return;bgmOff(.6,1);const s=AC.createBufferSource();s.buffer=BUF[k];s.loop=true;const g=AC.createGain(),t=AC.currentTime;g.gain.setValueAtTime(BGMV[k]||.2,t);s.connect(g);g.connect(MG);s.start();BGMS=s;BGMG=g;BGMK=k}
 function bgmOff(fd,keep){if(!keep)BGMW=null;if(!BGMS)return;const s=BGMS,G=BGMG.gain,t=AC.currentTime,f=fd||1.2;BGMS=null;BGMG=null;BGMK=null;G.cancelScheduledValues(t);G.setValueAtTime(G.value,t);G.linearRampToValueAtTime(0,t+f);try{s.stop(t+f+.05)}catch(e){}}
 function roomOff(){if(roomSrc){try{roomSrc.stop()}catch(e){}roomSrc=null}}
@@ -707,12 +708,14 @@ function tchMake(){const c=pcfg(1),pm=personMesh(c,0),G=new THREE.Group(),U={};
  Object.assign(U,{pm,hip,upper,swing,legL:legs[0],legR:legs[1],sd,tip,H,eyes,arms});katAim(U,null);return {g:G,U}}
 /* the katana stays in both hands: it turns about the grip. D = blade direction in the teacher's own frame (x: his left as you see it = your right, y up, z towards you) */
 const KQ=new THREE.Quaternion(),KV=new THREE.Vector3();
+function katAimS(U,v){U.sd.quaternion.setFromUnitVectors(YAX,v);U.sd.position.copy(U.H).addScaledVector(v,.13)}
+const KDLOW=new THREE.Vector3(0,-.95,.3).normalize(),KDV=new THREE.Vector3();
 function katAim(U,D){if(!D){U.sd.quaternion.setFromUnitVectors(YAX,KD0);U.sd.position.copy(U.H).addScaledVector(KD0,.13);return}
  KQ.copy(U.hip.quaternion).multiply(U.upper.quaternion).multiply(U.swing.quaternion).invert();KV.copy(D).normalize().applyQuaternion(KQ);
  U.sd.quaternion.setFromUnitVectors(YAX,KV);U.sd.position.copy(U.H).addScaledVector(KV,.13)}
 /* guards (WAVE 52): swing tilt / roll put the hands; D puts the blade across the body and well past its outline */
 const GUARDS=[{sx:.1,r:-.5,D:[.78,.6,.15]},{sx:-.9,r:.9,D:[-1,.08,.1]},{sx:.35,r:.45,D:[-.8,-.55,.15]},{sx:.1,r:.5,D:[-.78,.6,.15]}];
-function bossMake(cine){stormOn();if(!cine)winBreak(0);const T=tchMake(),B={g:T.g,U:T.U,x:0,z:cine?-3.6:1,sx:0,r:0,lg:0,ph:0,t:0,m:'idle'};BOSS=B;B.g.position.set(B.x,cine?-3.2:0,B.z);
+function bossMake(cine){bgmOff(1.5);stormOn();if(!cine)winBreak(0);const T=tchMake(),B={g:T.g,U:T.U,x:0,z:cine?-3.6:1,sx:0,r:0,lg:0,ph:0,t:0,m:'idle'};BOSS=B;B.g.position.set(B.x,cine?-3.2:0,B.z);
  if(cine){B.m='cine';B.t=0;B.U.sd.visible=true;
   const pool=new THREE.Mesh(new THREE.CircleGeometry(1,40),new THREE.MeshBasicMaterial({color:GORE==='off'?0x2e2a26:GORE==='green'?0x1f4a0c:0x4a0308,transparent:true,opacity:.92,depthWrite:false}));
   pool.userData.c0=pool.material.color.getHex();pool.rotation.x=-Math.PI/2;pool.position.set(B.x,.016,B.z+.15);pool.scale.setScalar(.01);pool.userData.nocut=1;pool.userData.boss=1;scene.add(pool);B.pool=pool;}
@@ -730,7 +733,7 @@ function tchPose(B){const U=B.U;
   if(B.m==='still'||B.m==='hurt2'){ax=-.12+Math.sin(tt*1.3+i)*.08;az=-.1*sx}else if(B.m==='grab'){ax=-1.45;az=-.15*sx}else{ax=-.55+Math.sin(tt*6.1+i*2.3)*.95;az=sx*(-.25+Math.sin(tt*4.3+i*1.7)*.55)}
   if(!pv.userData.f2){pv.userData.f2=1}pv.rotation.x+=(ax-pv.rotation.x)*.05;pv.rotation.y=0;pv.rotation.z+=(az-pv.rotation.z)*.05});U.legL.rotation.x=B.lg;U.legR.rotation.x=-B.lg;return}
  U.arms.forEach((pv,i)=>pv.rotation.set(-1.05,0,-.36*(i?1:-1)));
- if(B.gd){const g=B.gc;U.swing.rotation.set(g.sx,0,g.r);katAim(U,g.D)}else{U.swing.rotation.set(B.sx,0,B.r);katAim(U,null)}
+ if(B.gd){const g=B.gc;U.swing.rotation.set(g.sx,0,g.r);katAim(U,g.D)}else{U.swing.rotation.set(B.sx,0,B.r);if(B.kd&&B.m==='cine')katAimS(U,B.kd);else katAim(U,null)}
  U.legL.rotation.x=B.lg;U.legR.rotation.x=-B.lg}
 /* the red line: the direction of his swing on screen, through his chest, long enough to cross most of the screen */
 function tchLine(B){const U=B.U,P=sx=>{U.swing.rotation.set(sx,0,B.r);katAim(U,null);B.g.updateMatrixWorld(true);const v=U.tip.getWorldPosition(new THREE.Vector3()).project(cam);return [(v.x+1)/2*innerWidth,(1-v.y)/2*innerHeight]};
@@ -1046,7 +1049,7 @@ function bossCine(B,dr){const t=(B.t+=dr),sm=x=>{x=Math.min(1,Math.max(0,x));ret
  if(B.k===1&&t>2.2){B.k=2;sand({x:B.x,y:.1,z:B.z+.3},18,DUST,1,0,.3);puff(B.x,.15,B.z+.3,0x8f8068,'s',.4,.35,0)}
  if(B.k===2&&t>3){B.k=3;play('trev',1);shakeT=.5}
  const u=sm((t-3)/2.2);B.g.position.y=t<3?-3.2+1.25*sm((t-2.1)/.9):-1.95*(1-u);U.pm.rotation.z=t>3&&t<5.2?Math.sin(t*19)*.05:0;
- B.sx=t<5.4?-1.02+Math.sin(t*7)*.03*(1-u):-1.02+1.02*sm((t-5.4)/.8);B.r=t<5.4?.12:.12*(1-sm((t-5.4)/.8));
+ B.sx=t<5.4?Math.sin(t*7)*.03*(1-u):0;B.r=0;B.kd=t<6.3?KDV.copy(KDLOW).lerp(KD0,sm((t-5.4)/.8)).normalize():null;
  if(B.k===3&&t>5.4){B.k=4;U.sd.visible=true;play('tpull',1)}
  U.eyes.forEach(e=>e.scale.setScalar(t>5.9?1+.8*Math.max(0,1-(t-5.9)/.6):1));
  if(B.k===4&&t>6.6){B.k=5;$('lb1').style.height='0';$('lb2').style.height='0'}
@@ -1065,7 +1068,8 @@ function bossTick(dt,dr){const B=BOSS;if(!B)return;if(B.m==='tf3'||B.f3){fTick(B
  case 'idle':B.sx+=(0-B.sx)*Math.min(1,dt*5);B.lg*=.9;break;
  case 'stare':B.t+=dt;B.sx=Math.sin(B.t*1.3)*.03;B.r=0;B.lg*=.9;B.U.pm.rotation.z=Math.sin(B.t*.9)*.015;if(performance.now()>=NOZT){B.U.pm.rotation.z=0;B.m='walk'}break;
  case 'reel':{B.t+=dt;const k=Math.sin(Math.min(1,B.t/1.1)*Math.PI);B.U.upper.rotation.x=-.3*k;B.U.pm.rotation.z=Math.sin(B.t*9)*.06*k;B.lg=Math.sin(B.t*11)*.3*k;B.sx=.5*k;
-  if(B.t>=1.1){B.U.upper.rotation.x=0;B.U.pm.rotation.z=0;B.m='guard';B.gd=1;B.gt=8;const g=GUARDS[0];B.gc={sx:g.sx,r:g.r,D:new THREE.Vector3().fromArray(g.D)};B.gf=null}break}
+  if(B.t>=1.1){B.U.upper.rotation.x=0;B.U.pm.rotation.z=0;B.U.swing.rotation.set(B.sx,0,B.r);const q=B.U.hip.quaternion.clone().multiply(B.U.upper.quaternion).multiply(B.U.swing.quaternion),D0=KD0.clone().applyQuaternion(q);
+   B.m='guard';B.gd=1;B.gt=8;const g=GUARDS[0];B.gc={sx:B.sx,r:B.r,D:D0.clone()};B.gf={u:0,a:{sx:B.sx,r:B.r,D:D0},b:{sx:g.sx,r:g.r,D:new THREE.Vector3().fromArray(g.D).normalize()}}}break}
  case 'guard':{B.lg*=.9;if(B.gf){B.gf.u=Math.min(1,B.gf.u+dt/.56);const a=B.gf.a,b=B.gf.b,u=B.gf.u;B.gc.sx=a.sx+(b.sx-a.sx)*u;B.gc.r=a.r+(b.r-a.r)*u;B.gc.D.copy(a.D).lerp(b.D,u)}
   B.gt-=dt;if(B.gt<=0)bossCounter();break}
  case 'hurt':B.t+=dt;if(Math.random()<dt*14)sand(B.g.localToWorld(new THREE.Vector3((Math.random()-.5)*.3,1.2+Math.random()*.3,.15)),8,BLOOD,1.8,1,.3);B.U.pm.rotation.z=Math.sin(B.t*31)*.05;B.U.upper.rotation.x=.25+Math.sin(B.t*23)*.08;B.lg*=.9;break;
@@ -1430,7 +1434,7 @@ function banner(t,ms,sz,tw){const b=$('bn');b.style.fontSize=(sz||34)+'px';b.sty
  if(tw){let i=0;b.textContent='';bnT=setInterval(()=>{i++;b.textContent=t.slice(0,i);if(i>=t.length){clearInterval(bnT);bnT=null}},45)}
  else b.innerHTML=t;
  if(bnH)clearTimeout(bnH);bnH=setTimeout(()=>{b.style.opacity=0;bnH=null},ms)}
-function waveBanner(){if(BOSS&&(BOSS.m==='cine'||BOSS.m==='tf'||BOSS.m==='tf3'))return;if(wave>=50&&wave<=55&&BOSS&&!(wave===55&&BOSS.m==='hurt2'))bgmOn('bgm1');if(wave>=56&&wave<=60&&BOSS&&BOSS.f3&&BOSS.m!=='fdie')bgmOn('bgm2');if(wave===50||wave===52){const w=wave,L=w===50?[['攻撃の隙がない…',5000]]:[['攻撃のチャンスだ！',1700]];if(w===50)NOZT=performance.now()+5000+2000+250;L.forEach(([tx,ms])=>setTimeout(()=>{if(wave===w&&BOSS&&st!=='over')banner(tx,2000,24)},ms))}sDing();banner('WAVE '+wave+'<br><span style="font-size:17px;opacity:.92">'+(wave>=50&&wave<=60?['まさか、先生...!!','先生','先生、さようなら','先生...？','先生...？','こんどこそ、さようなら','先生だった何か','先生だった何か','来る...！左だ！','次は右だ！','今度こそ もう立ち上がれない'][wave-50]:wave===61?'終わりのない戦い':endSp(wave)>=0?['犬ゾンビの群れ','体育会系ゾンビの群れ','給食当番ゾンビの群れ','用務員ゾンビの群れ'][endSp(wave)]:wave===10?'犬ゾンビ出現':wave===20?'体育会系ゾンビ出現':wave===30?'給食当番ゾンビ出現':wave===40?'用務員ゾンビ出現':'ゾンビ '+En.length+'体')+'</span>',wave===50?5000:wave===53||wave===56?3000:wave===10||wave===20||wave===30||wave===40||wave===61||endSp(wave)>=0?1900:1500)}
+function waveBanner(){if(BOSS&&(BOSS.m==='cine'||BOSS.m==='tf'||BOSS.m==='tf3'))return;if(wave<50)bgmOn('bgm0');if(wave>60)bgmOn('bgm3');if(wave>=50&&wave<=55&&BOSS&&!(wave===55&&BOSS.m==='hurt2'))bgmOn('bgm1');if(wave>=56&&wave<=60&&BOSS&&BOSS.f3&&BOSS.m!=='fdie')bgmOn('bgm2');if(wave===50||wave===52){const w=wave,L=w===50?[['攻撃の隙がない…',5000]]:[['攻撃のチャンスだ！',1700]];if(w===50)NOZT=performance.now()+5000+2000+250;L.forEach(([tx,ms])=>setTimeout(()=>{if(wave===w&&BOSS&&st!=='over')banner(tx,2000,24)},ms))}sDing();banner('WAVE '+wave+'<br><span style="font-size:17px;opacity:.92">'+(wave>=50&&wave<=60?['まさか、先生...!!','先生','先生、さようなら','先生...？','先生...？','こんどこそ、さようなら','先生だった何か','先生だった何か','来る...！左だ！','次は右だ！','今度こそ もう立ち上がれない'][wave-50]:wave===61?'終わりのない戦い':endSp(wave)>=0?['犬ゾンビの群れ','体育会系ゾンビの群れ','給食当番ゾンビの群れ','用務員ゾンビの群れ'][endSp(wave)]:wave===10?'犬ゾンビ出現':wave===20?'体育会系ゾンビ出現':wave===30?'給食当番ゾンビ出現':wave===40?'用務員ゾンビ出現':'ゾンビ '+En.length+'体')+'</span>',wave===50?5000:wave===53||wave===56?3000:wave===10||wave===20||wave===30||wave===40||wave===61||endSp(wave)>=0?1900:1500)}
 function nextWave(){qFlush();endFinish();wave++;spawnWave();MAXL=bladeLen(wave);waveBanner()}
 const MSG=['…と、そこで目が覚めた。','チャイムが鳴った。妄想終了。','次の授業は体育だった。','先生「ここ、テストに出るぞ」'];
 function bloodScreen(){bl=[];bt0=performance.now();const S0=Math.min(innerWidth,innerHeight)/390;
@@ -1690,7 +1694,7 @@ function frame(now){requestAnimationFrame(frame);if(PAUSED){last=now;return}{con
  if(blD1>=0){const at=BL.instanceMatrix;at.updateRange.offset=blD0*16;at.updateRange.count=(blD1-blD0)*16;at.needsUpdate=true;blD0=1e9;blD1=-1}
  CLK.tick();if(!ZV)R.render(scene,cam);
  oc.clearRect(0,0,ov.width,ov.height);oc.lineCap='round';
- if(BOSS&&BOSS.tl&&(BOSS.m==='wind'||BOSS.m==='swing'||BOSS.m==='fly')){const L=BOSS.tl,k=.55+.45*Math.abs(Math.sin(now/90));oc.globalAlpha=k;oc.strokeStyle='#ff2222';oc.shadowColor='#ff0000';oc.shadowBlur=18;oc.lineWidth=7;oc.beginPath();oc.moveTo(L[0],L[1]);oc.lineTo(L[2],L[3]);oc.stroke();oc.shadowBlur=0;oc.globalAlpha=1}
+ if(BOSS&&BOSS.tl&&(BOSS.m==='wind'||BOSS.m==='swing'||BOSS.m==='fly')){const L=BOSS.tl,k=.55+.45*Math.abs(Math.sin(now/90));oc.globalAlpha=k;oc.strokeStyle='#ffd21e';oc.shadowColor='#ffb000';oc.shadowBlur=18;oc.lineWidth=7;oc.beginPath();oc.moveTo(L[0],L[1]);oc.lineTo(L[2],L[3]);oc.stroke();oc.shadowBlur=0;oc.globalAlpha=1}
  TR.forEach(t=>{oc.globalAlpha=Math.max(0,t.a);oc.strokeStyle=t.w?'#888':'#fff';oc.shadowColor=t.w?'transparent':'#4fc3ff';oc.shadowBlur=t.w?0:10;oc.lineWidth=t.w?2:(t.a>.86?14:5);oc.beginPath();oc.moveTo(t.x1,t.y1);oc.lineTo(t.x2,t.y2);oc.stroke()});oc.globalAlpha=1;oc.shadowBlur=0;
  if(stroke){oc.strokeStyle='#fff';oc.shadowColor='#4fc3ff';oc.shadowBlur=12;oc.lineWidth=4;oc.beginPath();oc.moveTo(stroke.x,stroke.y);oc.lineTo(stroke.ex,stroke.ey);oc.stroke();oc.shadowBlur=0;
   oc.fillStyle='#fff';oc.beginPath();oc.arc(stroke.x,stroke.y,5,0,6.28);oc.fill()}
