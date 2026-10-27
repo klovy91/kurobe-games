@@ -964,7 +964,7 @@ function banner(t,ms,sz,tw){const b=$('bn');b.style.fontSize=(sz||34)+'px';b.sty
  if(tw){let i=0;b.textContent='';bnT=setInterval(()=>{i++;b.textContent=t.slice(0,i);if(i>=t.length){clearInterval(bnT);bnT=null}},45)}
  else b.innerHTML=t;
  if(bnH)clearTimeout(bnH);bnH=setTimeout(()=>{b.style.opacity=0;bnH=null},ms)}
-function waveBanner(){sDing();banner('WAVE '+wave+'<br><span style="font-size:17px;opacity:.92">'+(wave===10?'犬ゾンビ出現':wave===20?'体育会系ゾンビ出現':wave===30?'給食当番ゾンビ出現':wave===40?'盾持ちゾンビ出現':'ゾンビ '+En.length+'体')+'</span>',wave===10||wave===20||wave===30||wave===40?1900:1500)}
+function waveBanner(){sDing();banner('WAVE '+wave+'<br><span style="font-size:17px;opacity:.92">'+(wave===10?'犬ゾンビ出現':wave===20?'体育会系ゾンビ出現':wave===30?'給食当番ゾンビ出現':wave===40?'用務員ゾンビ出現':'ゾンビ '+En.length+'体')+'</span>',wave===10||wave===20||wave===30||wave===40?1900:1500)}
 function nextWave(){wave++;spawnWave();MAXL=bladeLen(wave);waveBanner()}
 const MSG=['…と、そこで目が覚めた。','チャイムが鳴った。妄想終了。','次の授業は体育だった。','先生「ここ、テストに出るぞ」'];
 function bloodScreen(){bl=[];bt0=performance.now();const S0=Math.min(innerWidth,innerHeight)/390;
@@ -1078,7 +1078,7 @@ function howTo(){if($('ht'))return;const d=document.createElement('div');d.id='h
  '<p class="tip">犬ゾンビは左右に跳ね、止まって唸り、また跳ねる。ゾーン中も少し動くので、動きを読んで斬れ。</p>'+
  '<p class="tip">体育会系ゾンビは、深くしゃがんで力をためてから大きく跳ぶ。跳んでいる間は高い位置にいる。</p>'+
  '<p class="tip">給食当番ゾンビは食缶の血を投げつけてくる。画面についた血は少しずつ薄れる。</p>'+
- '<p class="tip">盾持ちゾンビの鉄の盾は斬れず、刃はそこで止まる。構えると盾を上げ下げするので、隙間を狙え。</p>'+
+ '<p class="tip">用務員ゾンビの鉄の盾は斬れず、刃はそこで止まる。構えると盾を上げ下げするので、隙間を狙え。</p>'+
  '<button type="button" class="b2 cl" id="htc">閉じる</button></div>';
  document.body.appendChild(d);['pointerdown','pointerup','click'].forEach(n=>d.addEventListener(n,ev=>ev.stopPropagation()));
  $('htc').addEventListener('click',()=>d.remove())}
