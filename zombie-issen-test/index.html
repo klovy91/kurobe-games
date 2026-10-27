@@ -1603,7 +1603,7 @@ addEventListener('pointermove',e=>{if(PAUSED||!stroke||st!=='cut'||e.pointerId!=
  if(d>MAXL){dx*=MAXL/d;dy*=MAXL/d;d=MAXL}
  stroke.ex=stroke.x+dx;stroke.ey=stroke.y+dy;stroke.len=d});
 function endStroke(e){if(PAUSED||st!=='cut'||!stroke)return;if(e&&e.pointerId!==undefined&&e.pointerId!==stroke.id)return;
- if(stroke.len>22){slashA={x1:stroke.x,y1:stroke.y,x2:stroke.ex,y2:stroke.ey,p:0};if(BOSS&&wave<=51)BOSS.pr=bossParry(slashA);const bk=shieldCut(slashA);if(bk){slashA.x2=bk.x;slashA.y2=bk.y;slashA.blk=bk.p}stroke=null;sWhoosh()}
+ if(stroke.len>45){slashA={x1:stroke.x,y1:stroke.y,x2:stroke.ex,y2:stroke.ey,p:0};if(BOSS&&wave<=51)BOSS.pr=bossParry(slashA);const bk=shieldCut(slashA);if(bk){slashA.x2=bk.x;slashA.y2=bk.y;slashA.blk=bk.p}stroke=null;sWhoosh()}
  else{stroke=null;st='ready';recAbort()}}
 addEventListener('pointerup',endStroke);addEventListener('pointercancel',endStroke);
 /* ---- loop ---- */
