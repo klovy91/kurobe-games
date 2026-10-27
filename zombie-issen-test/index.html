@@ -37,6 +37,10 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 #lb1{top:0}#lb2{bottom:0}
 #mt{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));width:44px;height:44px;border:0;border-radius:50%;background:rgba(18,20,26,.45);color:#fff;font-size:19px;line-height:1;cursor:pointer;z-index:6;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
 #mt:active{background:rgba(18,20,26,.7)}
+#ps{position:fixed;right:calc(66px + env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));width:44px;height:44px;border:0;border-radius:50%;background:rgba(18,20,26,.45);color:#fff;font-size:14px;font-weight:900;letter-spacing:-2px;line-height:1;cursor:pointer;z-index:6;display:none;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
+#ps:active{background:rgba(18,20,26,.7)}
+#pz{position:fixed;inset:0;z-index:25;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:rgba(6,8,14,.72);color:#fff;padding:24px;touch-action:none}
+#pz h2{margin:0 0 4px;font-size:26px;letter-spacing:.25em}
 #sh{pointer-events:auto;display:inline-flex;align-items:center;gap:7px;margin:2px 0;padding:11px 22px;border-radius:999px;background:#fff;color:#000;font-weight:700;font-size:15px;text-decoration:none;-webkit-tap-highlight-color:transparent}
 #sh:active{opacity:.7}
 #hl{pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:5px;margin:2px 0}
@@ -66,8 +70,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 .bt{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
 .b2{pointer-events:auto;display:inline-flex;align-items:center;padding:9px 18px;border-radius:999px;border:1.5px solid rgba(255,255,255,.85);color:#fff;background:rgba(0,0,0,.25);font-weight:700;font-size:14px;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .b2:active{opacity:.7}
-#rt,#pl{pointer-events:auto;min-width:220px;margin-top:4px;padding:15px 40px;border:0;border-radius:999px;background:#c81e2a;color:#fff;font-size:20px;font-weight:900;letter-spacing:.12em;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);-webkit-tap-highlight-color:transparent}
-#rt:active,#pl:active{transform:scale(.97);opacity:.85}
+#rt,#pl,#pzr{pointer-events:auto;min-width:220px;margin-top:4px;padding:15px 40px;border:0;border-radius:999px;background:#c81e2a;color:#fff;font-size:20px;font-weight:900;letter-spacing:.12em;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);-webkit-tap-highlight-color:transparent}
+#rt:active,#pl:active,#pzr:active{transform:scale(.97);opacity:.85}
 </style>
 </head>
 <body>
@@ -76,13 +80,14 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 <div id="zn"></div><div id="fl"></div><div id="lb1"></div><div id="lb2"></div><div id="bn"></div>
 <div id="scr"></div>
 <button id="mt" type="button" aria-label="音の切り替え">🔊</button>
+<button id="ps" type="button" aria-label="一時停止">❚❚</button>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 var DOOR=null;
-let AC=null,MG=null,MU=null,RD=null,RG=null,lastCut=0,moanT=3,muted=false;
+let PAUSED=false,PZT=0,psV=false;let AC=null,MG=null,MU=null,RD=null,RG=null,lastCut=0,moanT=3,muted=false;
 try{muted=localStorage.getItem('zi_mute')==='1'}catch(e){}
 function applyMute(){if(MU)MU.gain.value=muted?0:1;const b=document.getElementById('mt');if(b)b.textContent=muted?'🔇':'🔊'}
 function toggleMute(e){e.stopPropagation();e.preventDefault();muted=!muted;
@@ -92,7 +97,7 @@ const SFX={ready:'../zombie-issen/sfx/ready.mp3',cut:'../zombie-issen/sfx/cut.mp
 const BUF={};let roomSrc=null;
 function loadSfx(){for(const k in SFX){fetch(SFX[k]).then(r=>r.arrayBuffer()).then(b=>new Promise((res,rej)=>AC.decodeAudioData(b,res,rej))).then(d=>{BUF[k]=d;if(k==='room'&&st==='intro')roomOn();if(k==='rain'&&RAINON&&st!=='over')rainOn();if(k===BGMW&&st!=='over')bgmOn(k)}).catch(()=>{})}}
 function A(){if(AC===null){try{const C=window.AudioContext||window.webkitAudioContext;AC=new C();MG=AC.createGain();MG.gain.value=.5;MU=AC.createGain();MU.gain.value=muted?0:1;MG.connect(MU);MU.connect(AC.destination);try{RD=AC.createMediaStreamDestination();RG=AC.createGain();MG.connect(RG);RG.connect(RD)}catch(e2){RD=null}}catch(e){AC=false}if(AC)loadSfx()}
- if(AC&&AC.state==='suspended')AC.resume();return AC}
+ if(AC&&AC.state==='suspended'&&!PAUSED)AC.resume();return AC}
 function play(k,v,rate){if(!A()||!BUF[k])return null;const s=AC.createBufferSource();s.buffer=BUF[k];s.playbackRate.value=rate||1;
  const g=AC.createGain();g.gain.value=v===undefined?1:v;s.connect(g);g.connect(MG);s.start();return s}
 function roomOn(){if(roomSrc)return;const s=play('room',.45);if(s){s.loop=true;roomSrc=s}}
@@ -1524,22 +1529,38 @@ function howTo(){if($('ht'))return;const d=document.createElement('div');d.id='h
 function title(){$('scr').innerHTML='<h1>ゾンビ一閃</h1><p>退屈な授業中、ふと妄想した。<br>教室にゾンビが雪崩れ込んできたら。</p><p>ベスト WAVE '+best+'</p><div class="tb"><button id="pl" type="button">プレイ</button><button id="hw" class="b2" type="button">遊び方</button><button id="op" class="b2" type="button">設定</button></div>';
  ['pl','hw','op'].forEach(i=>noProp($(i)));$('op').addEventListener('click',()=>{A();optUI()});$('pl').addEventListener('click',()=>{A();start()});$('hw').addEventListener('click',()=>{A();howTo()});
  $('scr').appendChild(adSlot('title'))}
+/* ---- pause ---- */
+const canPause=()=>st==='ready'||st==='cut'||st==='after'||st==='cine';
+function pauseGame(){if(PAUSED||!canPause())return;PAUSED=true;PZT=performance.now();
+ if(st==='cut'&&stroke){stroke=null;st='ready';recAbort()}
+ if(AC&&AC.state==='running')AC.suspend();
+ if(REC.mr&&REC.mr.state==='recording'){try{REC.mr.pause()}catch(e){}}
+ const d=document.createElement('div');d.id='pz';
+ d.innerHTML='<h2>一時停止</h2><button id="pzr" type="button">再開</button><div class="bt"><button id="pzs" class="b2" type="button">最初からやり直す</button><button id="pzo" class="b2" type="button">設定</button></div>';
+ document.body.appendChild(d);['pointerdown','pointerup','click'].forEach(n=>d.addEventListener(n,ev=>ev.stopPropagation()));
+ $('pzr').addEventListener('click',resumeGame);$('pzs').addEventListener('click',()=>{resumeGame();start()});$('pzo').addEventListener('click',()=>optUI())}
+function resumeGame(){if(!PAUSED)return;PAUSED=false;const d=performance.now()-PZT;if(NOZT)NOZT+=d;REC.t0+=d;if(RP)RP.t0+=d;
+ if(REC.mr&&REC.mr.state==='paused'){try{REC.mr.resume()}catch(e){}}
+ if(AC&&AC.state==='suspended')AC.resume();{const z=$('pz');if(z)z.remove();const o=$('opt');if(o)o.remove()}}
+{const b=$('ps');b.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();pauseGame()});b.addEventListener('click',e=>{e.stopPropagation();e.preventDefault()})}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseGame()});
+addEventListener('keydown',e=>{if(e.key==='Escape'||e.key==='p'||e.key==='P'){if(PAUSED){if(!$('opt'))resumeGame()}else pauseGame()}});
 /* ---- input ---- */
 {const b=$('mt');b.addEventListener('pointerdown',toggleMute);b.addEventListener('click',e=>{e.stopPropagation();e.preventDefault()});applyMute()}
 const rc=new THREE.Raycaster();
 function rayAt(px,py){rc.setFromCamera(new THREE.Vector2(px/innerWidth*2-1,-(py/innerHeight)*2+1),cam)}
 let fin=false,slashA=null,swA=null;const TQ=new THREE.Quaternion();
-addEventListener('pointerdown',e=>{A();if(st==='title')return;if(st==='over')return;if(st==='intro'){introS=7;endIntro();return}if(st!=='ready')return;if(En.some(e=>e.rt!==undefined||e.ru!==undefined)||bossBlock())return;st='cut';sZone();if(BOSS&&BOSS.m==='guard'&&!BOSS.gdn){const B=BOSS,g=GUARDS[1+(Math.random()*3|0)];B.gdn=1;B.gf={u:0,a:{sx:B.gc.sx,r:B.gc.r,D:B.gc.D.clone()},b:{sx:g.sx,r:g.r,D:new THREE.Vector3().fromArray(g.D).normalize()}}}En.forEach(q=>{if(q.sh&&!q.sh.dn){q.sh.dn=1;q.sh.ty=Math.random()<.5?1.4:.55;q.sh.sp=Math.abs(q.sh.ty-q.sh.y)/.56}});stroke={x:e.clientX,y:e.clientY,ex:e.clientX,ey:e.clientY,len:0,id:e.pointerId};recStart()});
-addEventListener('pointermove',e=>{if(!stroke||st!=='cut'||e.pointerId!==stroke.id)return;let dx=e.clientX-stroke.x,dy=e.clientY-stroke.y,d=Math.hypot(dx,dy);
+addEventListener('pointerdown',e=>{if(PAUSED)return;A();if(st==='title')return;if(st==='over')return;if(st==='intro'){introS=7;endIntro();return}if(st!=='ready')return;if(En.some(e=>e.rt!==undefined||e.ru!==undefined)||bossBlock())return;st='cut';sZone();if(BOSS&&BOSS.m==='guard'&&!BOSS.gdn){const B=BOSS,g=GUARDS[1+(Math.random()*3|0)];B.gdn=1;B.gf={u:0,a:{sx:B.gc.sx,r:B.gc.r,D:B.gc.D.clone()},b:{sx:g.sx,r:g.r,D:new THREE.Vector3().fromArray(g.D).normalize()}}}En.forEach(q=>{if(q.sh&&!q.sh.dn){q.sh.dn=1;q.sh.ty=Math.random()<.5?1.4:.55;q.sh.sp=Math.abs(q.sh.ty-q.sh.y)/.56}});stroke={x:e.clientX,y:e.clientY,ex:e.clientX,ey:e.clientY,len:0,id:e.pointerId};recStart()});
+addEventListener('pointermove',e=>{if(PAUSED||!stroke||st!=='cut'||e.pointerId!==stroke.id)return;let dx=e.clientX-stroke.x,dy=e.clientY-stroke.y,d=Math.hypot(dx,dy);
  if(d>MAXL){dx*=MAXL/d;dy*=MAXL/d;d=MAXL}
  stroke.ex=stroke.x+dx;stroke.ey=stroke.y+dy;stroke.len=d});
-function endStroke(e){if(st!=='cut'||!stroke)return;if(e&&e.pointerId!==undefined&&e.pointerId!==stroke.id)return;
+function endStroke(e){if(PAUSED||st!=='cut'||!stroke)return;if(e&&e.pointerId!==undefined&&e.pointerId!==stroke.id)return;
  if(stroke.len>22){slashA={x1:stroke.x,y1:stroke.y,x2:stroke.ex,y2:stroke.ey,p:0};if(BOSS&&wave<=51)BOSS.pr=bossParry(slashA);const bk=shieldCut(slashA);if(bk){slashA.x2=bk.x;slashA.y2=bk.y;slashA.blk=bk.p}stroke=null;sWhoosh()}
  else{stroke=null;st='ready';recAbort()}}
 addEventListener('pointerup',endStroke);addEventListener('pointercancel',endStroke);
 /* ---- loop ---- */
 let zv=0,rushT=0,bite=0,biter=null,bl=[],bt0=0,introT=0,introS=0,iAct=[],iZom=[],holdT=0,slowT=0,seenIntro=false;
-function frame(now){requestAnimationFrame(frame);perfTick(now-last);const dr=Math.min(.05,(now-last)/1000);last=now;
+function frame(now){requestAnimationFrame(frame);if(PAUSED){last=now;return}{const v=canPause();if(v!==psV){psV=v;$('ps').style.display=v?'flex':'none'}}perfTick(now-last);const dr=Math.min(.05,(now-last)/1000);last=now;
  TR.forEach(t=>t.a-=dr*(st==='cut'?.8:3));TR=TR.filter(t=>t.a>0);
  if(st==='cut'){const hit=new Set();
   if(slashA){slashA.p+=dr/(slashA.p<1?.1:1.8);
