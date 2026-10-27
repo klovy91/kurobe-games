@@ -954,7 +954,7 @@ function fTf(B,dr){const t=(B.t+=dr),sm=x=>{x=Math.min(1,Math.max(0,x));return x
  if(t>1.9&&t<4.4&&Math.random()<dr*6){const p=new THREE.Vector3(B.x+(Math.random()-.5)*.8,.2+Math.random()*1.4*g,B.z+(Math.random()-.5)*.6);sand(p,30,BLOOD,2.2,1,.4)}
  B.W.forEach((w,i)=>{const k=sm((t-2.4-i*.07)/1.6);w.m.geometry.setDrawRange(0,Math.floor(w.cnt*k/3)*3);if(k>.98&&!w.h.visible){w.h.visible=true;if(w.E.y<.1)crack(w.E.x,w.E.z,.9)}});
  bossMood(Math.random()<.15?.4:.8,.45);if(t<4.5&&Math.random()<dr*3)shakeT=Math.max(shakeT,.3);
- if(t>5.2){B.f3=1;B.fg=1;if(B.hd){scene.remove(B.hd);disposeTree(B.hd);B.hd=null}if(B.fneck&&B.fneck.fist)B.fneck.fist.scale.setScalar(FK);bossMood(.8,.45);st='ready';B.g.visible=false;B.F.scale.setScalar(FK);B.W.forEach(w=>{w.m.geometry.setDrawRange(0,w.cnt);w.h.visible=true});fGo(B);waveBanner()}}
+ if(t>5.2){B.f3=1;B.fg=1;if(B.hd){scene.remove(B.hd);disposeTree(B.hd);B.hd=null}if(B.fneck&&B.fneck.fist)B.fneck.fist.scale.setScalar(FK);bossMood(.8,.45);st='ready';B.g.visible=false;B.F.scale.setScalar(FK);B.W.forEach(w=>{w.m.geometry.setDrawRange(0,w.cnt);w.h.visible=true});fGo(B);if(wave===56&&B.GA)B.GA.forEach(g=>g.t-=3);waveBanner()}}
 function fTick(B,dt,dr){if(B.m==='tf3'&&!B.f3){fTf(B,dr);if(!B.F)return}
  B.tt=(B.tt||0)+dt;const tt=B.tt;if(B.f3&&B.TU)B.TU.forEach((m,i)=>m.scale.copy(m.userData.s0).multiplyScalar(1+Math.sin(tt*3+i*1.7)*.05));
  // his own arms and head
