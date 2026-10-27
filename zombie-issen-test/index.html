@@ -1023,12 +1023,12 @@ function burstHalf(o){const i=gib.indexOf(o);if(i>=0)gib.splice(i,1);world.remov
    for(let q=0;q<2;q++){if(r.out[q].length)N.push({v:r.out[q],vn:r.on[q],vu:r.ou[q],mat:e.mat,cap:e.cap,cell:e.cell|(q<<pl)});if(c.length)N.push({v:c,vn:null,vu:null,mat:CU,cap:true,cell:e.cell|(q<<pl)})}});E=N}
  const cells={};E.forEach(e=>{(cells[e.cell]=cells[e.cell]||[]).push({v:e.v,vn:e.vn,vu:e.vu,mat:e.mat,c:[],cap:e.cap})});
  Object.values(cells).forEach(parts=>{const cen=new THREE.Vector3();let n=0;parts.forEach(p=>p.v.forEach(x=>{cen.add(x);n++}));if(!n)return;cen.multiplyScalar(1/n);
-  const d=cen.clone().sub(C);d.y=Math.max(d.y,0)+.25;d.normalize().multiplyScalar(3.5+Math.random()*3.5);const q=mkPiece(parts,{x:d.x,y:d.y+1.5,z:d.z},0,1.2);if(q){q.bleed=4;fEyeGlow(q);if(ENDM)(ENDM.ch=ENDM.ch||[]).push(q)}});
+  const d=cen.clone().sub(C);d.y=Math.max(d.y,0)+.25;d.normalize().multiplyScalar(8+Math.random()*5);const q=mkPiece(parts,{x:d.x,y:d.y+3,z:d.z},0,2.4);if(q){q.bleed=4;fEyeGlow(q);if(ENDM)(ENDM.ch=ENDM.ch||[]).push(q)}});
  scene.remove(o.mesh);disposeTree(o.mesh);o.gone=1;return C}
-function bodyBurst(E,k){const R=Math.random,o=E.h[k];if(!o||o.gone)return;const cs=[burstHalf(o)];if(k)return void cs.forEach(C=>{for(let i=0;i<10;i++){const p=C.clone().add(new THREE.Vector3((R()-.5)*1.2,(R()-.5)*1.2,(R()-.5)*1.2));gush(p.x,p.y,p.z);sand(p,260,BLOOD,6,1,1)}});
- flash(.7);shakeT=Math.max(shakeT,1.4);play('fsplat',1,.75);play('boom',.55,.7);play('splat',1,.6);
- cs.forEach(C=>{for(let i=0;i<10;i++){const p=C.clone().add(new THREE.Vector3((R()-.5)*1.2,(R()-.5)*1.2,(R()-.5)*1.2));gush(p.x,p.y,p.z);sand(p,260,BLOOD,6,1,1)}});
- SPLMAX=.6;for(let i=0;i<10;i++)setTimeout(()=>{if(st!=='over')lensSplat(innerWidth*(.1+R()*.8),innerHeight*(.12+R()*.76),'fsplat')},60+i*90);setTimeout(()=>{SPLMAX=.2},4000)}
+function bodyBurst(E,k){const R=Math.random,o=E.h[k];if(!o||o.gone)return;const cs=[burstHalf(o)];if(k)return void cs.forEach(C=>{for(let i=0;i<14;i++){const p=C.clone().add(new THREE.Vector3((R()-.5)*1.2,(R()-.5)*1.2,(R()-.5)*1.2));gush(p.x,p.y,p.z);sand(p,320,BLOOD,9,1,1)}});
+ flash(.85);shakeT=Math.max(shakeT,2);play('fsplat',1,.75);play('boom',.85,.6);play('splat',1,.6);play('froar',.6,.5);
+ cs.forEach(C=>{for(let i=0;i<14;i++){const p=C.clone().add(new THREE.Vector3((R()-.5)*1.2,(R()-.5)*1.2,(R()-.5)*1.2));gush(p.x,p.y,p.z);sand(p,320,BLOOD,9,1,1)}});
+ SPLMAX=.7;for(let i=0;i<14;i++)setTimeout(()=>{if(st!=='over')lensSplat(innerWidth*(.1+R()*.8),innerHeight*(.12+R()*.76),'fsplat')},60+i*90);setTimeout(()=>{SPLMAX=.2},4000)}
 function endFinish(){const E=ENDM;if(!E)return;ENDM=null;(E.ch||[]).forEach(o=>{if(o.gone)return;const i=gib.indexOf(o);if(i>=0){gib.splice(i,1);world.remove(o.b)}scene.remove(o.mesh);disposeTree(o.mesh)});(E.h||E.B.halves||[]).forEach(o=>{if(o.gone)return;const i=gib.indexOf(o);if(i>=0){gib.splice(i,1);world.remove(o.b)}scene.remove(o.mesh);disposeTree(o.mesh)});
  WFALL.forEach(o=>{if(!o.gone){scene.remove(o.g);disposeTree(o.g)}});WFALL=[];(E.B.W||[]).forEach(w=>{w.h.visible=false;w.m.visible=false});
  RAINL.visible=false;cam.position.set(0,1.6,6);cam.lookAt(0,.9,-8);cam.updateMatrixWorld();$('lb1').style.height='0';$('lb2').style.height='0'}
