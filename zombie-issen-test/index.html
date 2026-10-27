@@ -646,7 +646,12 @@ function stormOn(){RAINON=true;RAINL.visible=true;rainOn()}
 function stormOff(){RAINON=false;RAINL.visible=false;rainOff()}
 let SHD=[];const SHM=new THREE.MeshStandardMaterial({color:0xdcefff,roughness:.08,metalness:.2,transparent:true,opacity:.55,side:THREE.DoubleSide,depthWrite:false});SHM.userData.keep=1;
 const SHG=Array.from({length:6},()=>{const g=new THREE.BufferGeometry(),r=()=>.04+Math.random()*.12,a=Math.random()*6.28;g.setAttribute('position',new THREE.Float32BufferAttribute([0,0,0,Math.cos(a)*r(),Math.sin(a)*r(),0,Math.cos(a+1.6+Math.random())*r(),Math.sin(a+1.6+Math.random())*r(),0],3));g.computeVertexNormals();return g});
-function winBreak(loud){if(WBRK)return;WBRK=true;const LW=-6.02;
+const inBay=(y,z)=>y>.9&&y<2.6&&GLS.some(w=>z>w.a&&z<w.b);
+/* the blood on the glass goes with it: those stains vanish, their blood is thrown into the room */
+function winBlood(){const A=BL.instanceMatrix.array,n=Math.min(bn,NB);let k=0;
+ for(let i=0;i<n;i++){const j=i*16,x=A[j+12],y=A[j+13],z=A[j+14];if(x<-5.9&&inBay(y,z)){if(k<160&&k%2===0)sand({x:-5.85,y,z},4,BLOOD,1.8,.6,.06);k++;for(let q=0;q<16;q++)A[j+q]=0}}
+ if(k){blD0=0;blD1=n}}
+function winBreak(loud){if(WBRK)return;WBRK=true;const LW=-6.02;winBlood();
  GLS.forEach(w=>{w.m.visible=false;
   for(let i=0;i<34;i++){const m=new THREE.Mesh(SHG[i%6],SHM);m.position.set(LW+.02,.95+Math.random()*1.6,w.a+.08+Math.random()*(w.b-w.a-.16));m.rotation.set(Math.random()*6,Math.random()*6,Math.random()*6);m.scale.setScalar(.6+Math.random()*.9);m.castShadow=QT<2;scene.add(m);
    SHD.push({m,v:new THREE.Vector3(i%3?1.5+Math.random()*4.5:5+Math.random()*3.5,Math.random()*2.2,(Math.random()-.5)*2.4),w:new THREE.Vector3((Math.random()-.5)*14,(Math.random()-.5)*14,(Math.random()-.5)*14),rest:0})}
@@ -1118,7 +1123,7 @@ function stepSand(dt){SFR^=1;for(let j=0;j<NP;j++){if(sL[j]<=0){sP[j*3+1]=-50;co
  const px=sP[j*3],py=sP[j*3+1],pz=sP[j*3+2],rr=.12+Math.random()*.34;
  if(sT[j]&&(QT<2||((j+SFR)&1)===0)){
   if(py>3.33&&py<3.54&&Math.abs(Math.abs(px)-2.6)<.25&&pz>-3.85&&pz<.65){sT[j]=0;splatN(px,3.352,pz,rr*.65,0,-1,0);sL[j]=0;continue}
-  if(px<-5.93){sT[j]=0;splatN(-5.942,py,pz,rr,1,0,0);sL[j]=0;continue}
+  if(px<-5.93&&!(WBRK&&inBay(py,pz))){sT[j]=0;splatN(-5.942,py,pz,rr,1,0,0);sL[j]=0;continue}
   if(px>5.93){if(!(pz>-4.24&&pz<-2.56&&py<2.16)){sT[j]=0;splatN(5.942,py,pz,rr,-1,0,0);sL[j]=0;continue}
    if(px>9.0){sT[j]=0;splatN(9.042,py,pz,rr,-1,0,0);sL[j]=0;continue}}
   if(pz<-5.9&&Math.abs(px)<2.72&&py>1.12&&py<2.72){sT[j]=0;splatN(px,py,-5.903,rr,0,0,1);sL[j]=0;continue}
