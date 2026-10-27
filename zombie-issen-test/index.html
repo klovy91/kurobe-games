@@ -759,7 +759,7 @@ function bossHurt(){const B=BOSS;B.m='hurt';B.t=0;sCut();
  if(B.hit&&B.hit.C){const H=B.hit,sd=B.U.sd,pr=[[],[]];sd.updateMatrixWorld(true);sd.traverse(m=>{if(!m.isMesh||m.material.visible===false)return;const r=sliceMesh(m,H.C,H.n),c=capTris(r.ip,H.n);for(let q=0;q<2;q++)pr[q].push({v:r.out[q],vn:r.on[q],vu:r.ou[q],mat:m.material,c})});
   const kp=sd.getWorldPosition(new THREE.Vector3());sd.visible=false;B.kc=1;[0,1].forEach(q=>{const sg=q?-1:1,o=mkPiece(pr[q],{x:H.n.x*1.4*sg,y:1.6,z:H.n.z*1.4*sg+.5},1,.9);if(o)o.ns=1});sand(kp,40,FIRE,2.4,0,.3);play('clang',1,.75)}bossBleed(B,1.3,3);flash(.45);const s1=play('ttr1',1);if(s1)s1.onended=()=>{if(BOSS===B)play('ttr2',1)};else play('ttr2',1)}
 /* parry: the stroke crosses the red line, at 30 degrees or more, while his cut is on its way */
-function bossParry(a){const B=BOSS;if(!B||!(B.m==='wind'||B.m==='swing'||B.m==='fly')||!B.tl)return null;const L=B.tl,
+function bossParry(a){const B=BOSS;if(!B||!(B.m==='swing'||B.m==='fly')||!B.tl)return null;const L=B.tl,
  r1x=a.x2-a.x1,r1y=a.y2-a.y1,r2x=L[2]-L[0],r2y=L[3]-L[1],den=r1x*r2y-r1y*r2x;if(Math.abs(den)<1e-6)return null;
  const t=((L[0]-a.x1)*r2y-(L[1]-a.y1)*r2x)/den,u=((L[0]-a.x1)*r1y-(L[1]-a.y1)*r1x)/den;if(t<0||t>1||u<0||u>1)return null;
  const ang=Math.acos(Math.min(1,Math.abs(r1x*r2x+r1y*r2y)/Math.hypot(r1x,r1y)/Math.hypot(r2x,r2y)));if(ang<Math.PI/6)return null;return [a.x1+r1x*t,a.y1+r1y*t]}
@@ -1084,7 +1084,7 @@ function bossTick(dt,dr){const B=BOSS;if(!B)return;if(B.m==='tf3'||B.f3){fTick(B
   B.sx+=(0-B.sx)*Math.min(1,dt*8);B.r+=(0-B.r)*Math.min(1,dt*8);break;
  case 'wind':{B.t-=dt;B.sx=-1.6*sm((1-B.t/B.T)/.45);B.lg*=.9;if(B.t<=0){B.m='swing';B.t=0}break}
  case 'swing':{B.t+=dt;const u=Math.min(1,B.t/.15);B.sx=-1.6+2.5*u;if(u>=1){bossFly();play('cut',.6,1.4)}break}
- case 'fly':{B.fu+=dt/(B.demo?.7:.35);if(B.demo&&B.fu>=.45&&!B.dmh){B.dmh=1;demoParry(B);break}const u=Math.min(1,B.fu),m=B.cr;if(m){m.position.copy(B.fs).lerp(B.fe,u);m.quaternion.copy(cam.quaternion);m.rotateZ(B.fa);m.scale.setScalar(1+.25*u)}
+ case 'fly':{B.fu+=dt/(B.demo?1:.7);if(B.demo&&B.fu>=.45&&!B.dmh){B.dmh=1;demoParry(B);break}const u=Math.min(1,B.fu),m=B.cr;if(m){m.position.copy(B.fs).lerp(B.fe,u);m.quaternion.copy(cam.quaternion);m.rotateZ(B.fa);m.scale.setScalar(1+.25*u)}
   if(u>=1&&!B.done){B.done=1;B.tl=null;bossKill()}break}
  case 'stag':B.t-=dt;B.x-=ux*.8*dt;B.z-=uz*.8*dt;B.sx+=(-.4-B.sx)*Math.min(1,dt*10);B.r+=(0-B.r)*Math.min(1,dt*6);if(B.t<=0){if(B.demo){B.demo=0;B.m='stare'}else B.m='idle'}break;
  case 'idle':B.sx+=(0-B.sx)*Math.min(1,dt*5);B.lg*=.9;break;
