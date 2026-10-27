@@ -612,7 +612,7 @@ function lensSplat(x,y){const W=innerWidth,H=innerHeight,A=W*H;let tgt=A*(.03+Ma
  SPL.push({c,x:x+x0,y:y+y0,ar:tgt,a:.7+Math.random()*.2,t:0,L:2+Math.random()})}
 function bsTick(dr){if(!SPL.length&&!bsTick.dirty)return;bsX.clearRect(0,0,bsC.width,bsC.height);bsTick.dirty=SPL.length>0;
  for(let i=SPL.length-1;i>=0;i--){const q=SPL[i];q.t+=Math.max(0,dr);if(q.t>=q.L){SPL.splice(i,1);continue}bsX.globalAlpha=Math.min(1,Math.max(0,q.a*splF(q)));bsX.drawImage(q.c,q.x,q.y)}bsX.globalAlpha=1}
-function shieldMesh(cf){const z=zombieMesh(Object.assign({},cf,{shirt:0x56606a,pant:0x4b545c})),CP=SM(0x3f4851,.9),
+function shieldMesh(cf){const z=zombieMesh(Object.assign({},cf,{shirt:0x2f5d9c,pant:0x284a7c})),CP=SM(0x24416e,.9),
  MT=new THREE.MeshStandardMaterial({color:0xaab1b8,roughness:.5,metalness:.15}),DK=SM(0x2a2e33,.7),WL=SM(0xe8e6df,.8);
  const B=(w,h,d,m,x,y,q,par,b)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,q);o.castShadow=true;if(par){o.userData.nocut=1;par.add(o)}else{o.userData.bone=b;z.add(o)}return o};
  B(.36,.08,.38,CP,0,1.83,0,null,2);B(.3,.02,.14,CP,0,1.8,.21,null,2);
@@ -1167,7 +1167,7 @@ function frame(now){requestAnimationFrame(frame);perfTick(now-last);const dr=Mat
      if(b.sleepState===CANNON.Body.SLEEPING)b.wakeUp();b.velocity.x+=(ux*sp-b.velocity.x)*.35;b.velocity.z+=(uz*sp-b.velocity.z)*.35;
      if(dd>1e-4){e.x+=vx/dd*(.4-dd);e.z+=vz/dd*(.4-dd)}else e.x+=dx>=0?.4:-.4}});
    e.x=Math.max(-5.4,Math.min(5.4,e.x));e.z=Math.max(-5.6,e.z);if(e===biter)e.z=Math.min(e.z,6.15);
-   if(e.dog)dogPose(e,ax,az);else if(e.jm)jumpPose(e,ax,az);else if(e.ky)kyuPose(e,ax,az);else{e.g.position.set(e.x,Math.abs(Math.sin(e.z*5))*.04,e.z);e.g.rotation.y=Math.atan2(ax,az);if(e.sh)shPose(e,dr)}
+   if(e.dog)dogPose(e,ax,az);else if(e.jm)jumpPose(e,ax,az);else if(e.ky)kyuPose(e,ax,az);else{e.g.position.set(e.x,Math.abs(Math.sin(e.z*5))*.04,e.z);e.g.rotation.y=Math.atan2(ax,az);if(e.sh)shPose(e,dt)}
    if(e.arms&&e.arms.length){e.ph+=dt*4.2;e.arms.forEach(a=>{const q=new THREE.Quaternion().setFromAxisAngle(XAX,Math.sin(e.ph+a.ph)*.55);a.m.position.copy(a.lp).sub(a.J).applyQuaternion(q).add(a.J);a.m.quaternion.copy(q).multiply(a.lq)})}});
   stepBlobs(dt);
   if(st==='bite'){bite-=dr;if(!bl.length&&bite<.25)bloodScreen();if(bite<=0)die()}
