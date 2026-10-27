@@ -1405,8 +1405,8 @@ function spawnWave(){if(bossSpawn())return;spawnCrawlers();const n=waveCount(wav
  nd=ES>=0?(ES===0?endSpN(wave):0):EW?rl(2+EC,EP):wave===10?3:wave>10&&wave!==20&&wave!==30&&wave!==40?[0,1].slice(0,wave>=20?2:1).filter(()=>Math.random()<.4).length:0,
  nj=ES>=0?(ES===1?endSpN(wave):0):EW?rl(2+EC,EP):wave===20?3:wave>20&&wave!==30&&wave!==40?[0,1].slice(0,wave>=30?2:1).filter(()=>Math.random()<.4).length:0,
  nk=ES>=0?(ES===2?endSpN(wave):0):EW?rl(5+EC,EP):wave===30?5:wave>30&&wave!==40?[0,1,2,3,4].filter(()=>Math.random()<.4).length:0,
- ns=ES>=0?(ES===3?endSpN(wave):0):EW?rl(Math.floor((wave-61)/30)+1,Math.min(.35,.2+(wave-61)*.0015)):wave===40?2:0,
- N=ES>=0?endSpN(wave):EW?Math.max(n,nd+nj+nk+ns+2):wave===40?2:wave===30?5:wave===10||wave===20?3:n;let nb=0;for(let i=0;i<N;i++){
+ ns=ES>=0?(ES===3?endSpN(wave):0):EW?rl(Math.floor((wave-61)/30)+1,Math.min(.35,.2+(wave-61)*.0015)):wave===40?3:0,
+ N=ES>=0?endSpN(wave):EW?Math.max(n,nd+nj+nk+ns+2):wave===40?3:wave===30?5:wave===10||wave===20?3:n;let nb=0;for(let i=0;i<N;i++){
  const dog=i<nd,jmp=!dog&&i<nd+nj,kyu=!dog&&!jmp&&i<nd+nj+nk,shz=!dog&&!jmp&&!kyu&&i<nd+nj+nk+ns,cf=zcfg(),bomb=!dog&&!jmp&&!kyu&&!shz&&nb<maxB&&Math.random()<pb;if(bomb)nb++;let lt=null;
  const rt0=Math.random(),ty=dog?3:jmp?4:kyu?5:shz?6:bomb?1:rt0<.1?0:rt0<.3?2:1;let vm=1,sc=cf.s;
  const r=dog?.76*cf.s:.56*cf.s*(ty===2?1.42:ty===0?1.45:1),zn=zNear(r);
