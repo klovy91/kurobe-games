@@ -640,7 +640,13 @@ function shieldMesh(cf){const z=zombieMesh(Object.assign({},cf,{shirt:0x2f5d9c,p
 /* the door's height on the zombie: 0.95 normal (head and shins open), 1.4 high (legs open), 0.55 low (head and chest open).
    It moves in real time, so the change of guard shows even in the zone. */
 function shPose(e,dr){const H=e.sh;{const d=H.ty-H.y,st=dr*(H.sp||.95);H.y=Math.abs(d)<=st?H.ty:H.y+Math.sign(d)*st}H.g.position.y=H.y;e.inr.rotation.x=.06+.1*Math.max(0,(.95-H.y)/.4)}
-function shieldCut(s){const S=En.filter(e=>e.sh).map(e=>e.sh.g);if(BOSS&&BOSS.gd)S.push(BOSS.U.sd);if(!S.length)return null;const l=Math.hypot(s.x2-s.x1,s.y2-s.y1),n=Math.max(1,Math.ceil(l/5));
+/* janitor shields: the parts of the stroke (0..1) that run over a shield on screen -> nothing behind them is cut there */
+function shieldGaps(s){const S=En.filter(e=>e.sh).map(e=>{e.g.updateMatrixWorld(true);return e.sh.g});if(!S.length)return null;const l=Math.hypot(s.x2-s.x1,s.y2-s.y1),n=Math.max(1,Math.ceil(l/5)),I=[];let a=-1,p0=null;
+ for(let i=0;i<=n;i++){const t=i/n;rayAt(s.x1+(s.x2-s.x1)*t,s.y1+(s.y2-s.y1)*t);const h=rc.intersectObjects(S,true);
+  if(h.length){if(a<0){a=Math.max(0,t-.5/n);if(!p0)p0=h[0].point.clone()}}else if(a>=0){I.push([a,t-.5/n]);a=-1}}
+ if(a>=0)I.push([a,1]);return I.length?{I,p:p0}:null}
+function freeSegs(I){if(!I||!I.length)return [[0,1]];const F=[];let t=0;I.forEach(([a,b])=>{if(a>t+.002)F.push([t,a]);t=Math.max(t,b)});if(t<.998)F.push([t,1]);return F}
+function shieldCut(s){const S=[];if(BOSS&&BOSS.gd)S.push(BOSS.U.sd);if(!S.length)return null;const l=Math.hypot(s.x2-s.x1,s.y2-s.y1),n=Math.max(1,Math.ceil(l/5));
  for(let i=0;i<=n;i++){const px=s.x1+(s.x2-s.x1)*i/n,py=s.y1+(s.y2-s.y1)*i/n;rayAt(px,py);const h=rc.intersectObjects(S,true);if(h.length)return {x:px,y:py,p:h[0].point.clone()}}return null}
 function dropShield(e){const G=e.sh.g,p=new THREE.Vector3(),q=new THREE.Quaternion();G.updateMatrixWorld(true);G.getWorldPosition(p);G.getWorldQuaternion(q);scene.attach(G);
  const b=new CANNON.Body({mass:5,shape:new CANNON.Box(new CANNON.Vec3(.45,.5,.025))});b.position.set(p.x,p.y,p.z);b.quaternion.set(q.x,q.y,q.z,q.w);
@@ -707,11 +713,11 @@ function tchMake(){const c=pcfg(1),pm=personMesh(c,0),G=new THREE.Group(),U={};
  pm.traverse(o=>{if(o.isMesh)o.castShadow=true});G.add(pm);G.userData.boss=1;scene.add(G);
  Object.assign(U,{pm,hip,upper,swing,legL:legs[0],legR:legs[1],sd,tip,H,eyes,arms});katAim(U,null);return {g:G,U}}
 /* the katana stays in both hands: it turns about the grip. D = blade direction in the teacher's own frame (x: his left as you see it = your right, y up, z towards you) */
-const KQ=new THREE.Quaternion(),KV=new THREE.Vector3();
+const KQ=new THREE.Quaternion(),KV=new THREE.Vector3(),IDQ=new THREE.Quaternion(),GHANG={sx:.6,r:0,D:[.12,-1,.25]};
 function katAimS(U,v){U.sd.quaternion.setFromUnitVectors(YAX,v);U.sd.position.copy(U.H).addScaledVector(v,.13)}
 const KDLOW=new THREE.Vector3(0,-.95,.3).normalize(),KDV=new THREE.Vector3();
-function katAim(U,D){if(!D){U.sd.quaternion.setFromUnitVectors(YAX,KD0);U.sd.position.copy(U.H).addScaledVector(KD0,.13);return}
- KQ.copy(U.hip.quaternion).multiply(U.upper.quaternion).multiply(U.swing.quaternion).invert();KV.copy(D).normalize().applyQuaternion(KQ);
+function katAim(U,D,P){if(!D){U.sd.quaternion.setFromUnitVectors(YAX,KD0);U.sd.position.copy(U.H).addScaledVector(KD0,.13);return}
+ KQ.copy(P?U.pm.quaternion:IDQ).multiply(U.hip.quaternion).multiply(U.upper.quaternion).multiply(U.swing.quaternion).invert();KV.copy(D).normalize().applyQuaternion(KQ);
  U.sd.quaternion.setFromUnitVectors(YAX,KV);U.sd.position.copy(U.H).addScaledVector(KV,.13)}
 /* guards (WAVE 52): swing tilt / roll put the hands; D puts the blade across the body and well past its outline */
 const GUARDS=[{sx:.1,r:-.5,D:[.78,.6,.15]},{sx:-.9,r:.9,D:[-1,.08,.1]},{sx:.35,r:.45,D:[-.8,-.55,.15]},{sx:.1,r:.5,D:[-.78,.6,.15]}];
@@ -733,7 +739,7 @@ function tchPose(B){const U=B.U;
   if(B.m==='still'||B.m==='hurt2'){ax=-.12+Math.sin(tt*1.3+i)*.08;az=-.1*sx}else if(B.m==='grab'){ax=-1.45;az=-.15*sx}else{ax=-.55+Math.sin(tt*6.1+i*2.3)*.95;az=sx*(-.25+Math.sin(tt*4.3+i*1.7)*.55)}
   if(!pv.userData.f2){pv.userData.f2=1}pv.rotation.x+=(ax-pv.rotation.x)*.05;pv.rotation.y=0;pv.rotation.z+=(az-pv.rotation.z)*.05});U.legL.rotation.x=B.lg;U.legR.rotation.x=-B.lg;return}
  U.arms.forEach((pv,i)=>pv.rotation.set(-1.05,0,-.36*(i?1:-1)));
- if(B.gd){const g=B.gc;U.swing.rotation.set(g.sx,0,g.r);katAim(U,g.D)}else{U.swing.rotation.set(B.sx,0,B.r);if(B.kd&&B.m==='cine')katAimS(U,B.kd);else katAim(U,null)}
+ if(B.gd){const g=B.gc;U.swing.rotation.set(g.sx-(U.upper.rotation.x-.12),0,g.r-U.pm.rotation.z);katAim(U,g.D,1)}else{U.swing.rotation.set(B.sx,0,B.r);if(B.kd&&B.m==='cine')katAimS(U,B.kd);else katAim(U,null)}
  U.legL.rotation.x=B.lg;U.legR.rotation.x=-B.lg}
 /* the red line: the direction of his swing on screen, through his chest, long enough to cross most of the screen */
 function tchLine(B){const U=B.U,P=sx=>{U.swing.rotation.set(sx,0,B.r);katAim(U,null);B.g.updateMatrixWorld(true);const v=U.tip.getWorldPosition(new THREE.Vector3()).project(cam);return [(v.x+1)/2*innerWidth,(1-v.y)/2*innerHeight]};
@@ -1091,8 +1097,10 @@ function bossTick(dt,dr){const B=BOSS;if(!B)return;if(B.m==='tf3'||B.f3){fTick(B
  case 'stare':B.t+=dt;B.sx=Math.sin(B.t*1.3)*.03;B.r=0;B.lg*=.9;B.U.pm.rotation.z=Math.sin(B.t*.9)*.015;if(!B.dm&&NOZT&&performance.now()>=NOZT-2250){B.dm=1;B.demo=1;B.U.pm.rotation.z=0;bossWind(1);NOZT=Math.max(NOZT,performance.now()+4600)}else if(performance.now()>=NOZT){B.U.pm.rotation.z=0;B.m='walk'}break;
  case 'reel':{B.t+=dt;const k=Math.sin(Math.min(1,B.t/1.1)*Math.PI);B.U.upper.rotation.x=-.3*k;B.U.pm.rotation.z=Math.sin(B.t*9)*.06*k;B.lg=Math.sin(B.t*11)*.3*k;B.sx=.5*k;
   if(B.t>=1.1){B.U.upper.rotation.x=0;B.U.pm.rotation.z=0;B.U.swing.rotation.set(B.sx,0,B.r);const q=B.U.hip.quaternion.clone().multiply(B.U.upper.quaternion).multiply(B.U.swing.quaternion),D0=KD0.clone().applyQuaternion(q);
-   B.m='guard';B.gd=1;B.gt=8;const g=GUARDS[0];B.gc={sx:B.sx,r:B.r,D:D0.clone()};B.gf={u:0,a:{sx:B.sx,r:B.r,D:D0},b:{sx:g.sx,r:g.r,D:new THREE.Vector3().fromArray(g.D).normalize()}}}break}
- case 'guard':{B.lg*=.9;if(B.gf){B.gf.u=Math.min(1,B.gf.u+dt/.56);const a=B.gf.a,b=B.gf.b,u=B.gf.u;B.gc.sx=a.sx+(b.sx-a.sx)*u;B.gc.r=a.r+(b.r-a.r)*u;B.gc.D.copy(a.D).lerp(b.D,u)}
+   B.m='guard';B.gd=1;B.gt=8;B.wt=0;const g=GHANG;B.gc={sx:B.sx,r:B.r,D:D0.clone()};B.gf={u:0,a:{sx:B.sx,r:B.r,D:D0},b:{sx:g.sx,r:g.r,D:new THREE.Vector3().fromArray(g.D).normalize()}}}break}
+ case 'guard':{B.wt=(B.wt||0)+dt;const w=B.wt;B.U.pm.rotation.z=Math.sin(w*2.1)*.06+Math.sin(w*5.3)*.015;B.U.upper.rotation.x=.12+Math.sin(w*1.7)*.06+Math.max(0,Math.sin(w*.8))*.08;B.lg=Math.sin(w*9)*.07+Math.sin(w*1.3)*.12;B.U.hip.position.y=.9-.035*Math.abs(Math.sin(w*1.4));
+  B.x+=Math.sin(w*.9)*.18*dt;B.z+=Math.cos(w*.7)*.1*dt;
+  if(B.gf){B.gf.u=Math.min(1,B.gf.u+(B.gf.rt?dr/B.gf.rt:dt/.5));const a=B.gf.a,b=B.gf.b,u=B.gf.u;B.gc.sx=a.sx+(b.sx-a.sx)*u;B.gc.r=a.r+(b.r-a.r)*u;B.gc.D.copy(a.D).lerp(b.D,u)}
   B.gt-=dt;if(B.gt<=0)bossCounter();break}
  case 'hurt':B.t+=dt;if(Math.random()<dt*14)sand(B.g.localToWorld(new THREE.Vector3((Math.random()-.5)*.3,1.2+Math.random()*.3,.15)),8,BLOOD,1.8,1,.3);B.U.pm.rotation.z=Math.sin(B.t*31)*.05;B.U.upper.rotation.x=.25+Math.sin(B.t*23)*.08;B.lg*=.9;break;
  case 'tf':bossTf(B,dr);break;
@@ -1405,8 +1413,8 @@ function spawnWave(){if(bossSpawn())return;spawnCrawlers();const n=waveCount(wav
  nd=ES>=0?(ES===0?endSpN(wave):0):EW?rl(2+EC,EP):wave===10?3:wave>10&&wave!==20&&wave!==30&&wave!==40?[0,1].slice(0,wave>=20?2:1).filter(()=>Math.random()<.4).length:0,
  nj=ES>=0?(ES===1?endSpN(wave):0):EW?rl(2+EC,EP):wave===20?3:wave>20&&wave!==30&&wave!==40?[0,1].slice(0,wave>=30?2:1).filter(()=>Math.random()<.4).length:0,
  nk=ES>=0?(ES===2?endSpN(wave):0):EW?rl(5+EC,EP):wave===30?5:wave>30&&wave!==40?[0,1,2,3,4].filter(()=>Math.random()<.4).length:0,
- ns=ES>=0?(ES===3?endSpN(wave):0):EW?rl(Math.floor((wave-61)/30)+1,Math.min(.35,.2+(wave-61)*.0015)):wave===40?2:0,
- N=ES>=0?endSpN(wave):EW?Math.max(n,nd+nj+nk+ns+2):wave===40?2:wave===30?5:wave===10||wave===20?3:n;let nb=0;for(let i=0;i<N;i++){
+ ns=ES>=0?(ES===3?endSpN(wave):0):EW?rl(Math.floor((wave-61)/30)+1,Math.min(.35,.2+(wave-61)*.0015)):wave===40?3:0,
+ N=ES>=0?endSpN(wave):EW?Math.max(n,nd+nj+nk+ns+2):wave===40?3:wave===30?5:wave===10||wave===20?3:n;let nb=0;for(let i=0;i<N;i++){
  const dog=i<nd,jmp=!dog&&i<nd+nj,kyu=!dog&&!jmp&&i<nd+nj+nk,shz=!dog&&!jmp&&!kyu&&i<nd+nj+nk+ns,cf=zcfg(),bomb=!dog&&!jmp&&!kyu&&!shz&&nb<maxB&&Math.random()<pb;if(bomb)nb++;let lt=null;
  const rt0=Math.random(),ty=dog?3:jmp?4:kyu?5:shz?6:bomb?1:rt0<.1?0:rt0<.3?2:1;let vm=1,sc=cf.s;
  const r=dog?.76*cf.s:.56*cf.s*(ty===2?1.42:ty===0?1.45:1),zn=zNear(r);
@@ -1598,12 +1606,12 @@ addEventListener('keydown',e=>{if(e.key==='Escape'||e.key==='p'||e.key==='P'){if
 const rc=new THREE.Raycaster();
 function rayAt(px,py){rc.setFromCamera(new THREE.Vector2(px/innerWidth*2-1,-(py/innerHeight)*2+1),cam)}
 let fin=false,slashA=null,swA=null;const TQ=new THREE.Quaternion();
-addEventListener('pointerdown',e=>{if(PAUSED)return;A();if(ENDM&&st==='after'){endSkip();return}if(st==='title')return;if(st==='over')return;if(st==='intro'){introS=7;endIntro();return}if(st!=='ready')return;if(En.some(e=>e.rt!==undefined||e.ru!==undefined)||bossBlock())return;st='cut';sZone();if(BOSS&&BOSS.m==='guard'&&!BOSS.gdn){const B=BOSS,g=GUARDS[1+(Math.random()*3|0)];B.gdn=1;B.gf={u:0,a:{sx:B.gc.sx,r:B.gc.r,D:B.gc.D.clone()},b:{sx:g.sx,r:g.r,D:new THREE.Vector3().fromArray(g.D).normalize()}}}En.forEach(q=>{if(q.sh&&!q.sh.dn){q.sh.dn=1;q.sh.ty=Math.random()<.5?1.4:.55;q.sh.sp=Math.abs(q.sh.ty-q.sh.y)/.56}});stroke={x:e.clientX,y:e.clientY,ex:e.clientX,ey:e.clientY,len:0,id:e.pointerId};recStart()});
+addEventListener('pointerdown',e=>{if(PAUSED)return;A();if(ENDM&&st==='after'){endSkip();return}if(st==='title')return;if(st==='over')return;if(st==='intro'){introS=7;endIntro();return}if(st!=='ready')return;if(En.some(e=>e.rt!==undefined||e.ru!==undefined)||bossBlock())return;st='cut';sZone();if(BOSS&&BOSS.m==='guard'&&!BOSS.gdn){const B=BOSS,g=GUARDS[1+(Math.random()*3|0)];B.gdn=1;B.gf={u:0,rt:.2,a:{sx:B.gc.sx,r:B.gc.r,D:B.gc.D.clone()},b:{sx:g.sx,r:g.r,D:new THREE.Vector3().fromArray(g.D).normalize()}}}En.forEach(q=>{if(q.sh&&!q.sh.dn){q.sh.dn=1;q.sh.ty=Math.random()<.5?1.4:.55;q.sh.sp=Math.abs(q.sh.ty-q.sh.y)/.56}});stroke={x:e.clientX,y:e.clientY,ex:e.clientX,ey:e.clientY,len:0,id:e.pointerId};recStart()});
 addEventListener('pointermove',e=>{if(PAUSED||!stroke||st!=='cut'||e.pointerId!==stroke.id)return;let dx=e.clientX-stroke.x,dy=e.clientY-stroke.y,d=Math.hypot(dx,dy);
  if(d>MAXL){dx*=MAXL/d;dy*=MAXL/d;d=MAXL}
  stroke.ex=stroke.x+dx;stroke.ey=stroke.y+dy;stroke.len=d});
 function endStroke(e){if(PAUSED||st!=='cut'||!stroke)return;if(e&&e.pointerId!==undefined&&e.pointerId!==stroke.id)return;
- if(stroke.len>22){slashA={x1:stroke.x,y1:stroke.y,x2:stroke.ex,y2:stroke.ey,p:0};if(BOSS&&wave<=51)BOSS.pr=bossParry(slashA);const bk=shieldCut(slashA);if(bk){slashA.x2=bk.x;slashA.y2=bk.y;slashA.blk=bk.p}stroke=null;sWhoosh()}
+ if(stroke.len>45){slashA={x1:stroke.x,y1:stroke.y,x2:stroke.ex,y2:stroke.ey,p:0};if(BOSS&&wave<=51)BOSS.pr=bossParry(slashA);const bk=shieldCut(slashA);if(bk){slashA.x2=bk.x;slashA.y2=bk.y;slashA.blk=bk.p}const sg=shieldGaps(slashA);if(sg){slashA.blkI=sg.I;if(!slashA.blk)slashA.blk=sg.p}stroke=null;sWhoosh()}
  else{stroke=null;st='ready';recAbort()}}
 addEventListener('pointerup',endStroke);addEventListener('pointercancel',endStroke);
 /* ---- loop ---- */
@@ -1614,12 +1622,13 @@ function frame(now){requestAnimationFrame(frame);if(PAUSED){last=now;return}{con
   if(slashA){slashA.p+=dr/(slashA.p<1?.1:1.8);
    if(slashA.p>=1&&slashA.blk&&!slashA.bkd){slashA.bkd=1;play('clang',.9,.95+Math.random()*.1);sand(slashA.blk,34,FIRE,2.4,0,.3);puff(slashA.blk.x,slashA.blk.y,slashA.blk.z,0xffd27a,'s',.25,.2,0)}
    if(slashA.p>=1){slashA.d=(slashA.d||0)+dr;
-    if(slashA.d>=.2){pend.push({x1:slashA.x1,y1:slashA.y1,x2:slashA.x2,y2:slashA.y2,w:false});swA=slashA;slashA=null;fin=true}}}
+    if(slashA.d>=.2){pend.push({x1:slashA.x1,y1:slashA.y1,x2:slashA.x2,y2:slashA.y2,w:false,blkI:slashA.blkI});swA=slashA;slashA=null;fin=true}}}
   pend.forEach(s=>{const l=Math.hypot(s.x2-s.x1,s.y2-s.y1);TR.push({x1:s.x1,y1:s.y1,x2:s.x2,y2:s.y2,w:s.w,a:s.w?.3:1});if(s.w||l<1)return;
    const nx=-(s.y2-s.y1)/l,ny=(s.x2-s.x1)/l,n=Math.max(1,Math.ceil(l/8));
    {const dA=dirAt(s.x1,s.y1),dB=dirAt(s.x2,s.y2),nn=dA.clone().cross(dB);if(nn.lengthSq()>1e-12){nn.normalize();const hz=[];
-    En.forEach(e=>{const y=wedgeHit(e.g,cam.position,dA,dB,nn);if(y!==null)hz.push([e,y])});if(BOSS&&wave===52&&BOSS.m==='guard'&&!BOSS.hit){if(wedgeHit(BOSS.g,cam.position,dA,dB,nn)!==null)BOSS.hit={C:cam.position.clone(),n:nn.clone()}}if(BOSS&&(wave===53||wave===54)&&BOSS.tn&&!BOSS.th&&(BOSS.m==='tw'||BOSS.m==='punch')){const T=BOSS.tn[BOSS.ai];for(let k=0;k<T.n;k++)if(wedgeHit(T.segs[k],cam.position,dA,dB,nn)!==null){BOSS.th={k};break}if(!BOSS.th&&T.fist&&wedgeHit(T.fist,cam.position,dA,dB,nn)!==null)BOSS.th={k:T.n-1};if(BOSS.th){BOSS.th.C=cam.position.clone();BOSS.th.n=nn.clone()}}if(BOSS&&wave===55&&BOSS.m==='still'&&!BOSS.hit){if(wedgeHit(BOSS.g,cam.position,dA,dB,nn)!==null)BOSS.hit=1}if(BOSS&&BOSS.f3)fWedge(BOSS,dA,dB,nn);hz.forEach(([e,y])=>{if(En.includes(e))cutEnemy(e,nx,ny,s,y)})}}
-   for(let i=0;i<=n;i++){rayAt(s.x1+(s.x2-s.x1)*i/n,s.y1+(s.y2-s.y1)*i/n);
+    const FS=freeSegs(s.blkI).map(([a,b])=>[a?dirAt(s.x1+(s.x2-s.x1)*a,s.y1+(s.y2-s.y1)*a):dA,b<1?dirAt(s.x1+(s.x2-s.x1)*b,s.y1+(s.y2-s.y1)*b):dB]);
+    En.forEach(e=>{let y=null;FS.forEach(([a,b])=>{const h=wedgeHit(e.g,cam.position,a,b,nn);if(h!==null&&(y===null||h<y))y=h});if(y!==null)hz.push([e,y])});if(BOSS&&wave===52&&BOSS.m==='guard'&&!BOSS.hit){if(wedgeHit(BOSS.g,cam.position,dA,dB,nn)!==null)BOSS.hit={C:cam.position.clone(),n:nn.clone()}}if(BOSS&&(wave===53||wave===54)&&BOSS.tn&&!BOSS.th&&(BOSS.m==='tw'||BOSS.m==='punch')){const T=BOSS.tn[BOSS.ai];for(let k=0;k<T.n;k++)if(wedgeHit(T.segs[k],cam.position,dA,dB,nn)!==null){BOSS.th={k};break}if(!BOSS.th&&T.fist&&wedgeHit(T.fist,cam.position,dA,dB,nn)!==null)BOSS.th={k:T.n-1};if(BOSS.th){BOSS.th.C=cam.position.clone();BOSS.th.n=nn.clone()}}if(BOSS&&wave===55&&BOSS.m==='still'&&!BOSS.hit){if(wedgeHit(BOSS.g,cam.position,dA,dB,nn)!==null)BOSS.hit=1}if(BOSS&&BOSS.f3)fWedge(BOSS,dA,dB,nn);hz.forEach(([e,y])=>{if(En.includes(e))cutEnemy(e,nx,ny,s,y)})}}
+   for(let i=0;i<=n;i++){if(s.blkI&&s.blkI.some(([a,b])=>i/n>=a&&i/n<=b))continue;rayAt(s.x1+(s.x2-s.x1)*i/n,s.y1+(s.y2-s.y1)*i/n);
     const gg=rc.intersectObjects(gib.filter(o=>o.sink===undefined&&!o.ns).map(o=>o.mesh),true);
     if(gg.length){let o=gg[0].object;while(o&&!gib.some(q=>q.mesh===o))o=o.parent;const q=gib.find(q=>q.mesh===o);if(q)cutGib(q,nx,ny,s)}
     const gd=rc.intersectObjects(dyn.map(d=>d.mesh),true);
