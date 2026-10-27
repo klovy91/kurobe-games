@@ -1293,7 +1293,11 @@ function cutGib(q,nx,ny,s){const dA=dirAt(s.x1,s.y1),dB=dirAt(s.x2,s.y2);let n=d
  const v0=q.b.velocity;[0,1].forEach(k=>{const sg=k?-1:1;mkPiece(sd[k],{x:v0.x+n.x*.95*sg,y:v0.y+n.y*.95*sg+.45,z:v0.z+n.z*.95*sg-.25},q.nc,.3)});
  sand(q.b.position,q.nc?10:26,q.nc?DUST:BLOOD,2,q.nc?0:1,.3);dropGib(q);gib.splice(gib.indexOf(q),1)}
 /* ---- waves ---- */
-function waveCount(w){return w<=1?1:Math.min(30,2+Math.floor(w/5))}
+function waveCount(w){return w<=1?1:w>60?2+Math.floor(w/5):Math.min(30,2+Math.floor(w/5))}
+/* endless (WAVE 61+): speed rises slowly up to x1.6; special waves every 10 (dogs / athletes / lunch duty / janitors in turn, more each round) */
+function spdK(){return wave<=60?1:1+.6*(1-Math.exp(-(wave-60)/57))}
+function endSp(w){if(w<=60||w%10)return -1;return (w/10-7)%4}
+function endSpN(w){const k=Math.floor((w-70)/40)+1,t=endSp(w);return t===0?8+2*k:t===1?8+2*k:t===2?13+2*k:4+k}
 function bladeLen(w){return Math.hypot(innerWidth,innerHeight)*.6}
 /* visible half-width at depth z, minus the zombie's own half-width r -> its whole body stays on screen */
 function halfW(z,r){const T=Math.tan(cam.fov*Math.PI/360)*cam.aspect;return Math.min(5.4-r,Math.max(0,T*(6-z-r)*.94-r))}
@@ -1302,7 +1306,12 @@ function zNear(r){const T=Math.tan(cam.fov*Math.PI/360)*cam.aspect;return Math.m
 const SRC=new THREE.Raycaster(),SEYE=new THREE.Vector3(0,1.6,6);
 function seenFrom(x,y,z){const d=new THREE.Vector3(x,y,z).sub(SEYE),L=d.length();SRC.set(SEYE,d.normalize());SRC.far=L;return !SRC.intersectObjects(dyn.map(o=>o.mesh),true).length}
 function freeSpot(x,z){return !dyn.some(d=>{const ob=d.body.ob;if(!ob)return false;const q=d.body.position;return Math.abs(x-q.x)<ob[0]+.32&&Math.abs(z-q.z)<ob[1]+.32})}
-function spawnWave(){if(bossSpawn())return;spawnCrawlers();const n=waveCount(wave),pb=Math.min(.16,.02+wave*.005),maxB=1,nd=wave===10?3:wave>10&&wave!==20&&wave!==30&&wave!==40?[0,1].slice(0,wave>=20?2:1).filter(()=>Math.random()<.4).length:0,nj=wave===20?3:wave>20&&wave!==30&&wave!==40?[0,1].slice(0,wave>=30?2:1).filter(()=>Math.random()<.4).length:0,nk=wave===30?5:wave>30&&wave!==40?[0,1,2,3,4].filter(()=>Math.random()<.4).length:0,ns=wave===40?2:0,N=wave===40?2:wave===30?5:wave===10||wave===20?3:n;let nb=0;for(let i=0;i<N;i++){
+function spawnWave(){if(bossSpawn())return;spawnCrawlers();const n=waveCount(wave),pb=Math.min(.16,.02+wave*.005),maxB=1,EW=wave>60,ES=endSp(wave),EC=EW?Math.floor((wave-61)/20)+1:0,EP=EW?Math.min(.6,.4+(wave-61)*.002):.4,rl=(c,p)=>{let k=0;for(let i=0;i<c;i++)if(Math.random()<p)k++;return k},
+ nd=ES>=0?(ES===0?endSpN(wave):0):EW?rl(2+EC,EP):wave===10?3:wave>10&&wave!==20&&wave!==30&&wave!==40?[0,1].slice(0,wave>=20?2:1).filter(()=>Math.random()<.4).length:0,
+ nj=ES>=0?(ES===1?endSpN(wave):0):EW?rl(2+EC,EP):wave===20?3:wave>20&&wave!==30&&wave!==40?[0,1].slice(0,wave>=30?2:1).filter(()=>Math.random()<.4).length:0,
+ nk=ES>=0?(ES===2?endSpN(wave):0):EW?rl(5+EC,EP):wave===30?5:wave>30&&wave!==40?[0,1,2,3,4].filter(()=>Math.random()<.4).length:0,
+ ns=ES>=0?(ES===3?endSpN(wave):0):EW?rl(Math.floor((wave-61)/30)+1,Math.min(.35,.2+(wave-61)*.0015)):wave===40?2:0,
+ N=ES>=0?endSpN(wave):EW?Math.max(n,nd+nj+nk+ns+2):wave===40?2:wave===30?5:wave===10||wave===20?3:n;let nb=0;for(let i=0;i<N;i++){
  const dog=i<nd,jmp=!dog&&i<nd+nj,kyu=!dog&&!jmp&&i<nd+nj+nk,shz=!dog&&!jmp&&!kyu&&i<nd+nj+nk+ns,cf=zcfg(),bomb=!dog&&!jmp&&!kyu&&!shz&&nb<maxB&&Math.random()<pb;if(bomb)nb++;let lt=null;
  const rt0=Math.random(),ty=dog?3:jmp?4:kyu?5:shz?6:bomb?1:rt0<.1?0:rt0<.3?2:1;let vm=1,sc=cf.s;
  const r=dog?.76*cf.s:.56*cf.s*(ty===2?1.42:ty===0?1.45:1),zn=zNear(r);
@@ -1352,7 +1361,7 @@ function banner(t,ms,sz,tw){const b=$('bn');b.style.fontSize=(sz||34)+'px';b.sty
  if(tw){let i=0;b.textContent='';bnT=setInterval(()=>{i++;b.textContent=t.slice(0,i);if(i>=t.length){clearInterval(bnT);bnT=null}},45)}
  else b.innerHTML=t;
  if(bnH)clearTimeout(bnH);bnH=setTimeout(()=>{b.style.opacity=0;bnH=null},ms)}
-function waveBanner(){if(BOSS&&(BOSS.m==='cine'||BOSS.m==='tf'||BOSS.m==='tf3'))return;if(wave===50||wave===52){const w=wave,L=w===50?[['攻撃の隙がない…',1100]]:[['攻撃のチャンスだ！',1700]];L.forEach(([tx,ms])=>setTimeout(()=>{if(wave===w&&BOSS&&st!=='over')banner(tx,2000,24)},ms))}sDing();banner('WAVE '+wave+'<br><span style="font-size:17px;opacity:.92">'+(wave>=50&&wave<=60?['まさか、先生...!!','先生','先生、さようなら','先生...？','先生...？','こんどこそ、さようなら','先生だった何か','先生だった何か','来る...！左だ！','次は右だ！','今度こそ もう立ち上がれない'][wave-50]:wave===10?'犬ゾンビ出現':wave===20?'体育会系ゾンビ出現':wave===30?'給食当番ゾンビ出現':wave===40?'用務員ゾンビ出現':'ゾンビ '+En.length+'体')+'</span>',wave===10||wave===20||wave===30||wave===40?1900:1500)}
+function waveBanner(){if(BOSS&&(BOSS.m==='cine'||BOSS.m==='tf'||BOSS.m==='tf3'))return;if(wave===50||wave===52){const w=wave,L=w===50?[['攻撃の隙がない…',1100]]:[['攻撃のチャンスだ！',1700]];L.forEach(([tx,ms])=>setTimeout(()=>{if(wave===w&&BOSS&&st!=='over')banner(tx,2000,24)},ms))}sDing();banner('WAVE '+wave+'<br><span style="font-size:17px;opacity:.92">'+(wave>=50&&wave<=60?['まさか、先生...!!','先生','先生、さようなら','先生...？','先生...？','こんどこそ、さようなら','先生だった何か','先生だった何か','来る...！左だ！','次は右だ！','今度こそ もう立ち上がれない'][wave-50]:wave===61?'終わりのない戦い':endSp(wave)>=0?['犬ゾンビの群れ','体育会系ゾンビの群れ','給食当番ゾンビの群れ','用務員ゾンビの群れ'][endSp(wave)]:wave===10?'犬ゾンビ出現':wave===20?'体育会系ゾンビ出現':wave===30?'給食当番ゾンビ出現':wave===40?'用務員ゾンビ出現':'ゾンビ '+En.length+'体')+'</span>',wave===10||wave===20||wave===30||wave===40||wave===61||endSp(wave)>=0?1900:1500)}
 function nextWave(){wave++;spawnWave();MAXL=bladeLen(wave);waveBanner()}
 const MSG=['…と、そこで目が覚めた。','チャイムが鳴った。妄想終了。','次の授業は体育だった。','先生「ここ、テストに出るぞ」'];
 function bloodScreen(){bl=[];bt0=performance.now();const S0=Math.min(innerWidth,innerHeight)/390;
@@ -1549,7 +1558,7 @@ function frame(now){requestAnimationFrame(frame);perfTick(now-last);const dr=Mat
    if(u<1){rising=true;if(Math.random()<dt*14)sand({x:e.x+(Math.random()-.5)*.5,y:.05,z:e.z+(Math.random()-.5)*.5},3,DUST,.9,0,.3)}
    else{e.rt=undefined;e.inr.rotation.z=0;e.shd.position.y=.02;if(e.jm){const J=e.jm,dx=-e.x,dz=5.2-e.z,l=Math.hypot(dx,dz)||1;J.m='air';J.u=0;J.ad=.35+Math.random()*.45;J.ah=10*J.ad*J.ad;J.vel={x:dx/l*1.4,y:0,z:dz/l*1.4};J.nc=Math.random()<.5?1:2;puff(e.x,.12,e.z,0x8f8068,'s',.5,.4,0)}}});
   En.forEach(e=>{if(holdT>0||e.rt!==undefined||(rising&&!e.dog&&!e.jm))return;if(st==='after'&&!cleared&&rushT>0)return;const v=e.v;let ax=-e.x,az=(e===biter?6.8:5.2)-e.z;const l=Math.hypot(ax,az)||1;ax/=l;az/=l;
-   if(e.dog)dogStep(e,ax,az,Math.max(dt,dr*.25));else if(e.jm)jumpStep(e,ax,az,dt);else if(e.ky)kyuStep(e,ax,az,dt);else{e.x+=ax*dt*v;e.z+=az*dt*v}
+   const EK=spdK();if(e.dog)dogStep(e,ax,az,Math.max(dt,dr*.25)*EK);else if(e.jm)jumpStep(e,ax,az,dt*EK);else if(e.ky)kyuStep(e,ax,az,dt*EK);else{e.x+=ax*dt*v*EK;e.z+=az*dt*v*EK}
    if(!(e.jm&&e.jm.m==='air'))dyn.forEach(d=>{const ob=d.body.ob;if(!ob)return;const p=d.body.position,dx=e.x-p.x,dz=e.z-p.z,cx=Math.max(-ob[0],Math.min(ob[0],dx)),cz=Math.max(-ob[1],Math.min(ob[1],dz)),vx=dx-cx,vz=dz-cz,dd=Math.hypot(vx,vz);
     if(dd<.4){const b=d.body,pw=Math.min(1,12/b.mass),ux=dd>1e-4?-vx/dd:(dx>=0?-1:1),uz=dd>1e-4?-vz/dd:0,sp=e.v*1.15*pw;
      if(b.sleepState===CANNON.Body.SLEEPING)b.wakeUp();b.velocity.x+=(ux*sp-b.velocity.x)*.35;b.velocity.z+=(uz*sp-b.velocity.z)*.35;
