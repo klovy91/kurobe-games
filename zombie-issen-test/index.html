@@ -103,7 +103,7 @@ function rainOn(){if(!A()||!BUF.rain)return;const v=WBRK?.85:.5;if(!RAINS){const
 function rainOff(){if(!RAINS)return;const s=RAINS,G=RAING.gain,t=AC.currentTime;RAINS=null;RAING=null;G.cancelScheduledValues(t);G.setValueAtTime(G.value,t);G.linearRampToValueAtTime(0,t+1.2);try{s.stop(t+1.3)}catch(e){}}
 /* BGM (boss fight: forms 1-2 = bgm1). Loops; the file is mastered loud, so it plays at about 1/5 */
 let BGMW=null,BGMS=null,BGMG=null,BGMK=null;const BGMV={bgm1:.2};
-function bgmOn(k){BGMW=k;if(BGMK===k||!A()||!BUF[k])return;bgmOff(.6,1);const s=AC.createBufferSource();s.buffer=BUF[k];s.loop=true;const g=AC.createGain(),t=AC.currentTime;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(BGMV[k]||.2,t+.8);s.connect(g);g.connect(MG);s.start();BGMS=s;BGMG=g;BGMK=k}
+function bgmOn(k){BGMW=k;if(BGMK===k||!A()||!BUF[k])return;bgmOff(.6,1);const s=AC.createBufferSource();s.buffer=BUF[k];s.loop=true;const g=AC.createGain(),t=AC.currentTime;g.gain.setValueAtTime(BGMV[k]||.2,t);s.connect(g);g.connect(MG);s.start();BGMS=s;BGMG=g;BGMK=k}
 function bgmOff(fd,keep){if(!keep)BGMW=null;if(!BGMS)return;const s=BGMS,G=BGMG.gain,t=AC.currentTime,f=fd||1.2;BGMS=null;BGMG=null;BGMK=null;G.cancelScheduledValues(t);G.setValueAtTime(G.value,t);G.linearRampToValueAtTime(0,t+f);try{s.stop(t+f+.05)}catch(e){}}
 function roomOff(){if(roomSrc){try{roomSrc.stop()}catch(e){}roomSrc=null}}
 function nz(d){const n=Math.max(1,AC.sampleRate*d|0),b=AC.createBuffer(1,n,AC.sampleRate),c=b.getChannelData(0);for(let i=0;i<n;i++)c[i]=Math.random()*2-1;const s=AC.createBufferSource();s.buffer=b;return s}
@@ -354,7 +354,7 @@ function hlUI(){if(st!=='over')return;const h=$('hl'),sv=$('sv');if(!h||!sv)retu
 const world=new CANNON.World();world.gravity.set(0,-9.8,0);world.defaultContactMaterial.friction=.4;world.defaultContactMaterial.restitution=.2;world.allowSleep=true;world.broadphase=new CANNON.SAPBroadphase(world);world.solver.iterations=10;
 world.defaultContactMaterial.contactEquationStiffness=4e6;world.defaultContactMaterial.contactEquationRelaxation=6;
 world.defaultContactMaterial.frictionEquationStiffness=3e6;world.defaultContactMaterial.frictionEquationRelaxation=6;
-function plane(nx,ny,nz,px,py,pz){const b=new CANNON.Body({mass:0,shape:new CANNON.Plane()});const q=new CANNON.Quaternion();q.setFromVectors(new CANNON.Vec3(0,0,1),new CANNON.Vec3(nx,ny,nz));b.quaternion.copy(q);b.position.set(px,py,pz);world.addBody(b)}
+function plane(nx,ny,nz,px,py,pz){const b=new CANNON.Body({mass:0,shape:new CANNON.Plane()});const q=new CANNON.Quaternion();q.setFromVectors(new CANNON.Vec3(0,0,1),new CANNON.Vec3(nx,ny,nz));b.quaternion.copy(q);b.position.set(px,py,pz);b.collisionFilterMask=-1;world.addBody(b)}
 plane(0,1,0,0,0,0);plane(1,0,0,-6,0,0);plane(-1,0,0,6,0,0);plane(0,0,1,0,0,-6);plane(0,0,-1,0,0,8);plane(0,-1,0,0,3.4,0);
 const L=c=>new THREE.MeshLambertMaterial({color:c});
 function mk(w,h,d,c){return new THREE.Mesh(new THREE.BoxGeometry(w,h,d),L(c))}
@@ -707,11 +707,10 @@ function katAim(U,D){if(!D){U.sd.quaternion.setFromUnitVectors(YAX,KD0);U.sd.pos
  U.sd.quaternion.setFromUnitVectors(YAX,KV);U.sd.position.copy(U.H).addScaledVector(KV,.13)}
 /* guards (WAVE 52): swing tilt / roll put the hands; D puts the blade across the body and well past its outline */
 const GUARDS=[{sx:.1,r:-.5,D:[.78,.6,.15]},{sx:-.9,r:.9,D:[-1,.08,.1]},{sx:.35,r:.45,D:[-.8,-.55,.15]},{sx:.1,r:.5,D:[-.78,.6,.15]}];
-function bossMake(cine){stormOn();if(!cine)winBreak(0);const T=tchMake(),B={g:T.g,U:T.U,x:0,z:cine?-3.6:1,sx:0,r:0,lg:0,ph:0,t:0,m:'idle'};BOSS=B;B.g.position.set(B.x,cine?-1.95:0,B.z);
- if(cine){B.m='cine';B.t=0;B.U.sd.visible=false;
+function bossMake(cine){stormOn();if(!cine)winBreak(0);const T=tchMake(),B={g:T.g,U:T.U,x:0,z:cine?-3.6:1,sx:0,r:0,lg:0,ph:0,t:0,m:'idle'};BOSS=B;B.g.position.set(B.x,cine?-3.2:0,B.z);
+ if(cine){B.m='cine';B.t=0;B.U.sd.visible=true;
   const pool=new THREE.Mesh(new THREE.CircleGeometry(1,40),new THREE.MeshBasicMaterial({color:GORE==='off'?0x2e2a26:GORE==='green'?0x1f4a0c:0x4a0308,transparent:true,opacity:.92,depthWrite:false}));
-  pool.userData.c0=pool.material.color.getHex();pool.rotation.x=-Math.PI/2;pool.position.set(B.x,.016,B.z+.15);pool.scale.setScalar(.01);pool.userData.nocut=1;pool.userData.boss=1;scene.add(pool);B.pool=pool;
-  const sk=katMesh();sk.position.set(B.x+.45,.3,B.z+.55);sk.rotation.set(.25,0,-.2);sk.visible=false;sk.userData.boss=1;scene.add(sk);B.sk=sk}
+  pool.userData.c0=pool.material.color.getHex();pool.rotation.x=-Math.PI/2;pool.position.set(B.x,.016,B.z+.15);pool.scale.setScalar(.01);pool.userData.nocut=1;pool.userData.boss=1;scene.add(pool);B.pool=pool;}
  else{bossMood(.85,.35);bossGo()}tchPose(B)}
 function bossDispose(){if(!BOSS)return;const B=BOSS;[B.g,B.pool,B.sk,B.cr,B.dk].forEach(o=>{if(o){scene.remove(o);disposeTree(o)}});if(B.tn)B.tn.forEach(T=>{scene.remove(T.g);disposeTree(T.g);T.mat.dispose()});fDispose(B);BOSS=null;stormOff();bgmOff(1);bossMood(1,0);$('lb1').style.height='0';$('lb2').style.height='0'}
 function bossSpawn(){if(BOSS&&!(wave>=50&&wave<=60))bossDispose();if(!(wave>=50&&wave<=60))return false;
@@ -816,7 +815,7 @@ function tnSlice(T,th){const k=Math.max(0,Math.min(T.n-1,th.k)),segs=T.segs.slic
 function flopTick(dt){if(!FLOP.length||dt<=0)return;const g2=dt*dt*9.8;
  for(let i=FLOP.length-1;i>=0;i--){const R=FLOP[i];R.t+=dt;const p=R.p,pp=R.pp,n=p.length,vk=dt/(R.ldt||dt)*Math.pow(.985,dt*60);R.ldt=dt;
   for(let k=0;k<n;k++){const x=p[k],o=pp[k],vx=(x.x-o.x)*vk,vy=(x.y-o.y)*vk,vz=(x.z-o.z)*vk;o.copy(x);x.x+=vx;x.y+=vy-g2;x.z+=vz;
-   if(R.t<1.3&&Math.random()<dt*12){const a=.02*(1-R.t/1.3);x.x+=(Math.random()-.5)*a;x.y+=Math.random()*a;x.z+=(Math.random()-.5)*a}
+   if(R.t<1.3&&Math.random()<dt*12){const a=.02*(1-R.t/1.3),jx=(Math.random()-.5)*a,jy=Math.random()*a,jz=(Math.random()-.5)*a;x.x+=jx;x.y+=jy;x.z+=jz;o.x+=jx;o.y+=jy;o.z+=jz}
    if(x.y<.07){x.y=.07;o.y=x.y+(x.y-o.y)*.2;o.x=x.x-(x.x-o.x)*.6;o.z=x.z-(x.z-o.z)*.6}
    if(x.y>3.38){x.y=3.38;o.y=x.y+(x.y-o.y)*.3}if(Math.abs(x.x)>5.82){const w=Math.sign(x.x)*5.82;o.x=w+(w-o.x)*.3;x.x=w}if(x.z<-5.85){o.z=-5.85+(-5.85-o.z)*.3;x.z=-5.85}}
   for(let it=0;it<4;it++)for(let k=0;k<n-1;k++){const a=p[k],b=p[k+1],Ln=R.links[k].l;TCV.copy(b).sub(a);const d=TCV.length()||1e-4,c=(d-Ln)/d*.5;a.addScaledVector(TCV,c);b.addScaledVector(TCV,-c)}
@@ -825,7 +824,9 @@ function flopTick(dt){if(!FLOP.length||dt<=0)return;const g2=dt*dt*9.8;
   if(R.fg.children.length){const a=p[n-2],b=p[n-1];R.fg.position.copy(b);TCV.copy(b).sub(a).normalize();R.fg.quaternion.setFromUnitVectors(YAX,TCV);R.fg.scale.setScalar(Math.max(.001,sc))}
   if(R.t<1.2&&Math.random()<dt*6)sand(p[0],4,BLOOD,1.2,1,.15);
   if(sc<=0){scene.remove(R.g);disposeTree(R.g);FLOP.splice(i,1)}}}
-function flopClear(){FLOP.forEach(R=>{scene.remove(R.g);disposeTree(R.g)});FLOP=[]}
+let WFALL=[];
+function wfTick(dt){if(dt<=0)return;WFALL.forEach(o=>{if(o.rest)return;o.t+=dt;o.v.y-=9.8*dt;o.g.position.addScaledVector(o.v,dt);const fl=.02-o.off;if(o.g.position.y<fl){o.g.position.y=fl;o.rest=1;sand(o.g.position,30,BLOOD,1.6,1,.4)}else if(Math.random()<dt*10)sand(o.g.position,3,BLOOD,1,1,.2)})}
+function flopClear(){WFALL=[];FLOP.forEach(R=>{scene.remove(R.g);disposeTree(R.g)});FLOP=[]}
 function bossPunch(){const B=BOSS,T=B.tn[B.ai];if(!T||T.n<T.N){bossKill();return}B.m='punch';B.u=0;B.fs=(T.P[T.N]||B.g.localToWorld(new THREE.Vector3(0,1.8,0))).clone();
  CAMF.set(0,0,-1).applyQuaternion(cam.quaternion);B.fe=cam.position.clone().add(TCV.set(0,-.18,0)).addScaledVector(CAMF,.35);play('mpunch',1)}
 function bossTf(B,dr){const t=(B.t+=dr),sm=x=>{x=Math.min(1,Math.max(0,x));return x*x*(3-2*x)};
@@ -994,9 +995,9 @@ function fSplitAll(B){const C=B.th.C,n=B.th.n,ms=[],vis=o=>{while(o){if(!o.visib
  const sd=[[],[]];ms.forEach(m=>{const r=sliceMesh(m,C,n),c=capTris(r.ip,n);for(let q=0;q<2;q++)sd[q].push({v:r.out[q],vn:r.on[q],vu:r.ou[q],mat:m.material.clone(),c})});
  sd.forEach(a=>a.forEach(p=>{if(p.mat.emissive)p.mat.emissive.setRGB(0,0,0)}));
  B.F.visible=false;B.farms.forEach(L=>L.g.visible=false);if(B.fneck)B.fneck.g.visible=false;
- [0,1].forEach(q=>{const sg=q?-1:1,o=mkPiece(sd[q],{x:n.x*2.2*sg,y:2.2+Math.random(),z:n.z*2.2*sg+.6},0,.5);if(o){o.ns=1;o.bleed=12;fEyeGlow(o)}});
+ [0,1].forEach(q=>{const sg=q?-1:1,o=mkPiece(sd[q],{x:n.x*1.2*sg,y:.9+Math.random()*.4,z:n.z*1.2*sg+.3},0,.25);if(o){o.ns=1;o.bleed=12;fEyeGlow(o);o.b.collisionFilterGroup=2;o.b.collisionFilterMask=1}});
  (B.th.wh||[]).forEach(w=>{w.m.geometry.setDrawRange(0,w.cnt);w.m.updateMatrixWorld(true);const r=sliceMesh(w.m,C,n),c=capTris(r.ip,n);w.cut=1;w.m.visible=false;
-  for(let q=0;q<2;q++){const sg=q?-1:1,o=mkPiece([{v:r.out[q],vn:r.on[q],vu:r.ou[q],mat:w.m.material,c}],{x:n.x*1.2*sg,y:1,z:n.z*1.2*sg},0,.4);if(o){o.ns=1;o.bleed=8}}
+  for(let q=0;q<2;q++){const sg=q?-1:1,o=mkPiece([{v:r.out[q],vn:r.on[q],vu:r.ou[q],mat:w.m.material,c}],{x:0,y:0,z:0},0,0);if(o){world.remove(o.b);gib.splice(gib.indexOf(o),1);o.mesh.userData.boss=1;const bb=new THREE.Box3().setFromObject(o.mesh);WFALL.push({g:o.mesh,v:new THREE.Vector3(n.x*.4*sg,.3,n.z*.4*sg),off:bb.min.y-o.mesh.position.y,t:0})}}
   const mid=w.E.clone().lerp(B.F.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,1.4,0)),.5);gush(mid.x,mid.y,mid.z);sand(mid,160,BLOOD,4,1,.7)});
  B.m='fdie';B.t=0;flash(.85);shakeT=1.6;sCut();play('cut',1,.6);play('ttr2',1,.7);play('froar',.9,.6);
  const R=Math.random;for(let i=0;i<20;i++){const p=B.F.localToWorld(new THREE.Vector3((R()-.5)*1.4,.6+R()*2.6,.4));gush(p.x,p.y,p.z);sand(p,280,BLOOD,4.8,1,.9)}
@@ -1015,11 +1016,11 @@ function bossCine(B,dr){const t=(B.t+=dr),sm=x=>{x=Math.min(1,Math.max(0,x));ret
   CM4.lookAt(cam.position,new THREE.Vector3(0,.9,-8),YAX);CQ0.setFromRotationMatrix(CM4);CM4.lookAt(cam.position,new THREE.Vector3(-6,1.65,.2),YAX);CQ1.setFromRotationMatrix(CM4);
   cam.quaternion.slerpQuaternions(CQ0,CQ1,k);cam.updateMatrixWorld()}
  if(B.k===0&&t>1.6){B.k=1;crack(B.x,B.z,2.4)}
- if(B.k===1&&t>2.2){B.k=2;B.sk.visible=true;sand({x:B.sk.position.x,y:.1,z:B.sk.position.z},14,DUST,1,0,.3)}
+ if(B.k===1&&t>2.2){B.k=2;sand({x:B.x,y:.1,z:B.z+.3},18,DUST,1,0,.3);puff(B.x,.15,B.z+.3,0x8f8068,'s',.4,.35,0)}
  if(B.k===2&&t>3){B.k=3;play('trev',1);shakeT=.5}
- const u=sm((t-3)/2.2);B.g.position.y=-1.95*(1-u);U.pm.rotation.z=t>3&&t<5.2?Math.sin(t*19)*.05:0;
- B.sx=t<5.4?-2.4+1.2*u:-1.2+1.2*sm((t-5.4)/.8);B.r=t<5.4?.5:.5*(1-sm((t-5.4)/.8));
- if(B.k===3&&t>5.4){B.k=4;B.sk.visible=false;U.sd.visible=true;play('tpull',1)}
+ const u=sm((t-3)/2.2);B.g.position.y=t<3?-3.2+1.25*sm((t-2.1)/.9):-1.95*(1-u);U.pm.rotation.z=t>3&&t<5.2?Math.sin(t*19)*.05:0;
+ B.sx=t<5.4?-1.02+Math.sin(t*7)*.03*(1-u):-1.02+1.02*sm((t-5.4)/.8);B.r=t<5.4?.12:.12*(1-sm((t-5.4)/.8));
+ if(B.k===3&&t>5.4){B.k=4;U.sd.visible=true;play('tpull',1)}
  U.eyes.forEach(e=>e.scale.setScalar(t>5.9?1+.8*Math.max(0,1-(t-5.9)/.6):1));
  if(B.k===4&&t>6.6){B.k=5;$('lb1').style.height='0';$('lb2').style.height='0'}
  if(t>7.1){B.g.position.y=0;U.pm.rotation.z=0;st='ready';bossGo();waveBanner()}}
@@ -1606,7 +1607,7 @@ function frame(now){requestAnimationFrame(frame);perfTick(now-last);const dr=Mat
    e.x=Math.max(-5.4,Math.min(5.4,e.x));e.z=Math.max(-5.6,e.z);if(e===biter)e.z=Math.min(e.z,6.15);
    if(e.dog)dogPose(e,ax,az);else if(e.jm)jumpPose(e,ax,az);else if(e.ky)kyuPose(e,ax,az);else{e.g.position.set(e.x,Math.abs(Math.sin(e.z*5))*.04,e.z);e.g.rotation.y=Math.atan2(ax,az);if(e.sh)shPose(e,dt)}
    if(e.arms&&e.arms.length){e.ph+=dt*4.2;e.arms.forEach(a=>{const q=new THREE.Quaternion().setFromAxisAngle(XAX,Math.sin(e.ph+a.ph)*.55);a.m.position.copy(a.lp).sub(a.J).applyQuaternion(q).add(a.J);a.m.quaternion.copy(q).multiply(a.lq)})}});
-  stepBlobs(dt);flopTick(dt);bossTick(dt,dr);shardTick(dt);
+  stepBlobs(dt);flopTick(dt);wfTick(dt);bossTick(dt,dr);shardTick(dt);
   if(st==='bite'){bite-=dr;if(!bl.length&&bite<.25)bloodScreen();if(bite<=0)die()}
   else if(rushT<=0){const b=En.find(e=>Math.hypot(e.x,e.z-6)<1.5);if(b){cleared=false;startBite(b)}}}
  if(st==='after'){after-=dr;if(slowT>0)slowT-=dr;if(after<=0){if(cleared){recEnd();En.forEach(e=>scene.remove(e.g));En=[];nextWave();st='ready'}else die()}}
