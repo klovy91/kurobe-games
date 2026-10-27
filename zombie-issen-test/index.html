@@ -1716,7 +1716,7 @@ function frame(now){requestAnimationFrame(frame);if(PAUSED){last=now;return}{con
  if(blD1>=0){const at=BL.instanceMatrix;at.updateRange.offset=blD0*16;at.updateRange.count=(blD1-blD0)*16;at.needsUpdate=true;blD0=1e9;blD1=-1}
  CLK.tick();if(!ZV)R.render(scene,cam);
  oc.clearRect(0,0,ov.width,ov.height);oc.lineCap='round';
- if(BOSS&&BOSS.tl&&(BOSS.m==='wind'||BOSS.m==='swing'||BOSS.m==='fly')){const L=BOSS.tl,k=.55+.45*Math.abs(Math.sin(now/90));oc.globalAlpha=k;oc.strokeStyle='#ffd21e';oc.shadowColor='#ffb000';oc.shadowBlur=18;oc.lineWidth=7;oc.beginPath();oc.moveTo(L[0],L[1]);oc.lineTo(L[2],L[3]);oc.stroke();oc.shadowBlur=0;oc.globalAlpha=1}
+ if(BOSS&&BOSS.tl&&(BOSS.m==='swing'||BOSS.m==='fly')){const L=BOSS.tl,k=.55+.45*Math.abs(Math.sin(now/90));oc.globalAlpha=k;oc.strokeStyle='#ffd21e';oc.shadowColor='#ffb000';oc.shadowBlur=18;oc.lineWidth=7;oc.beginPath();oc.moveTo(L[0],L[1]);oc.lineTo(L[2],L[3]);oc.stroke();oc.shadowBlur=0;oc.globalAlpha=1}
  TR.forEach(t=>{oc.globalAlpha=Math.max(0,t.a);oc.strokeStyle=t.w?'#888':'#fff';oc.shadowColor=t.w?'transparent':'#4fc3ff';oc.shadowBlur=t.w?0:10;oc.lineWidth=t.w?2:(t.a>.86?14:5);oc.beginPath();oc.moveTo(t.x1,t.y1);oc.lineTo(t.x2,t.y2);oc.stroke()});oc.globalAlpha=1;oc.shadowBlur=0;
  if(stroke){oc.strokeStyle='#fff';oc.shadowColor='#4fc3ff';oc.shadowBlur=12;oc.lineWidth=4;oc.beginPath();oc.moveTo(stroke.x,stroke.y);oc.lineTo(stroke.ex,stroke.ey);oc.stroke();oc.shadowBlur=0;
   oc.fillStyle='#fff';oc.beginPath();oc.arc(stroke.x,stroke.y,5,0,6.28);oc.fill()}
