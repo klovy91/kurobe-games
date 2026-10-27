@@ -622,7 +622,7 @@ function shieldMesh(cf){const z=zombieMesh(Object.assign({},cf,{shirt:0x2f5d9c,p
  z.userData.shield=G;return z}
 /* the door's height on the zombie: 0.95 normal (head and shins open), 1.4 high (legs open), 0.55 low (head and chest open).
    It moves in real time, so the change of guard shows even in the zone. */
-function shPose(e,dr){const H=e.sh;H.y+=(H.ty-H.y)*Math.min(1,dr*14);H.g.position.y=H.y;e.inr.rotation.x=.06+.1*Math.max(0,(.95-H.y)/.4)}
+function shPose(e,dr){const H=e.sh;{const d=H.ty-H.y,st=dr*.95;H.y=Math.abs(d)<=st?H.ty:H.y+Math.sign(d)*st}H.g.position.y=H.y;e.inr.rotation.x=.06+.1*Math.max(0,(.95-H.y)/.4)}
 function shieldCut(s){const S=En.filter(e=>e.sh).map(e=>e.sh.g);if(!S.length)return null;const l=Math.hypot(s.x2-s.x1,s.y2-s.y1),n=Math.max(1,Math.ceil(l/5));
  for(let i=0;i<=n;i++){const px=s.x1+(s.x2-s.x1)*i/n,py=s.y1+(s.y2-s.y1)*i/n;rayAt(px,py);const h=rc.intersectObjects(S,true);if(h.length)return {x:px,y:py,p:h[0].point.clone()}}return null}
 function dropShield(e){const G=e.sh.g,p=new THREE.Vector3(),q=new THREE.Quaternion();G.updateMatrixWorld(true);G.getWorldPosition(p);G.getWorldQuaternion(q);scene.attach(G);
