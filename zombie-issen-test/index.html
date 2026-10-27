@@ -685,7 +685,7 @@ function bossGo(){const B=BOSS;B.pr=null;B.hit=null;B.th=null;B.tl=null;B.done=0
 function tchPose(B){const U=B.U;
  if(B.f2){const tt=B.tt||0;U.swing.rotation.set(0,0,0);U.arms.forEach((pv,i)=>{const sx=i?1:-1;let ax,az;
   if(B.m==='still'||B.m==='hurt2'){ax=-.12+Math.sin(tt*1.3+i)*.08;az=-.1*sx}else if(B.m==='grab'){ax=-1.45;az=-.15*sx}else{ax=-.55+Math.sin(tt*6.1+i*2.3)*.95;az=sx*(-.25+Math.sin(tt*4.3+i*1.7)*.55)}
-  pv.rotation.set(ax,0,az)});U.legL.rotation.x=B.lg;U.legR.rotation.x=-B.lg;return}
+  if(!pv.userData.f2){pv.userData.f2=1}pv.rotation.x+=(ax-pv.rotation.x)*.05;pv.rotation.y=0;pv.rotation.z+=(az-pv.rotation.z)*.05});U.legL.rotation.x=B.lg;U.legR.rotation.x=-B.lg;return}
  U.arms.forEach((pv,i)=>pv.rotation.set(-1.05,0,-.36*(i?1:-1)));
  if(B.gd){const g=B.gc;U.swing.rotation.set(g.sx,0,g.r);katAim(U,g.D)}else{U.swing.rotation.set(B.sx,0,B.r);katAim(U,null)}
  U.legL.rotation.x=B.lg;U.legR.rotation.x=-B.lg}
@@ -748,7 +748,7 @@ function tnPts(B,T,mode){const L=1.75*(B.grow==null?1:B.grow),P=T.P,sd=T.sd,ph=T
 function tnLay(T){const P=T.P;for(let k=0;k<T.segs.length;k++){const m=T.segs[k];if(k>=T.n){m.visible=false;continue}m.visible=true;const a=P[k],b=P[k+1];m.position.copy(a);TCV.copy(b).sub(a);const l=TCV.length()||1e-3;m.quaternion.setFromUnitVectors(YAX,TCV.multiplyScalar(1/l));m.scale.set(1,l,1)}
  if(T.fist){const a=P[T.N-1],b=P[T.N];T.fist.position.copy(b);TCV.copy(b).sub(a).normalize();T.fist.quaternion.setFromUnitVectors(YAX,TCV)}}
 function tnTick(B,dt){B.tt=(B.tt||0)+dt;B.tn.forEach((T,i)=>{if(T.leg){legPts(B,T);tnLay(T);return}const atk=(wave===53||wave===54)&&i===B.ai,mode=B.m==='punch'&&atk?'punch':B.m==='tw'&&atk?'tw':(B.m==='still'||B.m==='grab'||B.m==='hurt2')?'still':(wave===53||wave===54)&&!atk&&T.n===T.N?'hold':'idle';
-  tnPts(B,T,mode);tnLay(T);const g=(mode==='tw'||mode==='punch')?1:0;T.gl=(T.gl||0)+(g-(T.gl||0))*Math.min(1,dt*10);T.mat.emissive.setRGB(T.gl*.9,T.gl*.05,T.gl*.05);
+  const old=T.P.length?T.P.map(v=>v.clone()):null;tnPts(B,T,mode);if(old&&old.length===T.P.length){const f=mode==='punch'?Math.min(1,dt*40):Math.min(1,dt*2.5);T.P.forEach((v,k)=>v.copy(old[k].lerp(v,f)))}tnLay(T);const g=(mode==='tw'||mode==='punch')?1:0;T.gl=(T.gl||0)+(g-(T.gl||0))*Math.min(1,dt*10);T.mat.emissive.setRGB(T.gl*.9,T.gl*.05,T.gl*.05);
   if(T.n<T.N&&T.n>0&&Math.random()<dt*9)sand(T.P[T.n],7,BLOOD,1.6,1,.2)})}
 /* cut an arm off at segment k: the rest falls (and bleeds); the stump stays */
 function tnSever(T,k,fly){k=Math.max(0,Math.min(T.n-1,k));const parts=T.segs.slice(k,T.n).concat(T.fist?[T.fist]:[]);if(!parts.length)return;
@@ -805,11 +805,11 @@ function bossTick(dt,dr){const B=BOSS;if(!B)return;const dx=-B.x,dz=6-B.z,dist=M
   B.gt-=dt;if(B.gt<=0)bossCounter();break}
  case 'hurt':B.t+=dt;if(Math.random()<dt*14)sand(B.g.localToWorld(new THREE.Vector3((Math.random()-.5)*.3,1.2+Math.random()*.3,.15)),8,BLOOD,1.8,1,.3);B.U.pm.rotation.z=Math.sin(B.t*31)*.05;B.U.upper.rotation.x=.25+Math.sin(B.t*23)*.08;B.lg*=.9;break;
  case 'tf':bossTf(B,dr);break;
- case 'm2':{B.sx=-.6+Math.sin(B.tt*6.1)*.7;B.r=Math.sin(B.tt*4.3)*.7;B.U.upper.rotation.x=.2+Math.sin(B.tt*5)*.05;B.gr-=dt;if(B.gr<=0){B.gr=3+Math.random()*1.5;play('mgrowl',.6,.9+Math.random()*.2)}
+ case 'm2':{B.sx=-.6+Math.sin(B.tt*6.1)*.7;B.r=Math.sin(B.tt*4.3)*.7;B.U.upper.rotation.x+=(.2+Math.sin(B.tt*5)*.05-B.U.upper.rotation.x)*Math.min(1,dt*4);B.gr-=dt;if(B.gr<=0){B.gr=3+Math.random()*1.5;play('mgrowl',.6,.9+Math.random()*.2)}
   B.at-=dt;if(B.at<=0&&(wave===53||wave===54)&&B.tn[B.ai].n===B.tn[B.ai].N){B.m='tw';B.t=wave===53?.8:.65;play('mgrowl',1)}break}
  case 'tw':B.sx=-.6+Math.sin(B.tt*6.1)*.7;B.r=Math.sin(B.tt*4.3)*.7;B.t-=dt;if(B.t<=0)bossPunch();break;
  case 'punch':B.u+=dt/(wave===53?.45:.38);if(B.u>=1&&!B.done){B.done=1;bossKill()}break;
- case 'still':B.sx+=(.95-B.sx)*Math.min(1,dt*3);B.r=Math.sin(B.tt*1.3)*.08;B.U.upper.rotation.x=.3+Math.sin(B.tt*1.7)*.04;B.U.pm.rotation.z=Math.sin(B.tt*1.1)*.03;B.gt-=dt;if(B.gt<=0)bossCounter();break;
+ case 'still':{B.sx+=(.95-B.sx)*Math.min(1,dt*3);B.r=Math.sin(B.tt*1.3)*.08;const ek=Math.min(1,dt*3);B.U.upper.rotation.x+=(.3+Math.sin(B.tt*1.7)*.04-B.U.upper.rotation.x)*ek;B.U.pm.rotation.z+=(Math.sin(B.tt*1.1)*.03-B.U.pm.rotation.z)*ek;}B.gt-=dt;if(B.gt<=0)bossCounter();break;
  case 'grab':B.t+=dt;B.x+=ux*8*dt;B.z+=uz*8*dt;B.sx=-1.1;B.r=0;B.U.upper.rotation.x=-.1;if(dist<1.4&&!B.done){B.done=1;bossKill()}break;
  case 'hurt2':B.t+=dt;if(Math.random()<dt*14)sand(B.g.localToWorld(new THREE.Vector3((Math.random()-.5)*.3,1.1+Math.random()*.4,.15)),8,BLOOD,1.8,1,.3);B.U.pm.rotation.z=Math.sin(B.t*31)*.06;B.U.upper.rotation.x=.35+Math.sin(B.t*23)*.1;B.sx=.6+Math.sin(B.t*13)*.4;break}
  if(B.f2){B.g.position.y=B.lift||0;if(B.m!=='tf'&&Math.random()<dt*5)sand(B.g.localToWorld(new THREE.Vector3((Math.random()<.5?-1:1)*.13,1.2+Math.random()*.15,-.15)),6,BLOOD,1.5,1,.22);if(B.m!=='tf')B.lg=Math.sin((B.tt||0)*2)*.15}if(B.tn)tnTick(B,dt);
