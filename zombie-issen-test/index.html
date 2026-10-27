@@ -903,6 +903,10 @@ function fTick(B,dt,dr){if(B.m==='tf3'&&!B.f3){fTf(B,dr);if(!B.F)return}
  if(B.farms)B.farms.forEach((L,i)=>{const atk=B.fi===i,mode=atk&&B.m==='fpunch'?'punch':atk&&B.m==='ftw'?'tw':'idle';L.fast=mode==='punch';sm(L,()=>fArmPts(B,L,mode,B.u||0));tnLay(L);
   const gl=mode==='tw'||mode==='punch'?1:0;L.gl+=(gl-L.gl)*Math.min(1,dt*10);{const pk=L.gl*(atk?1:0)*(.75+.25*Math.sin(tt*14));L.mat.emissive.setRGB(pk,pk*.82,0)}if(L.n<L.N&&L.n>0&&Math.random()<dt*9)sand(L.P[L.n],7,BLOOD,1.6,1,.2)});
  if(B.fneck){const L=B.fneck,mode=B.fi===-1&&B.m==='fbite'?'bite':B.fi===-1&&B.m==='ftw'?'tw':'idle';L.fast=mode==='bite';sm(L,()=>fNeckPts(B,L,mode,B.u||0));tnLay(L);if(L.fist){L.fist.lookAt(cam.position);const gm=L.fist.userData.gum,op=mode==='tw'||mode==='bite'?1:0;if(gm)gm.scale.y+=(.6+op*.9-gm.scale.y)*Math.min(1,dt*8);(L.fist.userData.low||[]).forEach(b=>b.position.y+=((-.24-op*.14)-b.position.y)*Math.min(1,dt*8))}}
+ // a cut-off arm's stump melts away in a spray of blood
+ const melt=T=>{if(!T||T.mk===undefined||!T.g.visible)return;T.mk=Math.min(1,T.mk+dt/1.3);const sc=Math.max(.001,1-T.mk);T.segs.forEach(m=>{m.scale.x=m.scale.z=sc;m.material.color.lerp(FLC3,dt*2)});
+  if(T.n>0&&Math.random()<dt*16){const p=T.segs[Math.random()*T.n|0].getWorldPosition(new THREE.Vector3());sand(p,45,BLOOD,3,1,.5);if(Math.random()<.3)gush(p.x,p.y,p.z)}if(T.mk>=1)T.g.visible=false};
+ if(B.farms)B.farms.forEach(melt);if(B.GA)B.GA.forEach(a=>melt(a.T));
  switch(B.m){
  case 'fga':{let rising=0,alive=0;B.GA.forEach(a=>{const T=a.T;
    if(a.ph==='tel'){a.t+=dt;a.dc.material.opacity=a.t>0?.5+.45*Math.abs(Math.sin(a.t*12)):0;if(a.t>=1){a.ph='out';a.e=0;T.g.visible=true;play('fcrk',.9,.9+Math.random()*.2);sand({x:a.A.x,y:a.A.y,z:a.A.z},26,DUST,1.5,0,.5);puff(a.A.x,a.A.y,a.A.z,0x8f8068,'s',.6,.45,0);if(a.A.y<.1)crack(a.A.x,a.A.z,1.2)}rising=1}
@@ -923,9 +927,9 @@ function fWedge(B,dA,dB,nn){if(B.m==='fglow'&&!B.th){const hit=[B.F].concat(B.fa
  if(B.m==='fga'){B.fh=B.fh||[];B.GA.forEach((a,i)=>{if(a.ph==='app'&&!B.fh[i]){const k=first(a.T);if(k>=0)B.fh[i]={k,C,n}}})}
  else if(((wave===58||wave===59)&&(B.m==='ftw'||B.m==='fpunch'))&&!B.th){const L=B.fi===-1?B.fneck:B.farms[B.fi];if(L){const k=first(L);if(k>=0)B.th={k,C,n}}}}
 function fJudge(B){
- if(B.m==='fga'){const live=B.GA.filter(a=>a.ph==='app');let all=live.length>0;B.GA.forEach((a,i)=>{if(a.ph!=='app')return;if(B.fh&&B.fh[i]){tnSlice(a.T,B.fh[i]);a.ph='cut';a.dc.visible=false;a.T.mat.emissive.setRGB(0,0,0)}else all=false});
+ if(B.m==='fga'){const live=B.GA.filter(a=>a.ph==='app');let all=live.length>0;B.GA.forEach((a,i)=>{if(a.ph!=='app')return;if(B.fh&&B.fh[i]){tnSlice(a.T,B.fh[i]);a.ph='cut';a.dc.visible=false;a.T.mat.emissive.setRGB(0,0,0);a.T.mk=0}else all=false});
   if(all){fAppStop(B);B.m='fwait';play('froar',.7,1.3);return true}fCounter(B);return false}
- if((wave===58||wave===59)&&B.th&&(B.m==='ftw'||B.m==='fpunch')){tnSlice(B.farms[B.fi],B.th);B.m='fwait';play('froar',.8,1.1);return true}
+ if((wave===58||wave===59)&&B.th&&(B.m==='ftw'||B.m==='fpunch')){tnSlice(B.farms[B.fi],B.th);B.farms[B.fi].mk=0;B.m='fwait';play('froar',.8,1.1);return true}
  if(wave===60&&B.th&&B.m==='fglow'){fSplitAll(B);return true}
  fCounter(B);return false}
 function fCounter(B){if(B.m==='fglow'){bossGlow(B,0);fAttack(B);return}if(B.m==='fga'){B.GA.forEach(a=>{if(a.ph==='app')a.u=Math.max(a.u,.9)});return}if(B.m==='fidle'||B.m==='ftw')fAttack(B)}
