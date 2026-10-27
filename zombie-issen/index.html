@@ -720,7 +720,10 @@ function katAim(U,D,P){if(!D){U.sd.quaternion.setFromUnitVectors(YAX,KD0);U.sd.p
  KQ.copy(P?U.pm.quaternion:IDQ).multiply(U.hip.quaternion).multiply(U.upper.quaternion).multiply(U.swing.quaternion).invert();KV.copy(D).normalize().applyQuaternion(KQ);
  U.sd.quaternion.setFromUnitVectors(YAX,KV);U.sd.position.copy(U.H).addScaledVector(KV,.13)}
 /* guards (WAVE 52): swing tilt / roll put the hands; D puts the blade across the body and well past its outline */
-const GUARDS=[{sx:.1,r:-.5,D:[-.78,.6,.15]},{sx:-.9,r:.9,D:[-1,.08,.1]},{sx:.35,r:.45,D:[.8,-.55,.15]},{sx:.1,r:.5,D:[.78,.6,.15]}];
+const GUARDS=[{sx:-.1,r:-1.1,D:[-.17,.98,.15]},{sx:-.7,r:-.8,D:[-.94,-.34,.15]},{sx:-.1,r:1.1,D:[-.77,-.64,.15]},{sx:-.1,r:1.1,D:[.17,.98,.15]},{sx:-.1,r:-1.1,D:[.77,-.64,.15]},{sx:-.7,r:.8,D:[.94,-.34,.15]}];
+/* the guard that stands between the finger and his chest (screen angle from his chest to the finger) */
+function guardFor(B,x,y){const c=B.g.localToWorld(new THREE.Vector3(0,1.25,0)).project(cam),cx=(c.x+1)/2*innerWidth,cy=(1-c.y)/2*innerHeight,a=Math.atan2(cy-y,x-cx)*180/Math.PI;
+ return a>=-25&&a<35?3:a>=35&&a<90?5:a<-25&&a>=-90?2:a>=90&&a<145?1:a>=145||a<-155?0:4}
 function bossMake(cine){bgmOff(1.5);stormOn();if(!cine)winBreak(0);const T=tchMake(),B={g:T.g,U:T.U,x:0,z:cine?-3.6:1,sx:0,r:0,lg:0,ph:0,t:0,m:'idle'};BOSS=B;B.g.position.set(B.x,cine?-3.2:0,B.z);
  if(cine){B.m='cine';B.t=0;B.U.sd.visible=true;
   const pool=new THREE.Mesh(new THREE.CircleGeometry(1,40),new THREE.MeshBasicMaterial({color:GORE==='off'?0x2e2a26:GORE==='green'?0x1f4a0c:0x4a0308,transparent:true,opacity:.92,depthWrite:false}));
@@ -1005,8 +1008,8 @@ function endTick(dr){const E=ENDM,B=E.B;if(!E.h)E.h=(B.halves||[]).slice();const
  const lk=sm((t-3)/3);if(t>3)bossMood(.8+.2*lk,.45*(1-lk));
  if(t>6&&!E.rf){E.rf=1;rainOff(4)}if(t>6){RAINL.material.opacity=.45*(1-sm((t-6)/4));SKYK=1-sm((t-6.5)/3.5);if(t>10)RAINL.visible=false}
  {const k=t<8?0:t<14?sm((t-8)/2.5)*.8:.8*(1-sm((t-14)/1.8));if(t>8){CM4.lookAt(cam.position,new THREE.Vector3(0,.9,-8),YAX);CQ0.setFromRotationMatrix(CM4);CM4.lookAt(cam.position,new THREE.Vector3(-6,1.65,.2),YAX);CQ1.setFromRotationMatrix(CM4);cam.quaternion.slerpQuaternions(CQ0,CQ1,k);cam.updateMatrixWorld()}}
- if(t>10.5&&!E.s1){E.s1=1;banner('……終わった。',2400,26,1)}
- if(t>13.1&&!E.s2){E.s2=1;banner('さようなら、先生。',2600,26,1)}
+ if(t>10.5&&!E.s1){E.s1=1;banner('先生…',2400,26,1)}
+ if(t>13.1&&!E.s2){E.s2=1;banner('…ありがとう',2600,26,1)}
  if(t>15.8&&!E.lb){E.lb=1;$('lb1').style.height='0';$('lb2').style.height='0'}}
 /* one half of his body bursts into ~8 chunks (3 random cuts through its middle), thrown outward */
 function burstHalf(o){const i=gib.indexOf(o);if(i>=0)gib.splice(i,1);world.remove(o.b);o.mesh.updateMatrixWorld(true);
@@ -1077,7 +1080,7 @@ function bossCine(B,dr){const t=(B.t+=dr),sm=x=>{x=Math.min(1,Math.max(0,x));ret
  if(B.k===1&&t>2.2){B.k=2;sand({x:B.x,y:.1,z:B.z+.3},18,DUST,1,0,.3);puff(B.x,.15,B.z+.3,0x8f8068,'s',.4,.35,0)}
  if(B.k===2&&t>3){B.k=3;shakeT=.5}if(!B.trv&&t>6.1){B.trv=1;play('trev',1)}
  const u=sm((t-3)/2.2);B.g.position.y=t<3?-3.2+1.25*sm((t-2.1)/.9):-1.95*(1-u);U.pm.rotation.z=t>3&&t<5.2?Math.sin(t*19)*.05:0;
- B.sx=t<5.4?Math.sin(t*7)*.03*(1-u):0;B.r=0;B.kd=t<6.3?KDV.copy(KDLOW).lerp(KD0,sm((t-5.4)/.8)).normalize():null;
+ B.sx=0;B.r=0;B.kd=t<6.3?KDV.copy(KDLOW).lerp(KD0,sm((t-5.4)/.8)).normalize():null;
  if(B.k===3&&t>5.4){B.k=4;U.sd.visible=true;play('tpull',1)}
  U.eyes.forEach(e=>e.scale.setScalar(t>5.9?1+.8*Math.max(0,1-(t-5.9)/.6):1));
  if(B.k===4&&t>6.6){B.k=5;$('lb1').style.height='0';$('lb2').style.height='0'}
@@ -1094,13 +1097,13 @@ function bossTick(dt,dr){const B=BOSS;if(!B)return;if(B.m==='tf3'||B.f3){fTick(B
   if(u>=1&&!B.done){B.done=1;B.tl=null;bossKill()}break}
  case 'stag':B.t-=dt;B.x-=ux*.8*dt;B.z-=uz*.8*dt;B.sx+=(-.4-B.sx)*Math.min(1,dt*10);B.r+=(0-B.r)*Math.min(1,dt*6);if(B.t<=0){if(B.demo){B.demo=0;B.m='stare'}else B.m='idle'}break;
  case 'idle':B.sx+=(0-B.sx)*Math.min(1,dt*5);B.lg*=.9;break;
- case 'stare':B.t+=dt;B.sx=Math.sin(B.t*1.3)*.03;B.r=0;B.lg*=.9;B.U.pm.rotation.z=Math.sin(B.t*.9)*.015;if(!B.dm&&NOZT&&performance.now()>=NOZT-2250){B.dm=1;B.demo=1;B.U.pm.rotation.z=0;bossWind(1);NOZT=Math.max(NOZT,performance.now()+4600)}else if(performance.now()>=NOZT){B.U.pm.rotation.z=0;B.m='walk'}break;
+ case 'stare':B.t+=dt;B.sx=0;B.r=0;B.lg*=.9;B.U.pm.rotation.z=0;if(!B.dm&&NOZT&&performance.now()>=NOZT-2250){B.dm=1;B.demo=1;B.U.pm.rotation.z=0;bossWind(1);NOZT=Math.max(NOZT,performance.now()+4600)}else if(performance.now()>=NOZT){B.U.pm.rotation.z=0;B.m='walk'}break;
  case 'reel':{B.t+=dt;const k=Math.sin(Math.min(1,B.t/1.1)*Math.PI);B.U.upper.rotation.x=-.3*k;B.U.pm.rotation.z=Math.sin(B.t*9)*.06*k;B.lg=Math.sin(B.t*11)*.3*k;B.sx=.5*k;
   if(B.t>=1.1){B.U.upper.rotation.x=0;B.U.pm.rotation.z=0;B.U.swing.rotation.set(B.sx,0,B.r);const q=B.U.hip.quaternion.clone().multiply(B.U.upper.quaternion).multiply(B.U.swing.quaternion),D0=KD0.clone().applyQuaternion(q);
    B.m='guard';B.gd=1;B.gt=8;B.wt=0;const g=GHANG;B.gc={sx:B.sx,r:B.r,D:D0.clone()};B.gf={u:0,a:{sx:B.sx,r:B.r,D:D0},b:{sx:g.sx,r:g.r,D:new THREE.Vector3().fromArray(g.D).normalize()}}}break}
  case 'guard':{B.wt=(B.wt||0)+dt;const w=B.wt;B.U.pm.rotation.z=Math.sin(w*2.1)*.06+Math.sin(w*5.3)*.015;B.U.upper.rotation.x=.12+Math.sin(w*1.7)*.06+Math.max(0,Math.sin(w*.8))*.08;B.lg=Math.sin(w*9)*.07+Math.sin(w*1.3)*.12;B.U.hip.position.y=.9-.035*Math.abs(Math.sin(w*1.4));
   B.x+=Math.sin(w*.9)*.18*dt;B.z+=Math.cos(w*.7)*.1*dt;
-  if(B.gf){B.gf.u=Math.min(1,B.gf.u+(B.gf.rt?dr/B.gf.rt:dt/.5));const a=B.gf.a,b=B.gf.b,u=B.gf.u;B.gc.sx=a.sx+(b.sx-a.sx)*u;B.gc.r=a.r+(b.r-a.r)*u;B.gc.D.copy(a.D).lerp(b.D,u)}
+  if(B.gf){B.gf.u=Math.min(1,B.gf.u+dt/(B.gf.gt||.5));const a=B.gf.a,b=B.gf.b,u=B.gf.u;B.gc.sx=a.sx+(b.sx-a.sx)*u;B.gc.r=a.r+(b.r-a.r)*u;B.gc.D.copy(a.D).lerp(b.D,u)}
   B.gt-=dt;if(B.gt<=0)bossCounter();break}
  case 'hurt':B.t+=dt;if(Math.random()<dt*14)sand(B.g.localToWorld(new THREE.Vector3((Math.random()-.5)*.3,1.2+Math.random()*.3,.15)),8,BLOOD,1.8,1,.3);B.U.pm.rotation.z=Math.sin(B.t*31)*.05;B.U.upper.rotation.x=.25+Math.sin(B.t*23)*.08;B.lg*=.9;break;
  case 'tf':bossTf(B,dr);break;
@@ -1606,7 +1609,7 @@ addEventListener('keydown',e=>{if(e.key==='Escape'||e.key==='p'||e.key==='P'){if
 const rc=new THREE.Raycaster();
 function rayAt(px,py){rc.setFromCamera(new THREE.Vector2(px/innerWidth*2-1,-(py/innerHeight)*2+1),cam)}
 let fin=false,slashA=null,swA=null;const TQ=new THREE.Quaternion();
-addEventListener('pointerdown',e=>{if(PAUSED)return;A();if(ENDM&&st==='after'){endSkip();return}if(st==='title')return;if(st==='over')return;if(st==='intro'){introS=7;endIntro();return}if(st!=='ready')return;if(En.some(e=>e.rt!==undefined||e.ru!==undefined)||bossBlock())return;st='cut';sZone();if(BOSS&&BOSS.m==='guard'){const B=BOSS;let gi;do gi=Math.random()*GUARDS.length|0;while(gi===B.gi);B.gi=gi;const g=GUARDS[gi];B.gdn=1;B.gf={u:0,rt:.5,a:{sx:B.gc.sx,r:B.gc.r,D:B.gc.D.clone()},b:{sx:g.sx,r:g.r,D:new THREE.Vector3().fromArray(g.D).normalize()}}}En.forEach(q=>{if(q.sh&&!q.sh.dn){q.sh.dn=1;q.sh.ty=Math.random()<.5?1.4:.55;q.sh.sp=Math.abs(q.sh.ty-q.sh.y)/.56}});stroke={x:e.clientX,y:e.clientY,ex:e.clientX,ey:e.clientY,len:0,id:e.pointerId};recStart()});
+addEventListener('pointerdown',e=>{if(PAUSED)return;A();if(ENDM&&st==='after'){endSkip();return}if(st==='title')return;if(st==='over')return;if(st==='intro'){introS=7;endIntro();return}if(st!=='ready')return;if(En.some(e=>e.rt!==undefined||e.ru!==undefined)||bossBlock())return;st='cut';sZone();if(BOSS&&BOSS.m==='guard'){const B=BOSS,gi=guardFor(B,e.clientX,e.clientY);B.gi=gi;const g=GUARDS[gi];B.gdn=1;B.gf={u:0,gt:.2,a:{sx:B.gc.sx,r:B.gc.r,D:B.gc.D.clone()},b:{sx:g.sx,r:g.r,D:new THREE.Vector3().fromArray(g.D).normalize()}}}En.forEach(q=>{if(q.sh&&!q.sh.dn){q.sh.dn=1;q.sh.ty=Math.random()<.5?1.4:.55;q.sh.sp=Math.abs(q.sh.ty-q.sh.y)/.56}});stroke={x:e.clientX,y:e.clientY,ex:e.clientX,ey:e.clientY,len:0,id:e.pointerId};recStart()});
 addEventListener('pointermove',e=>{if(PAUSED||!stroke||st!=='cut'||e.pointerId!==stroke.id)return;let dx=e.clientX-stroke.x,dy=e.clientY-stroke.y,d=Math.hypot(dx,dy);
  if(d>MAXL){dx*=MAXL/d;dy*=MAXL/d;d=MAXL}
  stroke.ex=stroke.x+dx;stroke.ey=stroke.y+dy;stroke.len=d});
