@@ -840,11 +840,12 @@ function fMake(B){const F=new THREE.Group(),SK=fMat(FC.skin,.75),FL=fMat(FC.fles
  for(let k=0;k<7;k++){const a=new THREE.Vector3((R()-.5)*1.4,1.6+R()*1.2,.62),b=a.clone().add(new THREE.Vector3((R()-.5)*.9,(R()-.5)*.8,.25));
   add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([a,a.clone().lerp(b,.5).add(new THREE.Vector3(0,.15,.15)),b]),16,.05,8,false),FL2,0,0,0)}
  F.position.set(B.x,0,B.z);F.rotation.y=Math.atan2(-B.x,6-B.z);F.scale.setScalar(.62);scene.add(F);F.updateMatrixWorld(true);
- const W=[],T=[[5.95,1.4+R()*1.6,-3.5+R()*2],[-5.95,1.4+R()*1.6,-3.5+R()*2],[(R()*2-1)*3.5,3.48,-4+R()*2.5],[(R()*2-1)*3.5,3.48,-2+R()*2],[(R()*2-1)*3.5,3.48,-5+R()*2],[-2.5-R()*1.5,.02,-3+R()*2],[2.5+R()*1.5,.02,-3+R()*2],[(R()*2-1)*2.5,1+R()*2,-5.95]];
+ const W=[],T=[];for(let i=0;i<7;i++)T.push([-5+i*10/6+(R()-.5)*.6,.5+R()*2.7,-5.95]);for(let i=0;i<4;i++)T.push([(i-1.5)*2.4+(R()-.5)*.8,3.48,-5.2+R()*2.4]);
+ for(let i=0;i<3;i++)T.push([(i-1)*3.2+(R()-.5)*.8,.02,-5.2+R()*2.4]);[-1,1].forEach(sx=>{T.push([sx*5.95,.8+R()*2.4,-5+R()*1.3]);T.push([sx*5.95,.8+R()*2.4,-3.6+R()*1.2])});
  T.forEach((t,i)=>{const A=F.localToWorld(new THREE.Vector3((R()-.5)*1.6,2.1+R()*.7,-.35)),E=new THREE.Vector3(...t),M=A.clone().lerp(E,.5).add(new THREE.Vector3((R()-.5)*1.2,.4+R()*1.1,(R()-.5)*1.2));
   const cur=new THREE.CatmullRomCurve3([A,A.clone().lerp(M,.5).add(new THREE.Vector3(0,(R()-.5)*.4,0)),M,M.clone().lerp(E,.6),E]),r0=.09+R()*.06,ge=new THREE.TubeGeometry(cur,48,r0,10,false),pos=ge.attributes.position,tmp=new THREE.Vector3();
   for(let k=0;k<pos.count;k++){const sg=Math.floor(k/11)/48,pt=cur.getPoint(sg);tmp.fromBufferAttribute(pos,k).sub(pt).multiplyScalar(1-.45*sg);pos.setXYZ(k,pt.x+tmp.x,pt.y+tmp.y,pt.z+tmp.z)}ge.computeVertexNormals();
-  const m=new THREE.Mesh(ge,i%2?WT1:WT2);m.castShadow=true;m.userData.nocut=1;m.userData.boss=1;ge.setDrawRange(0,0);scene.add(m);
+  const m=new THREE.Mesh(ge,i%2?WT1:WT2);m.castShadow=true;m.userData.boss=1;ge.setDrawRange(0,0);scene.add(m);
   const h=new THREE.Mesh(new THREE.CircleGeometry(r0*1.9,16),VE),nr=Math.abs(t[0])>5.9?new THREE.Vector3(-Math.sign(t[0]),0,0):t[1]>3.4?new THREE.Vector3(0,-1,0):t[1]<.1?new THREE.Vector3(0,1,0):new THREE.Vector3(0,0,1);
   h.position.copy(E).addScaledVector(nr,.02);h.lookAt(E.clone().add(nr));h.visible=false;h.userData.nocut=1;h.userData.boss=1;scene.add(h);W.push({m,h,cnt:ge.index.count,E})});
  const arms=[-1,1].map(sd=>fBigArm(fMat(FC.skin,.75),sd));
@@ -904,7 +905,7 @@ function fTf(B,dr){const t=(B.t+=dr),sm=x=>{x=Math.min(1,Math.max(0,x));return x
   B.h0=H.position.clone();const sw=sm((t-2.2)/1.2);H.scale.setScalar(Math.max(.001,1-sw));H.position.y-=.12*sw;if(sw>=1){scene.remove(H);disposeTree(H);B.hd=null}}
  const g=sm((t-1.9)/2.6);B.fg=g;B.F.scale.setScalar(Math.max(.001,.62*g));if(B.fneck&&B.fneck.fist)B.fneck.fist.scale.setScalar(Math.max(.001,.62*sm((t-2.6)/1.8)));
  if(t>1.9&&t<4.4&&Math.random()<dr*6){const p=new THREE.Vector3(B.x+(Math.random()-.5)*.8,.2+Math.random()*1.4*g,B.z+(Math.random()-.5)*.6);sand(p,30,BLOOD,2.2,1,.4)}
- B.W.forEach((w,i)=>{const k=sm((t-2.4-i*.15)/2);w.m.geometry.setDrawRange(0,Math.floor(w.cnt*k/3)*3);if(k>.98&&!w.h.visible){w.h.visible=true;if(w.E.y<.1)crack(w.E.x,w.E.z,.9)}});
+ B.W.forEach((w,i)=>{const k=sm((t-2.4-i*.07)/1.6);w.m.geometry.setDrawRange(0,Math.floor(w.cnt*k/3)*3);if(k>.98&&!w.h.visible){w.h.visible=true;if(w.E.y<.1)crack(w.E.x,w.E.z,.9)}});
  bossMood(Math.random()<.15?.4:.8,.45);if(t<4.5&&Math.random()<dr*3)shakeT=Math.max(shakeT,.3);
  if(t>5.2){B.f3=1;B.fg=1;if(B.hd){scene.remove(B.hd);disposeTree(B.hd);B.hd=null}if(B.fneck&&B.fneck.fist)B.fneck.fist.scale.setScalar(.62);bossMood(.8,.45);st='ready';B.g.visible=false;B.F.scale.setScalar(.62);B.W.forEach(w=>{w.m.geometry.setDrawRange(0,w.cnt);w.h.visible=true});fGo(B);waveBanner()}}
 function fTick(B,dt,dr){if(B.m==='tf3'&&!B.f3){fTf(B,dr);if(!B.F)return}
@@ -929,11 +930,11 @@ function fTick(B,dt,dr){if(B.m==='tf3'&&!B.f3){fTf(B,dr);if(!B.F)return}
  case 'ftw':B.t-=dt;if(B.t<=0)fAttack(B);break;
  case 'fpunch':case 'fbite':B.u=Math.min(1,(B.u||0)+dt/(wave===59?.38:.45));if(B.u>=1&&!B.done){B.done=1;bossKill()}break;
  case 'fglow':B.gt-=dt;if(B.gt<=0)fCounter(B);break;
- case 'fdie':{B.t+=dt;B.F.position.y=-Math.min(2.3,B.t*B.t*.5);B.W.forEach((w,i)=>{const k=Math.max(0,1-(B.t-.3-i*.05)/1.6);w.m.geometry.setDrawRange(0,Math.floor(w.cnt*k/3)*3)});
+ case 'fdie':{B.t+=dt;B.F.position.y=-Math.min(2.3,B.t*B.t*.5);B.W.forEach((w,i)=>{if(w.cut)return;const k=Math.max(0,1-(B.t-.3-i*.05)/1.6);w.m.geometry.setDrawRange(0,Math.floor(w.cnt*k/3)*3)});
   if(Math.random()<dt*25)sand(fLocal(B,(Math.random()-.5)*1.2,1.4+Math.random()*1.4,.4),12,BLOOD,2.4,1,.35);break}}}
 function fAttack(B){const L=B.fi===-1?B.fneck:B.farms[B.fi];if(!L||L.n<L.N){bossKill();return}B.m=B.fi===-1?'fbite':'fpunch';B.u=0;L.ps=(L.P[L.N]||fLocal(B,0,3,0)).clone();play(B.fi===-1?'mgrowl':'mpunch',1,B.fi===-1?.7:1)}
 /* which of his parts did the blade touch?  56/57: each giant arm; 58/59: the punching arm; 60: neck / head */
-function fWedge(B,dA,dB,nn){if(B.m==='fglow'&&!B.th){const hit=[B.F].concat(B.farms.map(L=>L.g),B.fneck?[B.fneck.g]:[]).some(g=>g.visible&&wedgeHit(g,cam.position,dA,dB,nn)!==null);if(hit)B.th={C:cam.position.clone(),n:nn.clone()};return}
+function fWedge(B,dA,dB,nn){if(B.m==='fglow'&&!B.th){const hit=[B.F].concat(B.farms.map(L=>L.g),B.fneck?[B.fneck.g]:[]).some(g=>g.visible&&wedgeHit(g,cam.position,dA,dB,nn)!==null);const wh=(B.W||[]).filter(w=>w.m.visible&&wedgeHit(w.m,cam.position,dA,dB,nn)!==null);if(hit||wh.length)B.th={C:cam.position.clone(),n:nn.clone(),wh};return}
  const C=cam.position.clone(),n=nn.clone(),first=T=>{for(let k=0;k<T.n;k++)if(wedgeHit(T.segs[k],cam.position,dA,dB,nn)!==null)return k;if(T.fist&&wedgeHit(T.fist,cam.position,dA,dB,nn)!==null)return T.n-1;return -1};
  if(B.m==='fga'){B.fh=B.fh||[];B.GA.forEach((a,i)=>{if(a.ph==='app'&&!B.fh[i]){const k=first(a.T);if(k>=0)B.fh[i]={k,C,n}}})}
  else if(((wave===58||wave===59)&&(B.m==='ftw'||B.m==='fpunch'))&&!B.th){const L=B.fi===-1?B.fneck:B.farms[B.fi];if(L){const k=first(L);if(k>=0)B.th={k,C,n}}}}
@@ -953,6 +954,9 @@ function fSplitAll(B){const C=B.th.C,n=B.th.n,ms=[],vis=o=>{while(o){if(!o.visib
  sd.forEach(a=>a.forEach(p=>{if(p.mat.emissive)p.mat.emissive.setRGB(0,0,0)}));
  B.F.visible=false;B.farms.forEach(L=>L.g.visible=false);if(B.fneck)B.fneck.g.visible=false;
  [0,1].forEach(q=>{const sg=q?-1:1,o=mkPiece(sd[q],{x:n.x*2.2*sg,y:2.2+Math.random(),z:n.z*2.2*sg+.6},0,.5);if(o){o.ns=1;o.bleed=12}});
+ (B.th.wh||[]).forEach(w=>{w.m.geometry.setDrawRange(0,w.cnt);w.m.updateMatrixWorld(true);const r=sliceMesh(w.m,C,n),c=capTris(r.ip,n);w.cut=1;w.m.visible=false;
+  for(let q=0;q<2;q++){const sg=q?-1:1,o=mkPiece([{v:r.out[q],vn:r.on[q],vu:r.ou[q],mat:w.m.material,c}],{x:n.x*1.2*sg,y:1,z:n.z*1.2*sg},0,.4);if(o){o.ns=1;o.bleed=8}}
+  const mid=w.E.clone().lerp(B.F.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,1.4,0)),.5);gush(mid.x,mid.y,mid.z);sand(mid,160,BLOOD,4,1,.7)});
  B.m='fdie';B.t=0;flash(.85);shakeT=1.6;sCut();play('cut',1,.6);play('ttr2',1,.7);play('froar',.9,.6);
  const R=Math.random;for(let i=0;i<20;i++){const p=B.F.localToWorld(new THREE.Vector3((R()-.5)*1.4,.6+R()*2.6,.4));gush(p.x,p.y,p.z);sand(p,280,BLOOD,4.8,1,.9)}
  for(let i=0;i<7;i++){const p=B.F.localToWorld(new THREE.Vector3((R()-.5)*.5,2+R(),.5));sand(p,320,BLOOD,7,1,1.3)}
