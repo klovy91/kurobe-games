@@ -102,12 +102,12 @@ function play(k,v,rate){if(!A()||!BUF[k])return null;const s=AC.createBufferSour
  const g=AC.createGain();g.gain.value=v===undefined?1:v;s.connect(g);g.connect(MG);s.start();return s}
 function roomOn(){if(roomSrc)return;const s=play('room',.45);if(s){s.loop=true;roomSrc=s}}
 /* rain (boss fight): loops; louder once the windows are broken */
-let RAINON=false,RAINS=null,RAING=null,WBRK=false;
+let SKYK=0;let RAINON=false,RAINS=null,RAING=null,WBRK=false;
 function rainOn(){if(!A()||!BUF.rain)return;const v=WBRK?.85:.5;if(!RAINS){const s=AC.createBufferSource();s.buffer=BUF.rain;s.loop=true;const g=AC.createGain();g.gain.value=0;s.connect(g);g.connect(MG);s.start();RAINS=s;RAING=g}
  const t=AC.currentTime,G=RAING.gain;G.cancelScheduledValues(t);G.setValueAtTime(G.value,t);G.linearRampToValueAtTime(v,t+1.5)}
-function rainOff(){if(!RAINS)return;const s=RAINS,G=RAING.gain,t=AC.currentTime;RAINS=null;RAING=null;G.cancelScheduledValues(t);G.setValueAtTime(G.value,t);G.linearRampToValueAtTime(0,t+1.2);try{s.stop(t+1.3)}catch(e){}}
+function rainOff(fd){if(!RAINS)return;const s=RAINS,G=RAING.gain,t=AC.currentTime,f=fd||1.2;RAINS=null;RAING=null;G.cancelScheduledValues(t);G.setValueAtTime(G.value,t);G.linearRampToValueAtTime(0,t+f);try{s.stop(t+f+.1)}catch(e){}}
 /* BGM (boss fight: forms 1-2 = bgm1). Loops; the file is mastered loud, so it plays at about 1/5 */
-let BGMW=null,BGMS=null,BGMG=null,BGMK=null;const BGMV={bgm1:.2,bgm2:.19};
+let BGMW=null,BGMS=null,BGMG=null,BGMK=null;const BGMV={bgm1:.2,bgm2:.3};
 function bgmOn(k){BGMW=k;if(BGMK===k||!A()||!BUF[k])return;bgmOff(.6,1);const s=AC.createBufferSource();s.buffer=BUF[k];s.loop=true;const g=AC.createGain(),t=AC.currentTime;g.gain.setValueAtTime(BGMV[k]||.2,t);s.connect(g);g.connect(MG);s.start();BGMS=s;BGMG=g;BGMK=k}
 function bgmOff(fd,keep){if(!keep)BGMW=null;if(!BGMS)return;const s=BGMS,G=BGMG.gain,t=AC.currentTime,f=fd||1.2;BGMS=null;BGMG=null;BGMK=null;G.cancelScheduledValues(t);G.setValueAtTime(G.value,t);G.linearRampToValueAtTime(0,t+f);try{s.stop(t+f+.05)}catch(e){}}
 function roomOff(){if(roomSrc){try{roomSrc.stop()}catch(e){}roomSrc=null}}
@@ -651,8 +651,8 @@ const RAINL=new THREE.LineSegments(RNG,new THREE.LineBasicMaterial({color:0xb4c3
 function rnSet(i,y){const x=-6.25-Math.random()*3.5,z=-12+Math.random()*24;RNP.set([x,y,z,x+.05,y+.38,z],i*6)}
 for(let i=0;i<RNN;i++)rnSet(i,Math.random()*5.6-.2);
 function rainTick(dt){if(!RAINL.visible||dt<=0)return;const d=12*dt;for(let i=0;i<RNN;i++){const j=i*6;RNP[j+1]-=d;RNP[j+4]-=d;RNP[j]-=d*.13;RNP[j+3]-=d*.13;if(RNP[j+1]<-.2)rnSet(i,5.4+Math.random()*.4)}RNG.attributes.position.needsUpdate=true}
-function stormOn(){RAINON=true;RAINL.visible=true;rainOn()}
-function stormOff(){RAINON=false;RAINL.visible=false;rainOff()}
+function stormOn(){RAINON=true;SKYK=1;RAINL.visible=true;RAINL.material.opacity=.45;rainOn()}
+function stormOff(){RAINON=false;SKYK=0;RAINL.visible=false;rainOff()}
 let SHD=[];const SHM=new THREE.MeshStandardMaterial({color:0xdcefff,roughness:.08,metalness:.2,transparent:true,opacity:.55,side:THREE.DoubleSide,depthWrite:false});SHM.userData.keep=1;
 const SHG=Array.from({length:6},()=>{const g=new THREE.BufferGeometry(),r=()=>.04+Math.random()*.12,a=Math.random()*6.28;g.setAttribute('position',new THREE.Float32BufferAttribute([0,0,0,Math.cos(a)*r(),Math.sin(a)*r(),0,Math.cos(a+1.6+Math.random())*r(),Math.sin(a+1.6+Math.random())*r(),0],3));g.computeVertexNormals();return g});
 const inBay=(y,z)=>y>.9&&y<2.6&&GLS.some(w=>z>w.a&&z<w.b);
@@ -682,7 +682,7 @@ const bossW=()=>!!BOSS&&wave>=50&&wave<=60;
 let EYEG=null;const KD0=new THREE.Vector3(0,.62,1).normalize(),YAX=new THREE.Vector3(0,1,0),BCOL=[HEM.color.clone(),sun.color.clone()];
 function bossMood(dim,red){HEM.intensity=.62*dim*(QT===2?1.12:1);sun.intensity=1.15*dim;fil.intensity=.34*dim;
  HEM.color.copy(BCOL[0]).lerp(new THREE.Color(0xff8c8c),red);sun.color.copy(BCOL[1]).lerp(new THREE.Color(0xff9a88),red);
- const tn=new THREE.Color(1,1-.45*red,1-.5*red),k=Math.max(.1,dim);[[CEILM,0xdedacd],[HALLM,0x8a857a],[LAMPM,0xfffbe8],[SKYM,RAINON?0x3a434d:0xaed1ea],[SKYM2,RAINON?0x353d46:0x96b7d0],[BL.material,GC?GC.bl:0x7d0a12],[SCM.material,0x1d1714],[sandPts.material,0xffffff],[BOSS&&BOSS.pool?BOSS.pool.material:null,BOSS&&BOSS.pool?BOSS.pool.userData.c0:0]].forEach(([m,c])=>{if(m)m.color.setHex(c).multiply(tn).multiplyScalar(k)});if(dim>1.05){if(SKYM)SKYM.color.setHex(0xe6eeff);if(SKYM2)SKYM2.color.setHex(0xdde6f8)}}
+ const tn=new THREE.Color(1,1-.45*red,1-.5*red),k=Math.max(.1,dim);[[CEILM,0xdedacd],[HALLM,0x8a857a],[LAMPM,0xfffbe8],[SKYM,new THREE.Color(0xaed1ea).lerp(new THREE.Color(0x3a434d),SKYK).getHex()],[SKYM2,new THREE.Color(0x96b7d0).lerp(new THREE.Color(0x353d46),SKYK).getHex()],[BL.material,GC?GC.bl:0x7d0a12],[SCM.material,0x1d1714],[sandPts.material,0xffffff],[BOSS&&BOSS.pool?BOSS.pool.material:null,BOSS&&BOSS.pool?BOSS.pool.userData.c0:0]].forEach(([m,c])=>{if(m)m.color.setHex(c).multiply(tn).multiplyScalar(k)});if(dim>1.05){if(SKYM)SKYM.color.setHex(0xe6eeff);if(SKYM2)SKYM2.color.setHex(0xdde6f8)}}
 function katMesh(){const g=new THREE.Group(),bl=mk(.028,.95,.013,0xdfe4ec),ed=mk(.007,.95,.017,0xffffff),gu=mk(.1,.018,.062,0x26262b),hi=mk(.034,.26,.034,0x15151a);
  bl.position.y=.5;ed.position.set(.016,.5,0);gu.position.y=.015;hi.position.y=-.13;g.add(bl,ed,gu,hi);g.traverse(o=>{if(o.isMesh){o.userData.nocut=1;o.castShadow=true}});return g}
 function tchMake(){const c=pcfg(1),pm=personMesh(c,0),G=new THREE.Group(),U={};
@@ -975,8 +975,30 @@ function fTick(B,dt,dr){if(B.m==='tf3'&&!B.f3){fTf(B,dr);if(!B.F)return}
  case 'ftw':B.t-=dt;if(B.t<=0)fAttack(B);break;
  case 'fpunch':case 'fbite':B.u=Math.min(1,(B.u||0)+dt/(wave===59?.38:.45));if(B.u>=1&&!B.done){B.done=1;bossKill()}break;
  case 'fglow':B.gt-=dt;if(B.gt<=0)fCounter(B);break;
- case 'fdie':{B.t+=dt;B.F.position.y=-Math.min(2.3,B.t*B.t*.5);B.W.forEach((w,i)=>{if(w.cut)return;const k=Math.max(0,1-(B.t-.3-i*.05)/1.6);w.m.geometry.setDrawRange(0,Math.floor(w.cnt*k/3)*3)});
+ case 'fdie':{B.t+=dt;B.F.position.y=-Math.min(2.3,B.t*B.t*.5);
   if(Math.random()<dt*25)sand(fLocal(B,(Math.random()-.5)*1.2,1.4+Math.random()*1.4,.4),12,BLOOD,2.4,1,.35);break}}}
+/* ===== after the last stroke (real time, about 15 s; a tap skips it) =====
+   0-2.5 s every tentacle melts away / is pulled out; 3-6.5 the two halves sink into a pool of blood, the lights come back;
+   6-10 the rain stops and the sky clears, the camera turns to the broken windows; 9.8 / 12.4 two lines; 13-15 back, bars off */
+let ENDM=null;
+function endStart(B){ENDM={t:0,B,h:null};$('lb1').style.height='8.5%';$('lb2').style.height='8.5%'}
+function endTick(dr){const E=ENDM,B=E.B;if(!E.h)E.h=(B.halves||[]).slice();const t=(E.t+=dr),sm=x=>{x=Math.min(1,Math.max(0,x));return x*x*(3-2*x)},R=Math.random;
+ (B.W||[]).forEach((w,i)=>{if(w.cut||!w.m.visible)return;const k=1-sm((t-.3-i*.05)/1.8);w.m.geometry.setDrawRange(0,Math.floor(w.cnt*k/3)*3);if(k<=0){w.m.visible=false}else if(R()<dr*3)sand(w.E,6,BLOOD,1.4,1,.2)});
+ WFALL.forEach(o=>{if(o.gone)return;const k=sm(t/2.5);o.g.scale.setScalar(Math.max(.02,1-k*.98));o.g.position.y-=dr*.25;if(R()<dr*14)sand(o.g.position,8,BLOOD,1.6,1,.4);if(k>=1){scene.remove(o.g);disposeTree(o.g);o.gone=1}});
+ if(t>2.5&&!E.wh){E.wh=1;(B.W||[]).forEach(w=>{w.h.visible=false;w.m.visible=false})}
+ if(t>3)E.h.forEach(o=>{if(o.gone)return;if(!o.out){o.out=1;world.remove(o.b);const i=gib.indexOf(o);if(i>=0)gib.splice(i,1);o.y0=o.mesh.position.y;o.bleed=0}
+  const k=sm((t-3)/3.5),p=o.mesh.position;p.y=o.y0-3.2*k;if(R()<dr*8)splat(p.x+(R()-.5)*1.4,p.z+(R()-.5)*1.4,.4+R()*.9);if(R()<dr*10)sand({x:p.x,y:.1,z:p.z},10,BLOOD,1.3,1,.6);
+  if(k>=1){scene.remove(o.mesh);disposeTree(o.mesh);o.gone=1}});
+ const lk=sm((t-3)/3);if(t>3)bossMood(.8+.2*lk,.45*(1-lk));
+ if(t>6&&!E.rf){E.rf=1;rainOff(4)}if(t>6){RAINL.material.opacity=.45*(1-sm((t-6)/4));SKYK=1-sm((t-6.5)/3.5);if(t>10)RAINL.visible=false}
+ {const k=t<6?0:t<13?sm((t-6)/3.5)*.8:.8*(1-sm((t-13)/1.8));if(t>6){CM4.lookAt(cam.position,new THREE.Vector3(0,.9,-8),YAX);CQ0.setFromRotationMatrix(CM4);CM4.lookAt(cam.position,new THREE.Vector3(-6,1.65,.2),YAX);CQ1.setFromRotationMatrix(CM4);cam.quaternion.slerpQuaternions(CQ0,CQ1,k);cam.updateMatrixWorld()}}
+ if(t>9.8&&!E.s1){E.s1=1;banner('……終わった。',2400,26,1)}
+ if(t>12.4&&!E.s2){E.s2=1;banner('さようなら、先生。',2600,26,1)}
+ if(t>14.8&&!E.lb){E.lb=1;$('lb1').style.height='0';$('lb2').style.height='0'}}
+function endFinish(){const E=ENDM;if(!E)return;ENDM=null;(E.h||E.B.halves||[]).forEach(o=>{if(o.gone)return;const i=gib.indexOf(o);if(i>=0){gib.splice(i,1);world.remove(o.b)}scene.remove(o.mesh);disposeTree(o.mesh)});
+ WFALL.forEach(o=>{if(!o.gone){scene.remove(o.g);disposeTree(o.g)}});WFALL=[];(E.B.W||[]).forEach(w=>{w.h.visible=false;w.m.visible=false});
+ RAINL.visible=false;cam.position.set(0,1.6,6);cam.lookAt(0,.9,-8);cam.updateMatrixWorld();$('lb1').style.height='0';$('lb2').style.height='0'}
+function endSkip(){if(!ENDM)return;$('bn').style.opacity=0;after=.05;slowT=0}
 function fAttack(B){const L=B.fi===-1?B.fneck:B.farms[B.fi];if(!L||L.n<L.N){bossKill();return}B.m=B.fi===-1?'fbite':'fpunch';B.u=0;L.ps=(L.P[L.N]||fLocal(B,0,3,0)).clone();play(B.fi===-1?'mgrowl':'mpunch',1,B.fi===-1?.7:1)}
 /* which of his parts did the blade touch?  56/57: each giant arm; 58/59: the punching arm; 60: neck / head */
 function fWedge(B,dA,dB,nn){if(B.m==='fglow'&&!B.th){const hit=[B.F].concat(B.farms.map(L=>L.g),B.fneck?[B.fneck.g]:[]).some(g=>g.visible&&wedgeHit(g,cam.position,dA,dB,nn)!==null);const wh=(B.W||[]).filter(w=>w.m.visible&&wedgeHit(w.m,cam.position,dA,dB,nn)!==null);if(hit||wh.length)B.th={C:cam.position.clone(),n:nn.clone(),wh};return}
@@ -995,12 +1017,12 @@ function bossGlow(B,k){const f=m=>{if(m.isMesh&&m.material&&m.material.emissive)
 function fEyeGlow(o){o.mesh.traverse(m=>{if(m.isMesh&&m.material&&m.material.isMeshBasicMaterial&&m.material.color.r>.9&&m.material.color.g<.3){m.geometry.computeBoundingSphere();
  const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:EYEG||(EYEG=dotTex()),color:0xff2a14,blending:THREE.AdditiveBlending,transparent:true,depthWrite:false}));gl.position.copy(m.geometry.boundingSphere.center);gl.scale.setScalar(.32*FK);m.add(gl)}})}
 /* the last stroke: his whole body (and limbs, head) is cut in two along the blade; the biggest blood burst of the game */
-function fSplitAll(B){bgmOff(.12);const C=B.th.C,n=B.th.n,ms=[],vis=o=>{while(o){if(!o.visible)return false;o=o.parent}return true};bossGlow(B,0);
+function fSplitAll(B){bgmOff(.12);endStart(B);const C=B.th.C,n=B.th.n,ms=[],vis=o=>{while(o){if(!o.visible)return false;o=o.parent}return true};bossGlow(B,0);
  [B.F].concat(B.farms.map(L=>L.g),B.fneck?[B.fneck.g]:[]).forEach(g=>{g.updateMatrixWorld(true);g.traverse(o=>{if(o.isMesh&&vis(o))ms.push(o)})});
  const sd=[[],[]];ms.forEach(m=>{const r=sliceMesh(m,C,n),c=capTris(r.ip,n);for(let q=0;q<2;q++)sd[q].push({v:r.out[q],vn:r.on[q],vu:r.ou[q],mat:m.material.clone(),c})});
  sd.forEach(a=>a.forEach(p=>{if(p.mat.emissive)p.mat.emissive.setRGB(0,0,0)}));
  B.F.visible=false;B.farms.forEach(L=>L.g.visible=false);if(B.fneck)B.fneck.g.visible=false;
- [0,1].forEach(q=>{const sg=q?-1:1,o=mkPiece(sd[q],{x:n.x*1.2*sg,y:.9+Math.random()*.4,z:n.z*1.2*sg+.3},0,.25);if(o){o.ns=1;o.bleed=12;fEyeGlow(o);o.b.collisionFilterGroup=2;o.b.collisionFilterMask=1}});
+ B.halves=[];[0,1].forEach(q=>{const sg=q?-1:1,o=mkPiece(sd[q],{x:n.x*1.2*sg,y:.9+Math.random()*.4,z:n.z*1.2*sg+.3},0,.25);if(o){B.halves.push(o);o.ns=1;o.bleed=12;fEyeGlow(o);o.b.collisionFilterGroup=2;o.b.collisionFilterMask=1}});
  (B.th.wh||[]).forEach(w=>{w.m.geometry.setDrawRange(0,w.cnt);w.m.updateMatrixWorld(true);const r=sliceMesh(w.m,C,n),c=capTris(r.ip,n);w.cut=1;w.m.visible=false;
   for(let q=0;q<2;q++){const sg=q?-1:1,o=mkPiece([{v:r.out[q],vn:r.on[q],vu:r.ou[q],mat:w.m.material,c}],{x:0,y:0,z:0},0,0);if(o){world.remove(o.b);gib.splice(gib.indexOf(o),1);o.mesh.userData.boss=1;const bb=new THREE.Box3().setFromObject(o.mesh);WFALL.push({g:o.mesh,v:new THREE.Vector3(n.x*.4*sg,.3,n.z*.4*sg),off:bb.min.y-o.mesh.position.y,t:0})}}
   const mid=w.E.clone().lerp(B.F.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,1.4,0)),.5);gush(mid.x,mid.y,mid.z);sand(mid,160,BLOOD,4,1,.7)});
@@ -1408,8 +1430,8 @@ function banner(t,ms,sz,tw){const b=$('bn');b.style.fontSize=(sz||34)+'px';b.sty
  if(tw){let i=0;b.textContent='';bnT=setInterval(()=>{i++;b.textContent=t.slice(0,i);if(i>=t.length){clearInterval(bnT);bnT=null}},45)}
  else b.innerHTML=t;
  if(bnH)clearTimeout(bnH);bnH=setTimeout(()=>{b.style.opacity=0;bnH=null},ms)}
-function waveBanner(){if(BOSS&&(BOSS.m==='cine'||BOSS.m==='tf'||BOSS.m==='tf3'))return;if(wave>=50&&wave<=55&&BOSS&&!(wave===55&&BOSS.m==='hurt2'))bgmOn('bgm1');if(wave>=56&&wave<=60&&BOSS&&BOSS.f3&&BOSS.m!=='fdie')bgmOn('bgm2');if(wave===50||wave===52){const w=wave,L=w===50?[['攻撃の隙がない…',5000]]:[['攻撃のチャンスだ！',1700]];if(w===50)NOZT=performance.now()+5000+2000+250;L.forEach(([tx,ms])=>setTimeout(()=>{if(wave===w&&BOSS&&st!=='over')banner(tx,2000,24)},ms))}sDing();banner('WAVE '+wave+'<br><span style="font-size:17px;opacity:.92">'+(wave>=50&&wave<=60?['まさか、先生...!!','先生','先生、さようなら','先生...？','先生...？','こんどこそ、さようなら','先生だった何か','先生だった何か','来る...！左だ！','次は右だ！','今度こそ もう立ち上がれない'][wave-50]:wave===61?'終わりのない戦い':endSp(wave)>=0?['犬ゾンビの群れ','体育会系ゾンビの群れ','給食当番ゾンビの群れ','用務員ゾンビの群れ'][endSp(wave)]:wave===10?'犬ゾンビ出現':wave===20?'体育会系ゾンビ出現':wave===30?'給食当番ゾンビ出現':wave===40?'用務員ゾンビ出現':'ゾンビ '+En.length+'体')+'</span>',wave===50?5000:wave===10||wave===20||wave===30||wave===40||wave===61||endSp(wave)>=0?1900:1500)}
-function nextWave(){qFlush();wave++;spawnWave();MAXL=bladeLen(wave);waveBanner()}
+function waveBanner(){if(BOSS&&(BOSS.m==='cine'||BOSS.m==='tf'||BOSS.m==='tf3'))return;if(wave>=50&&wave<=55&&BOSS&&!(wave===55&&BOSS.m==='hurt2'))bgmOn('bgm1');if(wave>=56&&wave<=60&&BOSS&&BOSS.f3&&BOSS.m!=='fdie')bgmOn('bgm2');if(wave===50||wave===52){const w=wave,L=w===50?[['攻撃の隙がない…',5000]]:[['攻撃のチャンスだ！',1700]];if(w===50)NOZT=performance.now()+5000+2000+250;L.forEach(([tx,ms])=>setTimeout(()=>{if(wave===w&&BOSS&&st!=='over')banner(tx,2000,24)},ms))}sDing();banner('WAVE '+wave+'<br><span style="font-size:17px;opacity:.92">'+(wave>=50&&wave<=60?['まさか、先生...!!','先生','先生、さようなら','先生...？','先生...？','こんどこそ、さようなら','先生だった何か','先生だった何か','来る...！左だ！','次は右だ！','今度こそ もう立ち上がれない'][wave-50]:wave===61?'終わりのない戦い':endSp(wave)>=0?['犬ゾンビの群れ','体育会系ゾンビの群れ','給食当番ゾンビの群れ','用務員ゾンビの群れ'][endSp(wave)]:wave===10?'犬ゾンビ出現':wave===20?'体育会系ゾンビ出現':wave===30?'給食当番ゾンビ出現':wave===40?'用務員ゾンビ出現':'ゾンビ '+En.length+'体')+'</span>',wave===50?5000:wave===53||wave===56?3000:wave===10||wave===20||wave===30||wave===40||wave===61||endSp(wave)>=0?1900:1500)}
+function nextWave(){qFlush();endFinish();wave++;spawnWave();MAXL=bladeLen(wave);waveBanner()}
 const MSG=['…と、そこで目が覚めた。','チャイムが鳴った。妄想終了。','次の授業は体育だった。','先生「ここ、テストに出るぞ」'];
 function bloodScreen(){bl=[];bt0=performance.now();const S0=Math.min(innerWidth,innerHeight)/390;
  for(let i=0;i<66;i++)bl.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:(26+Math.random()*120)*S0,d:Math.random()*.09});
@@ -1433,7 +1455,7 @@ function hlZoom(){if($('hz')||!HL)return;const vid=!!HL.vu,d=document.createElem
  if(vid)m.play().catch(()=>{})}
 function hlStop(){{const z=$('hz');if(z){z.querySelectorAll('video').forEach(v=>{try{v.pause();v.removeAttribute('src');v.load()}catch(e){}});z.remove()}}const h=$('hl');if(h){h.querySelectorAll('video').forEach(v=>{try{v.pause();v.removeAttribute('src');v.load()}catch(e){}});h.textContent=''}
  if(HL){if(HL.vu)URL.revokeObjectURL(HL.vu);if(HL.img&&HL.img.u)URL.revokeObjectURL(HL.img.u)}}
-function start(){qFlush();NOZT=0;winReset();adOff();CARRY=[];blobClear();bossDispose();flopClear();scene.children.slice().forEach(o=>{if(o.userData.boss){scene.remove(o);disposeTree(o)}});bossMood(1,0);{const h=$('ht');if(h)h.remove();const o=$('opt');if(o)o.remove()}recAbort();hlStop();HL=null;REC.run++;REC.pend=0;{const f0=$('fl');f0.style.transition='none';f0.style.opacity=0}roomOff();moanT=3;if(DOOR)DOOR.position.z=-3.4;bl=[];biter=null;bite=0;rushT=0;slashA=null;swA=null;slowT=0;holdT=0;clearField();bn=0;BL.count=0;for(let j=0;j<NP;j++)sL[j]=0;wave=TESTW||1;S=0;ts=1;after=0;stroke=null;pend=[];TR=[];MAXL=bladeLen(wave);layout();$('scr').style.display='none';
+function start(){qFlush();NOZT=0;winReset();ENDM=null;adOff();CARRY=[];blobClear();bossDispose();flopClear();scene.children.slice().forEach(o=>{if(o.userData.boss){scene.remove(o);disposeTree(o)}});bossMood(1,0);{const h=$('ht');if(h)h.remove();const o=$('opt');if(o)o.remove()}recAbort();hlStop();HL=null;REC.run++;REC.pend=0;{const f0=$('fl');f0.style.transition='none';f0.style.opacity=0}roomOff();moanT=3;if(DOOR)DOOR.position.z=-3.4;bl=[];biter=null;bite=0;rushT=0;slashA=null;swA=null;slowT=0;holdT=0;clearField();bn=0;BL.count=0;for(let j=0;j<NP;j++)sL[j]=0;wave=TESTW||1;S=0;ts=1;after=0;stroke=null;pend=[];TR=[];MAXL=bladeLen(wave);layout();$('scr').style.display='none';
  if(seenIntro){endIntro();return}
  $('lb1').style.height='8.5%';$('lb2').style.height='8.5%';
  roomOn();introSetup();st='intro';introT=0;introS=0}
@@ -1550,7 +1572,7 @@ addEventListener('keydown',e=>{if(e.key==='Escape'||e.key==='p'||e.key==='P'){if
 const rc=new THREE.Raycaster();
 function rayAt(px,py){rc.setFromCamera(new THREE.Vector2(px/innerWidth*2-1,-(py/innerHeight)*2+1),cam)}
 let fin=false,slashA=null,swA=null;const TQ=new THREE.Quaternion();
-addEventListener('pointerdown',e=>{if(PAUSED)return;A();if(st==='title')return;if(st==='over')return;if(st==='intro'){introS=7;endIntro();return}if(st!=='ready')return;if(En.some(e=>e.rt!==undefined||e.ru!==undefined)||bossBlock())return;st='cut';sZone();if(BOSS&&BOSS.m==='guard'&&!BOSS.gdn){const B=BOSS,g=GUARDS[1+(Math.random()*3|0)];B.gdn=1;B.gf={u:0,a:{sx:B.gc.sx,r:B.gc.r,D:B.gc.D.clone()},b:{sx:g.sx,r:g.r,D:new THREE.Vector3().fromArray(g.D).normalize()}}}En.forEach(q=>{if(q.sh&&!q.sh.dn){q.sh.dn=1;q.sh.ty=Math.random()<.5?1.4:.55;q.sh.sp=Math.abs(q.sh.ty-q.sh.y)/.56}});stroke={x:e.clientX,y:e.clientY,ex:e.clientX,ey:e.clientY,len:0,id:e.pointerId};recStart()});
+addEventListener('pointerdown',e=>{if(PAUSED)return;A();if(ENDM&&st==='after'){endSkip();return}if(st==='title')return;if(st==='over')return;if(st==='intro'){introS=7;endIntro();return}if(st!=='ready')return;if(En.some(e=>e.rt!==undefined||e.ru!==undefined)||bossBlock())return;st='cut';sZone();if(BOSS&&BOSS.m==='guard'&&!BOSS.gdn){const B=BOSS,g=GUARDS[1+(Math.random()*3|0)];B.gdn=1;B.gf={u:0,a:{sx:B.gc.sx,r:B.gc.r,D:B.gc.D.clone()},b:{sx:g.sx,r:g.r,D:new THREE.Vector3().fromArray(g.D).normalize()}}}En.forEach(q=>{if(q.sh&&!q.sh.dn){q.sh.dn=1;q.sh.ty=Math.random()<.5?1.4:.55;q.sh.sp=Math.abs(q.sh.ty-q.sh.y)/.56}});stroke={x:e.clientX,y:e.clientY,ex:e.clientX,ey:e.clientY,len:0,id:e.pointerId};recStart()});
 addEventListener('pointermove',e=>{if(PAUSED||!stroke||st!=='cut'||e.pointerId!==stroke.id)return;let dx=e.clientX-stroke.x,dy=e.clientY-stroke.y,d=Math.hypot(dx,dy);
  if(d>MAXL){dx*=MAXL/d;dy*=MAXL/d;d=MAXL}
  stroke.ex=stroke.x+dx;stroke.ey=stroke.y+dy;stroke.len=d});
@@ -1579,7 +1601,7 @@ function frame(now){requestAnimationFrame(frame);if(PAUSED){last=now;return}{con
      b.wakeUp();const di=dyn.findIndex(x=>x.mesh===o);if(di>=0){dyn.splice(di,1);gib.push({mesh:o,b,age:2.6,nc:1,vt:8})}
      b.applyImpulse(new CANNON.Vec3((d.x+w.x*.6)*k,(d.y+w.y*.6+.5)*k,(d.z+w.z*.6)*k),new CANNON.Vec3(p.x-b.position.x,p.y-b.position.y,p.z-b.position.z))}}}});
   pend=[];
-  if(fin){fin=false;if(REC.on)REC.snapAt=now+420;cleared=bossW()?bossJudge():En.length===0;slowT=cleared?2.6:1.7;after=cleared?3.9:4.9;if(cleared&&wave===60&&BOSS){slowT=5.5;after=7}rushT=cleared?0:1.9;st='after'}
+  if(fin){fin=false;if(REC.on)REC.snapAt=now+420;cleared=bossW()?bossJudge():En.length===0;slowT=cleared?2.6:1.7;after=cleared?3.9:4.9;if(cleared&&wave===60&&BOSS){slowT=5.5;after=15.5}rushT=cleared?0:1.9;st='after'}
  }
  if(st==='intro'){introT+=dr;const t=introT,k=Math.min(1,t/15.4);
   {let px,py,pz,ly,lz;
@@ -1632,6 +1654,7 @@ function frame(now){requestAnimationFrame(frame);if(PAUSED){last=now;return}{con
   stepBlobs(dt);flopTick(dt);wfTick(dt);bossTick(dt,dr);shardTick(dt);
   if(st==='bite'){bite-=dr;if(!bl.length&&bite<.25)bloodScreen();if(bite<=0)die()}
   else if(rushT<=0){const b=En.find(e=>Math.hypot(e.x,e.z-6)<1.5);if(b){cleared=false;startBite(b)}}}
+ if(ENDM&&!PAUSED)endTick(dr);
  if(st==='after'){after-=dr;if(slowT>0)slowT-=dr;if(after<=0){if(cleared){recEnd();En.forEach(e=>scene.remove(e.g));En=[];nextWave();st='ready'}else die()}}
  if(st!=='title'&&!ZV){const sdt=dr*ts,fs=Math.min(1/90,Math.max(1/240,sdt));world.step(fs,sdt,6)}
  {let np=0;for(const o of gib)if(o.pc&&o.sink===undefined)np++;
