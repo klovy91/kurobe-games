@@ -1433,8 +1433,11 @@ function popAdd(x,y,t,c,sz,sub,lo,kind){const o=OPT.pop||'all';if(o==='off'||(o=
  POP.push({x:Math.max(70,Math.min(innerWidth-70,x)),y:Math.max(56,Math.min(innerHeight-30,y)),t,c,sz,sub,lo,a:0})}
 /* one stroke: each zombie's points (x1.5 when it was about to bite), then (sum) x (number cut) x (short line bonus) */
 function scStroke(s){const H=[];return{
- add(e){const r=vitalScore(e,s),T=r.k?VPT[r.k]:null,near=Math.hypot(e.x,e.z-6)<2.4;if(near)r.v=Math.round(r.v*1.5);H.push(r);if(r.k==='bomb')BOOMK=1.5;
-  const nt=near?J('紙一重!','BY A HAIR!')+' ×1.5':'';
+ add(e){const r=vitalScore(e,s),T=r.k?VPT[r.k]:null,near=Math.hypot(e.x,e.z-6)<2.4,tg=[];if(near){r.v=Math.round(r.v*1.5);tg.push(J('紙一重!','BY A HAIR!')+' ×1.5')}
+  // a jock in the air: x1 at take-off / landing .. x2 at the top of the jump
+  if(e.jm&&e.jm.m==='air'){const u=Math.min(1,Math.max(0,e.jm.u||0)),ka=1+4*u*(1-u);r.v=Math.round(r.v*ka);if(ka>=1.3)tg.push(J('撃墜!','SHOT DOWN!')+' ×'+ka.toFixed(1))}
+  H.push(r);if(r.k==='bomb')BOOMK=1.5;
+  const nt=tg.join('  ');
   if(T&&T[3])popAdd(r.x,r.y-14,T[2],'#ff3b3b',22,nt,fmtN(r.v),'i');
   else popAdd(r.x,r.y-12,(T?T[2]+' ':'')+fmtN(r.v),r.v>=2500?'#ffd21e':r.v>=1000?'#ffb36b':'#fff',r.v>=2500?18:15,nt,null,'i')},
  end(){if(!H.length)return;const N=H.length,l=Math.hypot(s.x2-s.x1,s.y2-s.y1),k=1+.5*(1-Math.min(1,l/MAXL)),tot=Math.round(H.reduce((a,r)=>a+r.v,0)*N*k),nk=H.filter(r=>r.k==='kai').length;SC+=tot;
@@ -1452,7 +1455,7 @@ function scBoss(base,c,lab,pt){c=Math.max(0,Math.min(1,c||0));const k=1+c,v=Math
  const s=LASTS,x=pt?pt[0]:s?(s.x1+s.x2)/2:innerWidth/2,y=pt?pt[1]-40:s?Math.min(s.y1,s.y2)-50:innerHeight*.35;
  bossPop(v,lab+(k>=1.3?'  '+J('紙一重!','BY A HAIR!')+' ×'+k.toFixed(1):''),x,y)}
 function scBossBody(B){const r=B.vs||{v:100,k:null,x:innerWidth/2,y:innerHeight*.4};B.vs=null;const v=r.v*100,T=r.k?VPT[r.k]:null;SC+=v;
- bossPop(v,T?T[2]:J('一太刀','A CLEAN HIT'),r.x,r.y-30,T&&T[3]?'#ff3b3b':'#fff')}
+ bossPop(v,T?T[2]:J('一閃!','ONE FLASH!'),r.x,r.y-30,T&&T[3]?'#ff3b3b':'#fff')}
 function popDraw(dr){if(!POP.length)return;const F=s=>'400 '+Math.round(s)+'px Iceberg,DotGothic16,system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif';oc.textAlign='center';oc.textBaseline='middle';oc.lineJoin='round';
  POP=POP.filter(p=>{p.a+=dr;if(p.a>1.4)return false;const y=p.y-28*(p.a/1.4),al=p.a>1?1-(p.a-1)/.4:1,sz=p.sz*(p.a<.12?1.3-.3*p.a/.12:1);
   if(p.w===undefined){oc.font=F(p.sz*1.3);p.w=oc.measureText(p.t).width;if(p.sub){oc.font=F(p.sz*.65);p.w=Math.max(p.w,oc.measureText(p.sub).width)}if(p.lo){oc.font=F(p.sz*.8);p.w=Math.max(p.w,oc.measureText(p.lo).width)}p.x=Math.max(p.w/2+10,Math.min(innerWidth-p.w/2-10,p.x))}
