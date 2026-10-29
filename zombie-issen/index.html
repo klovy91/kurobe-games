@@ -1420,7 +1420,7 @@ function mkPiece(parts,vel,nc,spin){const CAP=nc?CUW:CU;parts=parts.filter(p=>p.
  b.mass=Math.max(1.5,vol*140);b.updateMassProperties();b.position.set(cen.x,cen.y+Math.max(0,.01-gb.min.y),cen.z);b.velocity.set(vel.x,vel.y,vel.z);const sp=spin===undefined?1:spin;b.angularVelocity.set(rnd()*sp,rnd()*sp,rnd()*sp);
  b.linearDamping=.12;b.angularDamping=.45;
  scene.add(g);world.addBody(b);g.userData.body=b;g.position.copy(b.position);g.quaternion.copy(b.quaternion);
- const o={mesh:g,b,bleed:nc?0:1.6,nc:nc?1:0,con:[],pc:1,p0:new THREE.Vector3(b.position.x,b.position.y,b.position.z)};if(nc)o.vt=6+Math.random()*2;gib.push(o);return o}
+ const o={mesh:g,b,bleed:nc?0:1.6,nc:nc?1:0,con:[],pc:1,ms:Math.max(gs.x,gs.y,gs.z),p0:new THREE.Vector3(b.position.x,b.position.y,b.position.z)};if(nc)o.vt=6+Math.random()*2;gib.push(o);return o}
 /* ---- score ----
    vital point = [max points, radius (in the body's own units, 1 = 1m on a standard 185cm zombie), name].
    points = max x (1 - distance from the drawn line to the point / radius); the best point wins; 100 if none is in range.
@@ -1839,6 +1839,8 @@ function frame(now){requestAnimationFrame(frame);if(PAUSED){last=now;return}if(M
    const v2=v.x*v.x+v.y*v.y+v.z*v.z,w2=w.x*w.x+w.y*w.y+w.z*w.z,lim=o.age>FZ.l?4:1;
    if(v2<.004*lim*lim&&w2<.03*lim*lim){o.st=(o.st||0)+gd;if(o.st>FZ.s&&o.age>FZ.a)freezeGib(o)}else o.st=0;
    if(o.age>FZ.f&&Math.abs(v.y)<.5&&o.b.position.y<3.6)freezeGib(o)}
+  // small body pieces (longest side under 25 cm): 3 s after they come to rest, they sink into the floor and go (the blood stays)
+  if(o.fz&&!o.nc&&!o.carry&&o.ms<.25&&o.dieT===undefined){o.ft=(o.ft||0)+gd;if(o.ft>3){o.sink=0;world.remove(o.b);return true}}
   if(o.bleed>0&&ts>.3){o.bleed-=gd;sand(o.b.position,3,BLOOD,1,.75,.18)}
   if(o.vt!==undefined&&o.dieT===undefined){o.vt-=gd;if(o.vt<=0)o.dieT=1.2}
   if(o.dw&&ts>=.9)o.dw=0;
