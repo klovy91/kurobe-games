@@ -816,10 +816,10 @@ function bossParry(a){const B=BOSS;if(!B||!(B.m==='swing'||B.m==='fly')||!B.tl)r
  const t=((L[0]-a.x1)*r2y-(L[1]-a.y1)*r2x)/den,u=((L[0]-a.x1)*r1y-(L[1]-a.y1)*r1x)/den;if(t<0||t>1||u<0||u>1)return null;
  const ang=Math.acos(Math.min(1,Math.abs(r1x*r2x+r1y*r2y)/Math.hypot(r1x,r1y)/Math.hypot(r2x,r2y)));if(ang<Math.PI/6)return null;return [a.x1+r1x*t,a.y1+r1y*t]}
 function bossJudge(){const B=BOSS;if(B.f3)return fJudge(B);
- if(wave===53||wave===54){if(B.th&&(B.m==='tw'||B.m==='punch')){tnSlice(B.tn[B.ai],B.th);B.m='m2';B.at=99;B.tl=null;play('tstg',1);play('mgrowl',.8,1.25);return true}bossCounter();return false}
- if(wave===55){if(B.hit&&B.m==='still'){bossHurt2();return true}bossCounter();return false}
- if(wave<=51){if(B.pr&&(B.m==='wind'||B.m==='swing'||B.m==='fly')){bossClash(B.pr);return true}bossCounter();return false}
- if(B.hit&&B.m==='guard'){bossHurt();return true}bossCounter();return false}
+ if(wave===53||wave===54){if(B.th&&(B.m==='tw'||B.m==='punch')){scBoss(200000,B.m==='tw'?.4*(1-B.t/(wave===53?.8:.65)):.4+.6*Math.min(1,B.u||0),J('腕斬り!','ARM CUT!'));tnSlice(B.tn[B.ai],B.th);B.m='m2';B.at=99;B.tl=null;play('tstg',1);play('mgrowl',.8,1.25);return true}bossCounter();return false}
+ if(wave===55){if(B.hit&&B.m==='still'){scBossBody(B);bossHurt2();return true}bossCounter();return false}
+ if(wave<=51){if(B.pr&&(B.m==='wind'||B.m==='swing'||B.m==='fly')){scBoss(100000,B.m==='wind'?.25*(1-B.t/B.T):B.m==='swing'?.25:.25+.75*Math.min(1,B.fu),J('受け流し!','PARRY!'),B.pr);bossClash(B.pr);return true}bossCounter();return false}
+ if(B.hit&&B.m==='guard'){scBossBody(B);bossHurt();return true}bossCounter();return false}
 /* ===== monster form (WAVE 53-55) =====
    53/54: the back arms writhe fast; one of them (53: one, 54: the other) draws back glowing red with a growl, then punches at your face.
    Cut that arm before the fist arrives.  55: both are gone, he stands still; cut his body within 6 s, or he grabs you. */
@@ -1084,9 +1084,9 @@ function fWedge(B,dA,dB,nn){if(B.m==='fglow'&&!B.th){const hit=[B.F].concat(B.fa
  else if(((wave===58||wave===59)&&(B.m==='ftw'||B.m==='fpunch'))&&!B.th){const L=B.fi===-1?B.fneck:B.farms[B.fi];if(L){const k=first(L,2);if(k>=0)B.th={k,C,n}}}}
 function fJudge(B){
  if(B.m==='fga'){const live=B.GA.filter(a=>a.ph==='app');let all=live.length>0;B.GA.forEach((a,i)=>{if(a.ph!=='app')return;if(B.fh&&B.fh[i]){tnSlice(a.T,B.fh[i]);a.ph='cut';a.dc.visible=false;a.T.mat.emissive.setRGB(0,0,0);a.T.mk=0}else all=false});
-  if(all){fAppStop(B);B.m='fwait';play('froar',.7,1.3);return true}fCounter(B);return false}
- if((wave===58||wave===59)&&B.th&&(B.m==='ftw'||B.m==='fpunch')){tnSlice(B.farms[B.fi],B.th);B.farms[B.fi].mk=0;B.m='fwait';play('froar',.8,1.1);return true}
- if(wave===60&&B.th&&B.m==='fglow'){fSplitAll(B);return true}
+  if(all){scBoss(150000*live.length,Math.max(...live.map(a=>a.u||0)),J('千手斬り! ×','ARM SWEEP! ×')+live.length);fAppStop(B);B.m='fwait';play('froar',.7,1.3);return true}fCounter(B);return false}
+ if((wave===58||wave===59)&&B.th&&(B.m==='ftw'||B.m==='fpunch')){scBoss(300000,B.m==='ftw'?.4*(1-B.t/(wave===58?.8:.65)):.4+.6*Math.min(1,B.u||0),J('腕斬り!','ARM CUT!'));tnSlice(B.farms[B.fi],B.th);B.farms[B.fi].mk=0;B.m='fwait';play('froar',.8,1.1);return true}
+ if(wave===60&&B.th&&B.m==='fglow'){scBoss(1000000,1-Math.max(0,B.gt)/6,J('介錯!','KAISHAKU!'));fSplitAll(B);return true}
  fCounter(B);return false}
 function fCounter(B){if(B.m==='fglow'){bossGlow(B,0);fAttack(B);return}if(B.m==='fga'){B.GA.forEach(a=>{if(a.ph==='app')a.u=Math.max(a.u,.9)});return}if(B.m==='fidle'||B.m==='ftw')fAttack(B)}
 /* glow (yellow) on everything of him: the teacher, his tumours, his limbs and head */
@@ -1441,6 +1441,18 @@ function scStroke(s){const H=[];return{
   if(N>1||k>=1.01){const m=[];if(nk>=2)m.push(J('介錯 ×','KAISHAKU ×')+nk+'!');if(N>1)m.push('×'+N+J(' 同時斬り',' MULTI'));if(k>=1.01)m.push('×'+k.toFixed(2)+J(' 短い線',' PRECISION'));popAdd((s.x1+s.x2)/2,Math.min(s.y1,s.y2)-50,'+'+fmtN(tot),'#fff',35,m.join('  '),null,'t')}}}}
 /* explosion: 500 x (number caught)^2 (x1.5 after a MEGA BLAST) */
 function scBoom(n,cx,cz){const mk=BOOMK;BOOMK=1;if(!n)return;const p=Math.round(500*n*n*mk),a=scrPt(new THREE.Vector3(cx,1.5,cz));SC+=p;popAdd(a[0],a[1]-40,'+'+fmtN(p),'#ff8a2a',Math.min(56,31+n*3),J('爆破 ×','BLAST ×')+n+(mk>1?'  ×1.5':''),null,'t')}
+/* ---- boss score ----
+   c = how close his attack was to landing (0 = just started, 1 = about to hit): x(1+c), shown as "紙一重" from x1.3.
+   WAVE 52 / 55: the vital points of his body (as for zombies) x100, no close-call bonus. */
+let LASTS=null;
+function bossVital(s){const B=BOSS;if(!B||!B.g)return null;const ws=new THREE.Vector3();(B.U&&B.U.pm||B.g).getWorldScale(ws);
+ return vitalScore({g:B.g,inr:{scale:{x:ws.x}},x:B.x,z:B.z},s)}
+function bossPop(v,lab,x,y,c){popAdd(x,y,'+'+fmtN(v),c||'#fff',38,lab,null,'t')}
+function scBoss(base,c,lab,pt){c=Math.max(0,Math.min(1,c||0));const k=1+c,v=Math.round(base*k/100)*100;SC+=v;
+ const s=LASTS,x=pt?pt[0]:s?(s.x1+s.x2)/2:innerWidth/2,y=pt?pt[1]-40:s?Math.min(s.y1,s.y2)-50:innerHeight*.35;
+ bossPop(v,lab+(k>=1.3?'  '+J('紙一重!','BY A HAIR!')+' ×'+k.toFixed(1):''),x,y)}
+function scBossBody(B){const r=B.vs||{v:100,k:null,x:innerWidth/2,y:innerHeight*.4};B.vs=null;const v=r.v*100,T=r.k?VPT[r.k]:null;SC+=v;
+ bossPop(v,T?T[2]:J('一太刀','A CLEAN HIT'),r.x,r.y-30,T&&T[3]?'#ff3b3b':'#fff')}
 function popDraw(dr){if(!POP.length)return;const F=s=>'400 '+Math.round(s)+'px Iceberg,DotGothic16,system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif';oc.textAlign='center';oc.textBaseline='middle';oc.lineJoin='round';
  POP=POP.filter(p=>{p.a+=dr;if(p.a>1.4)return false;const y=p.y-28*(p.a/1.4),al=p.a>1?1-(p.a-1)/.4:1,sz=p.sz*(p.a<.12?1.3-.3*p.a/.12:1);
   if(p.w===undefined){oc.font=F(p.sz*1.3);p.w=oc.measureText(p.t).width;if(p.sub){oc.font=F(p.sz*.65);p.w=Math.max(p.w,oc.measureText(p.sub).width)}if(p.lo){oc.font=F(p.sz*.8);p.w=Math.max(p.w,oc.measureText(p.lo).width)}p.x=Math.max(p.w/2+10,Math.min(innerWidth-p.w/2-10,p.x))}
@@ -1595,8 +1607,8 @@ function pcfg(t){return t?{skin:PSKIN[0],hair:PHAIR[0],shirt:0x4a4f63,pant:0x2a2
 function personMesh(c,seat){const g=new THREE.Group(),SKm=SM(c.skin,.88),SHm=SM(c.shirt,.9),PAm=SM(c.pant,.9),SHOE=SM(0x23252b,.8),HRm=SM(c.hair,.95);
  let bone=0;
  const B=(w,h,d,m,x,y,z,rx)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);if(rx)o.rotation.x=rx;o.userData.bone=bone;o.castShadow=true;g.add(o);return o};
- const head=(hy)=>{bone=2;B(.12,.13,.12,SKm,0,hy-.14,0);
-  const h=new THREE.Mesh(new THREE.SphereGeometry(.185,14,11),SKm);h.position.set(0,hy,.01);h.scale.z=1.06;h.userData.bone=2;h.castShadow=true;g.add(h);
+ const head=(hy)=>{bone=2;VP(B(.12,.13,.12,SKm,0,hy-.14,0),'neck');
+  const h=new THREE.Mesh(new THREE.SphereGeometry(.185,14,11),SKm);h.position.set(0,hy,.01);h.scale.z=1.06;h.userData.bone=2;h.userData.vp='head';h.castShadow=true;g.add(h);
   const hr=new THREE.Mesh(new THREE.SphereGeometry(.2,14,10,0,6.284,0,1.75),HRm);hr.position.set(0,hy+.01,0);hr.scale.set(1,.98,1.04);hr.userData.bone=2;hr.castShadow=true;g.add(hr);
   B(.21,.07,.05,HRm,0,hy+.09,.17)};
  if(seat){
@@ -1607,12 +1619,12 @@ function personMesh(c,seat){const g=new THREE.Group(),SKm=SM(c.skin,.88),SHm=SM(
    bone=si?4:3;B(.12,.28,.12,SHm,.27*s,.93,.04,-.3);B(.11,.11,.3,SKm,.27*s,.79,.24);B(.1,.09,.14,SKm,.27*s,.78,.43);
    bone=si?6:5;B(.16,.16,.44,PAm,.12*s,.47,.22);B(.14,.44,.14,PAm,.12*s,.23,.42);B(.16,.09,.26,SHOE,.12*s,.05,.48)})}
  else{
-  bone=0;B(.44,.36,.26,SHm,0,1.3,0);
-  bone=1;B(.38,.24,.23,SHm,0,1.02,0);B(.4,.16,.23,PAm,0,.87,0);
+  bone=0;VP(B(.44,.36,.26,SHm,0,1.3,0),'heart',.08,.02,0);
+  bone=1;VP(B(.38,.24,.23,SHm,0,1.02,0),'belly',0,.03,0);VP(B(.4,.16,.23,PAm,0,.87,0),'hip');
   head(1.66);
-  [-1,1].forEach((s,si)=>{bone=0;const sh=new THREE.Mesh(new THREE.SphereGeometry(.11,10,8),SHm);sh.position.set(.25*s,1.4,0);sh.userData.bone=0;sh.castShadow=true;g.add(sh);
+  [-1,1].forEach((s,si)=>{bone=0;const sh=new THREE.Mesh(new THREE.SphereGeometry(.11,10,8),SHm);sh.position.set(.25*s,1.4,0);sh.userData.bone=0;sh.userData.vp='shl';sh.castShadow=true;g.add(sh);
    bone=si?4:3;B(.12,.32,.12,SHm,.27*s,1.24,0);B(.11,.3,.11,SKm,.27*s,.94,.02);B(.1,.12,.1,SKm,.27*s,.76,.03);
-   bone=si?6:5;B(.16,.44,.16,PAm,.12*s,.67,0);B(.14,.42,.14,PAm,.12*s,.24,.01);B(.16,.09,.26,SHOE,.12*s,.05,.08)})}
+   bone=si?6:5;VP(B(.16,.44,.16,PAm,.12*s,.67,0),'knee',0,-.22,0);B(.14,.42,.14,PAm,.12*s,.24,.01);B(.16,.09,.26,SHOE,.12*s,.05,.08)})}
  return g}
 function actor(c,x,y,z,seat){const g=personMesh(c,seat);g.position.set(x,y,z);g.rotation.y=Math.PI;g.userData.cfg=c;g.userData.seat=seat?1:0;scene.add(g);return g}
 function standUp(a){const g2=personMesh(a.userData.cfg,0);while(a.children.length)a.remove(a.children[0]);while(g2.children.length)a.add(g2.children[0]);a.userData.seat=0}
@@ -1722,11 +1734,11 @@ function frame(now){requestAnimationFrame(frame);if(PAUSED){last=now;return}if(M
    if(slashA.p>=1&&slashA.blk&&!slashA.bkd){slashA.bkd=1;play('clang',.9,.95+Math.random()*.1);sand(slashA.blk,34,FIRE,2.4,0,.3);puff(slashA.blk.x,slashA.blk.y,slashA.blk.z,0xffd27a,'s',.25,.2,0)}
    if(slashA.p>=1){slashA.d=(slashA.d||0)+dr;
     if(slashA.d>=.2){pend.push({x1:slashA.x1,y1:slashA.y1,x2:slashA.x2,y2:slashA.y2,w:false,blkI:slashA.blkI});swA=slashA;slashA=null;fin=true}}}
-  pend.forEach(s=>{const l=Math.hypot(s.x2-s.x1,s.y2-s.y1);TR.push({x1:s.x1,y1:s.y1,x2:s.x2,y2:s.y2,w:s.w,a:s.w?.3:1});if(s.w||l<1)return;
+  pend.forEach(s=>{const l=Math.hypot(s.x2-s.x1,s.y2-s.y1);TR.push({x1:s.x1,y1:s.y1,x2:s.x2,y2:s.y2,w:s.w,a:s.w?.3:1});if(s.w||l<1)return;LASTS=s;
    const nx=-(s.y2-s.y1)/l,ny=(s.x2-s.x1)/l,n=Math.max(1,Math.ceil(l/8));
    {const dA=dirAt(s.x1,s.y1),dB=dirAt(s.x2,s.y2),nn=dA.clone().cross(dB);if(nn.lengthSq()>1e-12){nn.normalize();const hz=[];
     const FS=freeSegs(s.blkI).map(([a,b])=>[a?dirAt(s.x1+(s.x2-s.x1)*a,s.y1+(s.y2-s.y1)*a):dA,b<1?dirAt(s.x1+(s.x2-s.x1)*b,s.y1+(s.y2-s.y1)*b):dB]);
-    En.forEach(e=>{let y=null;FS.forEach(([a,b])=>{const h=wedgeHit(e.g,cam.position,a,b,nn);if(h!==null&&(y===null||h<y))y=h});if(y!==null)hz.push([e,y])});if(BOSS&&wave===52&&BOSS.m==='guard'&&!BOSS.hit){if(wedgeHit(BOSS.g,cam.position,dA,dB,nn)!==null)BOSS.hit={C:cam.position.clone(),n:nn.clone()}}if(BOSS&&(wave===53||wave===54)&&BOSS.tn&&!BOSS.th&&(BOSS.m==='tw'||BOSS.m==='punch')){const T=BOSS.tn[BOSS.ai];for(let k=0;k<T.n;k++)if(wedgeHit(T.segs[k],cam.position,dA,dB,nn)!==null){BOSS.th={k};break}if(!BOSS.th&&T.fist&&wedgeHit(T.fist,cam.position,dA,dB,nn)!==null)BOSS.th={k:T.n-1};if(BOSS.th){BOSS.th.C=cam.position.clone();BOSS.th.n=nn.clone()}}if(BOSS&&wave===55&&BOSS.m==='still'&&!BOSS.hit){if(wedgeHit(BOSS.g,cam.position,dA,dB,nn)!==null)BOSS.hit=1}if(BOSS&&BOSS.f3)fWedge(BOSS,dA,dB,nn);{const SX=scStroke(s);hz.forEach(([e,y])=>{if(En.includes(e)){SX.add(e);cutEnemy(e,nx,ny,s,y)}});SX.end()}}}
+    En.forEach(e=>{let y=null;FS.forEach(([a,b])=>{const h=wedgeHit(e.g,cam.position,a,b,nn);if(h!==null&&(y===null||h<y))y=h});if(y!==null)hz.push([e,y])});if(BOSS&&wave===52&&BOSS.m==='guard'&&!BOSS.hit){if(wedgeHit(BOSS.g,cam.position,dA,dB,nn)!==null){BOSS.hit={C:cam.position.clone(),n:nn.clone()};BOSS.vs=bossVital(s)}}if(BOSS&&(wave===53||wave===54)&&BOSS.tn&&!BOSS.th&&(BOSS.m==='tw'||BOSS.m==='punch')){const T=BOSS.tn[BOSS.ai];for(let k=0;k<T.n;k++)if(wedgeHit(T.segs[k],cam.position,dA,dB,nn)!==null){BOSS.th={k};break}if(!BOSS.th&&T.fist&&wedgeHit(T.fist,cam.position,dA,dB,nn)!==null)BOSS.th={k:T.n-1};if(BOSS.th){BOSS.th.C=cam.position.clone();BOSS.th.n=nn.clone()}}if(BOSS&&wave===55&&BOSS.m==='still'&&!BOSS.hit){if(wedgeHit(BOSS.g,cam.position,dA,dB,nn)!==null){BOSS.hit=1;BOSS.vs=bossVital(s)}}if(BOSS&&BOSS.f3)fWedge(BOSS,dA,dB,nn);{const SX=scStroke(s);hz.forEach(([e,y])=>{if(En.includes(e)){SX.add(e);cutEnemy(e,nx,ny,s,y)}});SX.end()}}}
    for(let i=0;i<=n;i++){if(s.blkI&&s.blkI.some(([a,b])=>i/n>=a&&i/n<=b))continue;rayAt(s.x1+(s.x2-s.x1)*i/n,s.y1+(s.y2-s.y1)*i/n);
     const gg=rc.intersectObjects(gib.filter(o=>o.sink===undefined&&!o.ns).map(o=>o.mesh),true);
     if(gg.length){let o=gg[0].object;while(o&&!gib.some(q=>q.mesh===o))o=o.parent;const q=gib.find(q=>q.mesh===o);if(q)cutGib(q,nx,ny,s)}
