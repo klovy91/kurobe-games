@@ -28,6 +28,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 .bars{width:100%;margin-top:6px}
 .bars b{height:8px;background:rgba(0,0,0,.2);border-radius:4px;overflow:hidden;display:block}
 .bars i{display:block;height:100%;width:100%;background:#111}
+#dk{position:fixed;inset:0;pointer-events:none;background:#000;opacity:0;transition:opacity .2s}
 #zn{position:fixed;inset:0;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,rgba(20,40,90,0) 30%,rgba(8,14,45,.8) 100%)}
 #zt{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 58px);text-align:center;color:#fff;font-weight:900;letter-spacing:.5em;font-size:15px;text-shadow:0 0 10px #4fc3ff,0 0 4px #000;opacity:0;pointer-events:none}
 #scr{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:10px;background:rgba(10,12,20,.55);color:#fff;text-align:center;padding:calc(env(safe-area-inset-top,0px) + 58px) 24px calc(env(safe-area-inset-bottom,0px) + 24px);pointer-events:auto;overflow-y:auto;touch-action:pan-y;-webkit-overflow-scrolling:touch}
@@ -79,6 +80,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 </head>
 <body>
 <canvas id="gl"></canvas><canvas id="bs"></canvas><canvas id="ov"></canvas>
+<div id="dk"></div>
 <div id="hud"><span id="sc">WAVE 1</span><span id="spt"></span><span id="rm"></span><div class="bars"><b><i id="ib"></i></b></div></div>
 <div id="zn"></div><div id="fl"></div><div id="lb1"></div><div id="lb2"></div><div id="bn"></div>
 <div id="scr"></div>
@@ -1729,7 +1731,7 @@ function endStroke(e){if(PAUSED||st!=='cut'||!stroke)return;if(e&&e.pointerId!==
  else{stroke=null;st='ready';recAbort()}}
 addEventListener('pointerup',endStroke);addEventListener('pointercancel',endStroke);
 /* ---- loop ---- */
-let zv=0,rushT=0,bite=0,biter=null,bl=[],bt0=0,introT=0,introS=0,iAct=[],iZom=[],holdT=0,slowT=0,seenIntro=false;
+let dkV='0',zv=0,rushT=0,bite=0,biter=null,bl=[],bt0=0,introT=0,introS=0,iAct=[],iZom=[],holdT=0,slowT=0,seenIntro=false;
 function frame(now){requestAnimationFrame(frame);if(PAUSED){last=now;return}if(MONO.length){const d0=Math.max(0,Math.min(.05,(now-last)/1000));MONO=MONO.filter(m=>{m.d-=d0;if(m.d>0)return true;if(wave===m.w&&BOSS&&st!=='over')banner(m.tx,2000,24);return false})}{const v=canPause();if(v!==psV){psV=v;$('ps').style.display=v?'flex':'none'}}perfTick(now-last);const dr=Math.max(0,Math.min(.05,(now-last)/1000));last=now;
  TR.forEach(t=>t.a-=dr*(st==='cut'?.8:3));TR=TR.filter(t=>t.a>0);
  if(st==='cut'){const hit=new Set();
@@ -1852,6 +1854,7 @@ function frame(now){requestAnimationFrame(frame);if(PAUSED){last=now;return}if(M
  {const zz=(st==='cut')?1:0;zv+=(zz-zv)*.28;$('zn').style.opacity=zv}
  $('sc').textContent=(st==='title'||st==='intro')?J('ゾンビ一閃','ZOMBIE ISSEN'):'WAVE '+wave;$('spt').textContent=(st==='title'||st==='intro')?'':fmtN(SC)+J(' 点',' PTS');
  $('rm').textContent=st==='intro'?J('タップでスキップ','Tap to skip'):st==='title'?'':J('\u6b8b\u308a ','LEFT ')+(En.length+(bossW()?1:0));
+ {const dk=st==='ready'&&(En.some(e=>e.rt!==undefined||e.ru!==undefined)||performance.now()<NOZT||!!(BOSS&&BOSS.frise))?'.35':'0';if(dkV!==dk){dkV=dk;$('dk').style.opacity=dk}}
  $('ib').style.width=(stroke?Math.max(0,1-stroke.len/MAXL)*100:100)+'%';$('ib').style.opacity=En.some(e=>e.rt!==undefined||e.ru!==undefined)||bossBlock()?.3:1;bsTick(dr);
  recTick(now);
 }
