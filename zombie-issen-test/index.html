@@ -354,14 +354,26 @@ function noProp(el){if(el)['pointerdown','pointerup','click'].forEach(n=>el.addE
 function canShareFile(f){if(!MOB||!f||!navigator.canShare)return false;try{return navigator.canShare({files:[f]})}catch(e){return false}}
 /* 死んだときのヒント: 噛んだゾンビ→場にいた特殊ゾンビの順。ボス戦中は出さない */
 const HINTS=EN?{sh:'The janitor’s shield can’t be cut. It moves when he braces — aim for the gaps.',ky:'Lunch-duty zombies throw blood. Blood on the screen fades little by little.',jm:'Jocks crouch to build up power, then leap. While in the air, they are up high.',dog:'Dogs hop left and right, then stop. They still move a little in the zone — read their movement.',bomb:'Cut a glowing red bomb zombie and it explodes, taking the others around it with it.',legless:'Cut only the legs and it comes back next WAVE as a legless crawler. Crawlers are slow.'}:{sh:'用務員の盾は斬れない。構えると盾が動く。隙間を狙え。',ky:'給食当番は血を投げてくる。画面の血は少しずつ薄れる。',jm:'体育会系は、しゃがんで力をためてから大きく跳ぶ。跳んでいる間は高い位置にいる。',dog:'犬は左右に跳ねて止まる。ゾーン中も少し動くので、動きを読め。',bomb:'赤く光る爆弾ゾンビを斬ると爆発し、周りも巻き込める。',legless:'足だけを斬ると、次の WAVE で脚のない這うゾンビになる。這うゾンビは遅い。'};
-let lastHint='';
+let lastHint='',lastHT='';
+/* weak-point hints (vague, a hint of where the extra points are), apart from the play hints above */
+const WEAK=EN?{sh:['The janitor never seems to take off his cap…'],ky:['Lunch duty’s mission is to deliver lunch…'],
+  jm:['The jocks seem awfully proud of the number on their chest…','The higher they jump, the more defenseless they look…'],
+  dog:['That dog sure wags its tail a lot…'],bomb:['With one flash, even a bomb won’t notice it’s been cut…','The more a blast catches, the bigger the show…']}
+ :{sh:['用務員は、絶対に帽子を外さないようだ…'],ky:['給食当番は給食を届けることが任務だ…'],
+  jm:['体育会系は、胸の番号に誇りを持っているらしい…','高く跳ぶほど、無防備になるようだ…'],
+  dog:['あの犬、よく尻尾を振っている…'],bomb:['一閃なら、爆弾でも斬られたことに気づかない…','爆発は、巻き込むほど派手になる…']},
+ WGEN=EN?['Zombies have weak necks, just like people…','The closer to dead center, the better…','How many can one line take down…?','A short flash is a beautiful flash…','The closer they get, the sharper your slash…']
+ :['ゾンビも、首が弱いのは人間と同じらしい…','急所は、ど真ん中を狙うほどいい…','1本の線で、何体まとめて斬れるだろう…','一閃は短いほうが美しい…','引きつけるほど、一閃は冴える…'];
+/* the zombie kind: the one that bit you (unless it was last time), else one of the special zombies on the field.
+   then a play hint or a weak-point hint of that kind, half and half; no special zombie -> a general weak-point hint. no repeats */
 function hintKind(e){return e?e.sh?'sh':e.ky?'ky':e.jm?'jm':e.dog?'dog':e.bomb?'bomb':e.legless?'legless':'':''}
 function pickHint(){if(BOSS)return '';
- const b=hintKind(biter);if(b&&b!==lastHint){lastHint=b;return HINTS[b]}
- const have=[];['sh','ky','jm','dog','bomb','legless'].forEach(k=>{if(En.some(e=>hintKind(e)===k))have.push(k)});
+ const b=hintKind(biter),have=[];['sh','ky','jm','dog','bomb','legless'].forEach(k=>{if(En.some(e=>hintKind(e)===k))have.push(k)});
  if(b&&!have.includes(b))have.push(b);
- const c=have.filter(k=>k!==lastHint),p=c.length?c:have;if(!p.length)return '';
- const k=p[Math.floor(Math.random()*p.length)];lastHint=k;return HINTS[k]}
+ let k='';if(b&&b!==lastHint)k=b;else if(have.length){const c=have.filter(x=>x!==lastHint),p=c.length?c:have;k=p[Math.floor(Math.random()*p.length)]}
+ if(k)lastHint=k;
+ const G=k?[[HINTS[k]],WEAK[k]||WGEN]:[WGEN];if(G.length>1&&Math.random()<.5)G.reverse();
+ const p=G.map(L=>L.filter(t=>t!==lastHT)).find(L=>L.length)||G[0],t=p[Math.floor(Math.random()*p.length)];lastHT=t;return t}
 function overUI(){
  const hint=pickHint();
  $('scr').innerHTML='<h1>'+J('斬り残した。','You missed one.')+'</h1><p>'+MSG[Math.floor(Math.random()*MSG.length)]+'</p>'+(hint?'<p class="hint">'+hint+'</p>':'')+(EN?'<p>WAVE '+wave+'　Kills '+S+'<br>Score '+fmtN(SC)+(newBS?' <b style="color:#ffd21e">NEW!</b>':'')+'<br>Best WAVE '+best+'　Best score '+fmtN(bestS)+'</p>'
