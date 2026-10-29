@@ -15,6 +15,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ゾンビ一閃</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Iceberg&display=swap">
 <style>
 :root{--bg:#dfe6ee;--fg:#111;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10141a;--fg:#eee;color-scheme:dark}}
@@ -22,7 +24,7 @@
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 html,body{height:100%;margin:0;background:var(--bg);overflow:hidden;touch-action:none;user-select:none;font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif}
 canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
-#hud{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 8px);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;color:#111;font-weight:800;font-size:18px;text-shadow:0 0 4px #fff,0 0 4px #fff;pointer-events:none}
+#hud{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 8px);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;color:#111;font-family:Iceberg,DotGothic16,system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;font-weight:400;font-size:19px;text-shadow:0 0 4px #fff,0 0 4px #fff;pointer-events:none}
 .bars{width:100%;margin-top:6px}
 .bars b{height:8px;background:rgba(0,0,0,.2);border-radius:4px;overflow:hidden;display:block}
 .bars i{display:block;height:100%;width:100%;background:#111}
@@ -530,6 +532,7 @@ try{if(localStorage.getItem('zi_rv')!==RESET_V){localStorage.removeItem('ht_best
 try{best=+localStorage.getItem('ht_best')||0}catch(e){}
 /* score (SC) / best score (zi_bsc) / floating score texts (POP) */
 let SC=0,bestS=0,newBS=false,POP=[];try{bestS=+localStorage.getItem('zi_bsc')||0}catch(e){}
+try{document.fonts&&['Iceberg','DotGothic16'].forEach(f=>document.fonts.load('20px '+f,'頭首心臓みぞおち腰膝脚爆破同時斬り短い線点残0123456789+,×.WAVE').catch(()=>{}))}catch(e){}
 function fmtN(n){return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,',')}
 function VP(o,k,x,y,z){o.userData.vp=k;if(x||y||z)o.userData.vo=new THREE.Vector3(x||0,y||0,z||0);return o}
 const FH=1.15; // furniture height scale
@@ -1409,16 +1412,16 @@ function vitalScore(e,s){const dx=s.x2-s.x1,dy=s.y2-s.y1,l=Math.hypot(dx,dy)||1,
 function popAdd(x,y,t,c,sz,sub){POP.push({x:Math.max(70,Math.min(innerWidth-70,x)),y:Math.max(56,Math.min(innerHeight-30,y)),t,c,sz,sub,a:0})}
 /* one stroke: each zombie's points, then (sum) x (number cut) x (short line bonus) */
 function scStroke(s){const H=[];return{
- add(e){const r=vitalScore(e,s);H.push(r);popAdd(r.x,r.y-12,(r.k?VPT[r.k][2]+' ':'')+fmtN(r.v),r.v>=2500?'#ffd21e':r.v>=1000?'#ffb36b':'#fff',r.v>=2500?26:20)},
+ add(e){const r=vitalScore(e,s);H.push(r);popAdd(r.x,r.y-12,(r.k?VPT[r.k][2]+' ':'')+fmtN(r.v),r.v>=2500?'#ffd21e':r.v>=1000?'#ffb36b':'#fff',r.v>=2500?29:22)},
  end(){if(!H.length)return;const N=H.length,l=Math.hypot(s.x2-s.x1,s.y2-s.y1),k=1+.5*(1-Math.min(1,l/MAXL)),tot=Math.round(H.reduce((a,r)=>a+r.v,0)*N*k);SC+=tot;
-  if(N>1||k>=1.01){const m=[];if(N>1)m.push('×'+N+' 同時斬り');if(k>=1.01)m.push('×'+k.toFixed(2)+' 短い線');popAdd((s.x1+s.x2)/2,Math.min(s.y1,s.y2)-50,'+'+fmtN(tot),'#fff',32,m.join('  '))}}}}
+  if(N>1||k>=1.01){const m=[];if(N>1)m.push('×'+N+' 同時斬り');if(k>=1.01)m.push('×'+k.toFixed(2)+' 短い線');popAdd((s.x1+s.x2)/2,Math.min(s.y1,s.y2)-50,'+'+fmtN(tot),'#fff',35,m.join('  '))}}}}
 /* explosion: 500 x (number caught)^2 */
-function scBoom(n,cx,cz){if(!n)return;const p=500*n*n,a=scrPt(new THREE.Vector3(cx,1.5,cz));SC+=p;popAdd(a[0],a[1]-40,'+'+fmtN(p),'#ff8a2a',Math.min(52,28+n*3),'爆破 ×'+n)}
+function scBoom(n,cx,cz){if(!n)return;const p=500*n*n,a=scrPt(new THREE.Vector3(cx,1.5,cz));SC+=p;popAdd(a[0],a[1]-40,'+'+fmtN(p),'#ff8a2a',Math.min(56,31+n*3),'爆破 ×'+n)}
 function popDraw(dr){if(!POP.length)return;oc.textAlign='center';oc.textBaseline='middle';oc.lineJoin='round';
  POP=POP.filter(p=>{p.a+=dr;if(p.a>1.4)return false;const y=p.y-28*(p.a/1.4),al=p.a>1?1-(p.a-1)/.4:1,sz=p.sz*(p.a<.12?1.3-.3*p.a/.12:1);
-  if(p.w===undefined){oc.font='900 '+Math.round(p.sz*1.3)+'px system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif';p.w=oc.measureText(p.t).width;if(p.sub){oc.font='800 '+Math.round(p.sz*.65)+'px system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif';p.w=Math.max(p.w,oc.measureText(p.sub).width)}p.x=Math.max(p.w/2+10,Math.min(innerWidth-p.w/2-10,p.x))}
-  oc.globalAlpha=al;oc.font='900 '+Math.round(sz)+'px system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif';oc.lineWidth=Math.max(3,sz*.18);oc.strokeStyle='rgba(0,0,0,.8)';oc.strokeText(p.t,p.x,y);oc.fillStyle=p.c;oc.fillText(p.t,p.x,y);
-  if(p.sub){const ys=y-sz*.85;oc.font='800 '+Math.round(sz*.5)+'px system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif';oc.lineWidth=3;oc.strokeText(p.sub,p.x,ys);oc.fillStyle='#9fe3ff';oc.fillText(p.sub,p.x,ys)}return true});
+  if(p.w===undefined){oc.font='400 '+Math.round(p.sz*1.3)+'px Iceberg,DotGothic16,system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif';p.w=oc.measureText(p.t).width;if(p.sub){oc.font='400 '+Math.round(p.sz*.65)+'px Iceberg,DotGothic16,system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif';p.w=Math.max(p.w,oc.measureText(p.sub).width)}p.x=Math.max(p.w/2+10,Math.min(innerWidth-p.w/2-10,p.x))}
+  oc.globalAlpha=al;oc.font='400 '+Math.round(sz)+'px Iceberg,DotGothic16,system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif';oc.lineWidth=Math.max(3,sz*.18);oc.strokeStyle='rgba(0,0,0,.8)';oc.strokeText(p.t,p.x,y);oc.fillStyle=p.c;oc.fillText(p.t,p.x,y);
+  if(p.sub){const ys=y-sz*.85;oc.font='400 '+Math.round(sz*.5)+'px Iceberg,DotGothic16,system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif';oc.lineWidth=3;oc.strokeText(p.sub,p.x,ys);oc.fillStyle='#9fe3ff';oc.fillText(p.sub,p.x,ys)}return true});
  oc.globalAlpha=1;oc.textAlign='left';oc.textBaseline='alphabetic';oc.lineJoin='miter'}
 let MADE=null,CARRY=[];
 function cutEnemy(e,nx,ny,s,hitY){const dA=dirAt(s.x1,s.y1),dB=dirAt(s.x2,s.y2);let n=dA.clone().cross(dB);if(n.lengthSq()<1e-9)n=nW(nx,ny);n.normalize();
