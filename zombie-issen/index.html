@@ -358,10 +358,10 @@ let lastHint='',lastHT='';
 /* weak-point hints (vague, a hint of where the extra points are), apart from the play hints above */
 const WEAK=EN?{sh:['The janitor never seems to take off his cap…'],ky:['Lunch duty’s mission is to deliver lunch…'],
   jm:['The jocks seem awfully proud of the number on their chest…','The higher they jump, the more defenseless they look…'],
-  dog:['That dog sure wags its tail a lot…'],bomb:['With one flash, even a bomb won’t notice it’s been cut…','The more a blast catches, the bigger the show…']}
+  dog:['That dog never wags its tail at all…'],bomb:['With one flash, even a bomb won’t notice it’s been cut…','The more a blast catches, the bigger the show…']}
  :{sh:['用務員は、絶対に帽子を外さないようだ…'],ky:['給食当番は給食を届けることが任務だ…'],
   jm:['体育会系は、胸の番号に誇りを持っているらしい…','高く跳ぶほど、無防備になるようだ…'],
-  dog:['あの犬、よく尻尾を振っている…'],bomb:['一閃なら、爆弾でも斬られたことに気づかない…','爆発は、巻き込むほど派手になる…']},
+  dog:['あの犬、全く尻尾を振らないな…'],bomb:['一閃なら、爆弾でも斬られたことに気づかない…','爆発は、巻き込むほど派手になる…']},
  WGEN=EN?['Zombies have weak necks, just like people…','The closer to dead center, the better…','How many can one line take down…?','A short flash is a beautiful flash…','The closer they get, the sharper your slash…']
  :['ゾンビも、首が弱いのは人間と同じらしい…','急所は、ど真ん中を狙うほどいい…','1本の線で、何体まとめて斬れるだろう…','一閃は短いほうが美しい…','引きつけるほど、一閃は冴える…'];
 /* the zombie kind: the one that bit you (unless it was last time), else one of the special zombies on the field.
@@ -744,6 +744,7 @@ function winReset(){SHD.forEach(o=>scene.remove(o.m));SHD=[];GLS.forEach(w=>w.m.
 let BOSS=null;
 const bossW=()=>!!BOSS&&wave>=50&&wave<=60;
 let EYEG=null;const KD0=new THREE.Vector3(0,.62,1).normalize(),YAX=new THREE.Vector3(0,1,0),BCOL=[HEM.color.clone(),sun.color.clone()];
+const BD1=.7,BD3=.65; // light level in the storm of the teacher's fight
 function bossMood(dim,red){HEM.intensity=.62*dim*(QT===2?1.12:1);sun.intensity=1.15*dim;fil.intensity=.34*dim;
  HEM.color.copy(BCOL[0]).lerp(new THREE.Color(0xff8c8c),red);sun.color.copy(BCOL[1]).lerp(new THREE.Color(0xff9a88),red);
  const tn=new THREE.Color(1,1-.45*red,1-.5*red),k=Math.max(.1,dim);[[CEILM,0xdedacd],[HALLM,0x8a857a],[LAMPM,0xfffbe8],[SKYM,new THREE.Color(0xaed1ea).lerp(new THREE.Color(0x3a434d),SKYK).getHex()],[SKYM2,new THREE.Color(0x96b7d0).lerp(new THREE.Color(0x353d46),SKYK).getHex()],[BL.material,GC?GC.bl:0x7d0a12],[SCM.material,0x1d1714],[sandPts.material,0xffffff],[BOSS&&BOSS.pool?BOSS.pool.material:null,BOSS&&BOSS.pool?BOSS.pool.userData.c0:0]].forEach(([m,c])=>{if(m)m.color.setHex(c).multiply(tn).multiplyScalar(k)});if(dim>1.05){if(SKYM)SKYM.color.setHex(0xe6eeff);if(SKYM2)SKYM2.color.setHex(0xdde6f8)}}
@@ -785,7 +786,7 @@ function bossMake(cine){bgmOff(1.5);stormOn();if(!cine)winBreak(0);const T=tchMa
  if(cine){B.m='cine';B.t=0;B.U.sd.visible=true;
   const pool=new THREE.Mesh(new THREE.CircleGeometry(1,40),new THREE.MeshBasicMaterial({color:GORE==='off'?0x2e2a26:GORE==='green'?0x1f4a0c:0x4a0308,transparent:true,opacity:.92,depthWrite:false}));
   pool.userData.c0=pool.material.color.getHex();pool.rotation.x=-Math.PI/2;pool.position.set(B.x,.016,B.z+.15);pool.scale.setScalar(.01);pool.userData.nocut=1;pool.userData.boss=1;scene.add(pool);B.pool=pool;}
- else{bossMood(.85,.35);bossGo()}tchPose(B)}
+ else{bossMood(BD1,.35);bossGo()}tchPose(B)}
 function bossDispose(){if(!BOSS)return;const B=BOSS;[B.g,B.pool,B.cr,B.dk].forEach(o=>{if(o){scene.remove(o);disposeTree(o)}});if(B.tn)B.tn.forEach(T=>{scene.remove(T.g);disposeTree(T.g);T.mat.dispose()});fDispose(B);BOSS=null;stormOff();bgmOff(1);bossMood(1,0);$('lb1').style.height='0';$('lb2').style.height='0'}
 function bossSpawn(){if(BOSS&&!(wave>=50&&wave<=60))bossDispose();if(!(wave>=50&&wave<=60))return false;
  CARRY.forEach(c=>Object.values(c.made||{}).forEach(o=>{if(o)o.carry=0}));CARRY=[];riseMoan=0;
@@ -911,8 +912,8 @@ function bossTf(B,dr){const t=(B.t+=dr),sm=x=>{x=Math.min(1,Math.max(0,x));retur
   if(!B.kc){const dk=katMesh();dk.position.set(B.x+.35,.03,B.z+.35);dk.rotation.set(Math.PI/2,0,.7);dk.userData.boss=1;scene.add(dk);B.dk=dk;play('clang',.5,.8)}}
  B.grow=sm((t-.3)/3.4);B.f2=1;B.lift=.45*sm((t-1.6)/2.6);B.lg=Math.sin(t*3)*.15;B.U.upper.rotation.x=.35*Math.min(1,t/.6)+Math.sin(t*20)*.04;B.U.pm.rotation.z=Math.sin(t*17)*.04;B.sx=-.6+Math.sin(t*6)*.8;B.r=Math.sin(t*4)*.8;
  if(Math.random()<dr*9){const a=B.g.localToWorld(new THREE.Vector3((Math.random()<.5?-1:1)*.13,1.32,-.14));sand(a,9,BLOOD,1.8,1,.25)}
- bossMood(Math.random()<.12?.45:.85,.35);if(t<4&&Math.random()<dr*2)shakeT=Math.max(shakeT,.2);
- if(t>4.4){bossMood(.85,.35);B.U.upper.rotation.x=.2;B.U.pm.rotation.z=0;B.grow=1;st='ready';
+ bossMood(Math.random()<.12?.37:BD1,.35);if(t<4&&Math.random()<dr*2)shakeT=Math.max(shakeT,.2);
+ if(t>4.4){bossMood(BD1,.35);B.U.upper.rotation.x=.2;B.U.pm.rotation.z=0;B.grow=1;st='ready';
   if(wave===55){B.tn.slice(0,2).forEach(T=>tnSever(T,3,false));B.m='still';B.gt=6}else{B.m='m2';B.at=3+1.6+Math.random()*.8}waveBanner()}}
 function bossHurt2(){bgmOff(2);const B=BOSS;bossGlow(B,0);B.m='hurt2';B.t=0;sCut();bossBleed(B,1.25,4);flash(.45);play('ttr2',.9)}
 /* ===== final form (WAVE 56-60): the teacher himself, tumours on his body, clawed limbs for arms, tentacles driven into walls, floor and ceiling =====
@@ -1022,8 +1023,8 @@ function fTf(B,dr){const t=(B.t+=dr),sm=x=>{x=Math.min(1,Math.max(0,x));return x
  const g=sm((t-1.9)/2.6);B.fg=g;B.F.scale.setScalar(Math.max(.001,FK*g));if(B.fneck&&B.fneck.fist)B.fneck.fist.scale.setScalar(Math.max(.001,FK*sm((t-2.6)/1.8)));
  if(t>1.9&&t<4.4&&Math.random()<dr*6){const p=new THREE.Vector3(B.x+(Math.random()-.5)*.8,.2+Math.random()*1.4*g,B.z+(Math.random()-.5)*.6);sand(p,30,BLOOD,2.2,1,.4)}
  B.W.forEach((w,i)=>{const k=sm((t-2.4-i*.07)/1.6);w.m.geometry.setDrawRange(0,Math.floor(w.cnt*k/3)*3);if(k>.98&&!w.h.visible){w.h.visible=true;if(w.E.y<.1)crack(w.E.x,w.E.z,.9)}});
- bossMood(Math.random()<.15?.4:.8,.45);if(t<4.5&&Math.random()<dr*3)shakeT=Math.max(shakeT,.3);
- if(t>5.2){B.f3=1;B.fg=1;if(B.hd){scene.remove(B.hd);disposeTree(B.hd);B.hd=null}if(B.fneck&&B.fneck.fist)B.fneck.fist.scale.setScalar(FK);bossMood(.8,.45);st='ready';B.g.visible=false;B.F.scale.setScalar(FK);B.W.forEach(w=>{w.m.geometry.setDrawRange(0,w.cnt);w.h.visible=true});fGo(B);if(wave===56&&B.GA)B.GA.forEach(g=>g.t-=3);waveBanner()}}
+ bossMood(Math.random()<.15?.33:BD3,.45);if(t<4.5&&Math.random()<dr*3)shakeT=Math.max(shakeT,.3);
+ if(t>5.2){B.f3=1;B.fg=1;if(B.hd){scene.remove(B.hd);disposeTree(B.hd);B.hd=null}if(B.fneck&&B.fneck.fist)B.fneck.fist.scale.setScalar(FK);bossMood(BD3,.45);st='ready';B.g.visible=false;B.F.scale.setScalar(FK);B.W.forEach(w=>{w.m.geometry.setDrawRange(0,w.cnt);w.h.visible=true});fGo(B);if(wave===56&&B.GA)B.GA.forEach(g=>g.t-=3);waveBanner()}}
 function fTick(B,dt,dr){if(B.m==='tf3'&&!B.f3){fTf(B,dr);if(!B.F)return}
  B.tt=(B.tt||0)+dt;const tt=B.tt;if(B.f3&&B.TU)B.TU.forEach((m,i)=>m.scale.copy(m.userData.s0).multiplyScalar(1+Math.sin(tt*3+i*1.7)*.05));
  // his own arms and head
@@ -1062,7 +1063,7 @@ function endTick(dr){const E=ENDM,B=E.B;if(!E.h)E.h=(B.halves||[]).slice();const
  (E.ch||[]).forEach(o=>{if(o.gone||t<5)return;if(!o.out){o.out=1;const i=gib.indexOf(o);if(i>=0){gib.splice(i,1);world.remove(o.b)}if(o.con){o.con.forEach(rmCon);o.con=[]}o.dl=Math.random()*.7;o.y0=o.mesh.position.y;const bb=new THREE.Box3().setFromObject(o.mesh);o.hd=o.y0-bb.min.y+bb.max.y-bb.min.y+.1}
   const k=sm((t-5-o.dl)/2.8),p=o.mesh.position;p.y=o.y0-o.hd*k;if(k>0&&k<1){if(R()<dr*7)splat(p.x+(R()-.5)*.9,p.z+(R()-.5)*.9,.35+R()*.7);if(R()<dr*6)sand({x:p.x,y:.08,z:p.z},6,BLOOD,1.1,1,.4)}
   if(k>=1){scene.remove(o.mesh);disposeTree(o.mesh);o.gone=1}});
- const lk=sm((t-3)/3);if(t>3)bossMood(.8+.2*lk,.45*(1-lk));
+ const lk=sm((t-3)/3);if(t>3)bossMood(BD3+(1-BD3)*lk,.45*(1-lk));
  if(t>6&&!E.rf){E.rf=1;rainOff(4)}if(t>6){RAINL.material.opacity=.45*(1-sm((t-6)/4));SKYK=1-sm((t-6.5)/3.5);if(t>10)RAINL.visible=false}
  {const k=t<8?0:t<14?sm((t-8)/2.5)*.8:.8*(1-sm((t-14)/1.8));if(t>8){CM4.lookAt(cam.position,new THREE.Vector3(0,.9,-8),YAX);CQ0.setFromRotationMatrix(CM4);CM4.lookAt(cam.position,new THREE.Vector3(-6,1.65,.2),YAX);CQ1.setFromRotationMatrix(CM4);cam.quaternion.slerpQuaternions(CQ0,CQ1,k);cam.updateMatrixWorld()}}
  if(t>10.5&&!E.s1){E.s1=1;banner(J('先生…','Sensei…'),2400,26,1)}
@@ -1127,7 +1128,7 @@ const CQ0=new THREE.Quaternion(),CQ1=new THREE.Quaternion(),CM4=new THREE.Matrix
 function bossCine(B,dr){const t=(B.t+=dr),sm=x=>{x=Math.min(1,Math.max(0,x));return x*x*(3-2*x)},U=B.U;
  if(st==='ready'){st='cine';$('lb1').style.height='8.5%';$('lb2').style.height='8.5%';B.k=0}
  if(!B.tnd&&t>2.1){B.tnd=1;play('thunder',1)}if(!B.wbk&&t>3){B.wbk=1;winBreak(1)}
- const fl=t<6.2?(Math.random()<.18?.25:1):1,dim=t<1.6?1-.7*sm(t/1.6):t<6.2?.3:.3+.55*sm((t-6.2)/.8);const lt=t>3&&t<3.12?1.45:t>3.24&&t<3.32?1.25:t>3.5&&t<3.56?1.1:0;bossMood(lt||dim*(t>.3&&t<5?fl:1),.35*sm((t-5.4)/1.2));
+ const fl=t<6.2?(Math.random()<.18?.25:1):1,dim=t<1.6?1-.7*sm(t/1.6):t<6.2?.3:.3+(BD1-.3)*sm((t-6.2)/.8);const lt=t>3&&t<3.12?1.45:t>3.24&&t<3.32?1.25:t>3.5&&t<3.56?1.1:0;bossMood(lt||dim*(t>.3&&t<5?fl:1),.35*sm((t-5.4)/1.2));
  if(t<5.4&&Math.random()<dr*2.5)shakeT=Math.max(shakeT,.25);
  B.pool.scale.setScalar(.01+1.3*sm((t-1.4)/1.6));
  {const sm2=x=>{x=Math.min(1,Math.max(0,x));return x*x*(3-2*x)},k=t<2.7?0:t<3.35?sm2((t-2.7)/.3):1-sm2((t-3.35)/.5);
@@ -1866,7 +1867,7 @@ function frame(now){requestAnimationFrame(frame);if(PAUSED){last=now;return}if(M
  {const zz=(st==='cut')?1:0;zv+=(zz-zv)*.28;$('zn').style.opacity=zv}
  $('sc').textContent=(st==='title'||st==='intro')?J('ゾンビ一閃','ZOMBIE ISSEN'):'WAVE '+wave;$('spt').textContent=(st==='title'||st==='intro')?'':fmtN(SC)+J(' 点',' PTS');
  $('rm').textContent=st==='intro'?J('タップでスキップ','Tap to skip'):st==='title'?'':J('\u6b8b\u308a ','LEFT ')+(En.length+(bossW()?1:0));
- {const dk=st==='ready'&&(En.some(e=>e.rt!==undefined||e.ru!==undefined)||performance.now()<NOZT||!!(BOSS&&BOSS.frise))?'.35':'0';if(dkV!==dk){dkV=dk;$('dk').style.opacity=dk}}
+ {const dk=st==='ready'&&!bossW()&&En.some(e=>e.rt!==undefined||e.ru!==undefined)?'.5':'0';if(dkV!==dk){dkV=dk;$('dk').style.opacity=dk}}
  $('ib').style.width=(stroke?Math.max(0,1-stroke.len/MAXL)*100:100)+'%';$('ib').style.opacity=En.some(e=>e.rt!==undefined||e.ru!==undefined)||bossBlock()?.3:1;bsTick(dr);
  recTick(now);
 }
