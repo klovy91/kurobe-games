@@ -1372,7 +1372,7 @@ function thawGib(o){if(!o.fz)return;const b=o.b;b.type=CANNON.Body.DYNAMIC;b.mas
 let GIBMAX=300;
 /* ---- auto quality: watch the frame time; step the load down while slow, back up once fast again ----
    level 0 normal / 1 lower resolution / 2 pieces cap 200 / 3 cap 120 / 4 pieces turn into props sooner */
-const FZ={s:1,a:1.5,l:5,f:10},PRL=Math.min(PR0,1),PRH=Math.min(devicePixelRatio,2),QS=[{pr:PRH,cap:300,fz:-1},{pr:PR0,cap:300,fz:0},{pr:PRL,cap:300,fz:0},{pr:PRL,cap:200,fz:0},{pr:PRL*.75,cap:120,fz:0},{pr:PRL*.75,cap:120,fz:1}];
+const FZ={s:1,a:1.5,l:5,f:10},PRL=Math.min(PR0,1),PRH=Math.min(devicePixelRatio,2),QS=[{pr:PRH,cap:300,fz:-1},{pr:PR0,cap:300,fz:0},{pr:PRL,cap:300,fz:0},{pr:PRL,cap:200,fz:0},{pr:PRL*.75,cap:120,fz:1},{pr:PRL*.75,cap:120,fz:1}];
 const OPT=(()=>{const o={gfx:'auto',gore:'on',pop:'all'};try{Object.assign(o,JSON.parse(localStorage.getItem('zi_opt')||'{}'))}catch(e){}return o})(),GFXL={auto:0,high:0,std:1,low:4};
 let GORE='on',GC=null;
 let QPEND=null;function qFlush(){if(QPEND){const f=QPEND;QPEND=null;f()}}
@@ -1381,9 +1381,10 @@ const FPSD=/[?&]fps\b/.test(location.search)?(()=>{const d=document.createElemen
 function setQ(l){QL=Math.max(0,Math.min(QS.length-1,l));const q=QS[QL];const qt=QL===0?0:QL<=3?1:2,tc=qt!==QT;QT=qt;BSK=[1,.75,.5][QT];
  if(R.getPixelRatio()!==q.pr||tc){R.setPixelRatio(q.pr);resize()}GIBMAX=q.cap;
  {const ms=[1024,768,384][QT],ty=[THREE.PCFSoftShadowMap,THREE.PCFShadowMap,THREE.BasicShadowMap][QT];if(sun.shadow.mapSize.x!==ms){if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null}sun.shadow.mapSize.set(ms,ms)}
-  const q2=QT,ap=()=>{if(R.shadowMap.type!==ty){R.shadowMap.type=ty;scene.traverse(o=>{if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.needsUpdate=true)})}AUXL.forEach(L=>L.visible=q2<2)};
+  const q2=QT,ap=()=>{const sh=q2<2;if(R.shadowMap.type!==ty||R.shadowMap.enabled!==sh){R.shadowMap.type=ty;R.shadowMap.enabled=sh;sun.castShadow=sh;scene.traverse(o=>{if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.needsUpdate=true)})}AUXL.forEach(L=>L.visible=q2<2)};
   if(OPT.gfx==='auto'&&(st==='ready'||st==='cut'||st==='after'||st==='bite'||st==='cine'))QPEND=ap;else{QPEND=null;ap()}}
 if(!BOSS)HEM.intensity=.62*(QT===2?1.12:1);
+ world.solver.iterations=QT===2?6:10;
  if(q.fz>0){FZ.s=.5;FZ.a=1;FZ.l=3;FZ.f=6}else if(q.fz<0){FZ.s=FZ.a=FZ.l=FZ.f=1e9}else{FZ.s=1;FZ.a=1.5;FZ.l=5;FZ.f=10}}
 const QN=()=>QL?'段階'+(QL-1):'高画質';
 setQ(GFXL[OPT.gfx]);
@@ -1829,7 +1830,7 @@ function frame(now){requestAnimationFrame(frame);if(PAUSED){last=now;return}if(M
   else if(rushT<=0){const b=En.find(e=>Math.hypot(e.x,e.z-6)<1.5);if(b){cleared=false;startBite(b)}}}
  if(ENDM&&!PAUSED)endTick(dr);
  if(st==='after'){after-=dr;if(slowT>0)slowT-=dr;if(after<=0){if(cleared){recEnd();En.forEach(e=>scene.remove(e.g));En=[];nextWave();st='ready'}else die()}}
- if(st!=='title'&&!ZV){const sdt=dr*ts,fs=Math.min(1/90,Math.max(1/240,sdt));world.step(fs,sdt,6)}
+ if(st!=='title'&&!ZV){const sdt=dr*ts,fs=Math.min(1/90,Math.max(1/240,sdt));world.step(fs,sdt,QT===2?3:6)}
  {let np=0;for(const o of gib)if(o.pc&&o.sink===undefined)np++;
   for(let i=0,k=0;i<gib.length&&np>GIBMAX&&k<15;i++){const o=gib[i];if(o.pc&&(o.age||0)>5&&(o.fz||QL===0&&o.dieT===undefined)&&o.sink===undefined){o.sink=0;if(o.con){o.con.forEach(rmCon);o.con=[]}world.remove(o.b);np--;k++}}}
  const gd=dr*ts; // game time: slows down in the zone
