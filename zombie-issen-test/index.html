@@ -44,9 +44,10 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 .bars{width:100%;margin-top:6px}
 .bars b{height:8px;background:rgba(0,0,0,.2);border-radius:4px;overflow:hidden;display:block}
 .bars i{display:block;height:100%;width:100%;background:#111}
+#ld{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:var(--fg);font-size:15px;line-height:1.8;letter-spacing:.08em;pointer-events:none}
+#ld.err{letter-spacing:0;pointer-events:auto}
 #dk{position:fixed;inset:0;pointer-events:none;background:#000;opacity:0;transition:opacity .2s}
 #zn{position:fixed;inset:0;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,rgba(20,40,90,0) 30%,rgba(8,14,45,.8) 100%)}
-#zt{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 58px);text-align:center;color:#fff;font-weight:900;letter-spacing:.5em;font-size:15px;text-shadow:0 0 10px #4fc3ff,0 0 4px #000;opacity:0;pointer-events:none}
 #scr{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:10px;background:rgba(10,12,20,.55);color:#fff;text-align:center;padding:calc(env(safe-area-inset-top,0px) + 58px) 24px calc(env(safe-area-inset-bottom,0px) + 24px);pointer-events:auto;overflow-y:auto;touch-action:pan-y;-webkit-overflow-scrolling:touch}
 #scr>:first-child{margin-top:auto}#scr>:last-child{margin-bottom:auto}
 #scr h1{margin:0;font-size:30px}#scr p{margin:0;font-size:15px;line-height:1.6;opacity:.92}#scr p.hint{font-size:13px;line-height:1.6;opacity:.78;max-width:320px;padding:6px 10px;border-left:3px solid #c81e2a;background:rgba(255,255,255,.05);border-radius:0 8px 8px 0;text-align:left}
@@ -82,6 +83,9 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 #opt h3{margin:16px 0 6px;font-size:15px;text-align:center;opacity:.92}
 .og{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 .og .b2{padding:10px 16px;font-size:14px}
+.vr{display:flex;flex-direction:column;gap:10px;align-items:center}
+.vr label{display:flex;align-items:center;justify-content:space-between;gap:12px;width:min(330px,100%);font-size:14px}
+.vr input{flex:1;max-width:210px;accent-color:#c81e2a;touch-action:pan-x}
 .og .b2.on{background:#c81e2a;border-color:#c81e2a}
 #opt .nt{font-size:12px;opacity:.65;text-align:center;margin:8px 0 0}
 #ht li{margin:0 0 6px}
@@ -100,6 +104,17 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 <div id="hud"><span id="sc">WAVE 1</span><span id="spt"></span><span id="rm"></span><div class="bars"><b><i id="ib"></i></b></div></div>
 <div id="zn"></div><div id="fl"></div><div id="lb1"></div><div id="lb2"></div><div id="bn"></div>
 <div id="scr"></div>
+<div id="ld"></div>
+<script>
+/* "loading…" until the title shows; if 3D (WebGL) is unavailable or the game files fail to load, say so instead of a blank page */
+(function(){var q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1],o={};try{o=JSON.parse(localStorage.getItem('zi_opt')||'{}')}catch(e){}
+ var en=(q||o.lang||(/^ja\b/i.test(navigator.language||'ja')?'ja':'en'))==='en',ld=document.getElementById('ld');ld.textContent=en?'Loading…':'読み込み中…';
+ var c=document.createElement('canvas');try{window.__glok=!!(window.WebGLRenderingContext&&(c.getContext('webgl')||c.getContext('experimental-webgl')))}catch(e){window.__glok=false}
+ window.__ldFail=function(gl){var l=document.getElementById('ld');if(!l)return;l.className='err';
+  l.innerHTML=gl?(en?'This device or browser can’t show 3D graphics (WebGL), so the game can’t run.<br>Please try another browser or device.':'お使いの端末・ブラウザでは3D表示（WebGL）が使えないため、遊べません。<br>別のブラウザや端末でお試しください。')
+   :(en?'The game failed to load.<br>Please check your connection and reload the page.':'ゲームの読み込みに失敗しました。<br>通信環境を確かめて、ページを読み込み直してください。')};
+ addEventListener('error',function(e){if(e.filename&&e.filename.split('#')[0]===location.href.split('#')[0])window.__ldFail(!window.__glok)});})();
+</script>
 <button id="mt" type="button" aria-label="音の切り替え">🔊</button>
 <button id="ps" type="button" aria-label="一時停止"><i></i><i></i></button>
 
@@ -107,21 +122,22 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
 <script>
 const $=id=>document.getElementById(id);
+if(typeof THREE==='undefined'||typeof CANNON==='undefined'){window.__ldFail(0);throw new Error('libraries did not load')}
+if(!window.__glok){window.__ldFail(1);throw new Error('no WebGL')}
 /* language: ?lang=ja|en (this visit only) > the saved setting (zi_opt.lang) > the browser's language */
-/* test page only: switches to find what is slow  ?nodk (no dim layer) ?nopop (no score popups) ?sysfont (system font for HUD / popups) ?nohud (no HUD) */
-const DBGF=k=>/-test\//.test(location.pathname)&&new RegExp('[?&]'+k+'\\b').test(location.search),NODK=DBGF('nodk'),NOPOP=DBGF('nopop'),SYSF=DBGF('sysfont'),NOHUD=DBGF('nohud');
-if(NODK){const d=$('dk');if(d)d.remove()}
-if(SYSF){const h=$('hud');if(h){h.style.fontFamily='system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif';h.style.fontWeight='800';h.style.fontSize='18px'}}
-if(NOHUD){const h=$('hud');if(h)h.style.display='none'}
 const LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;
  try{const o=JSON.parse(localStorage.getItem('zi_opt')||'{}');if(o.lang==='ja'||o.lang==='en')return o.lang}catch(e){}
  return /^ja\b/i.test(navigator.language||'ja')?'ja':'en'})(),EN=LANG==='en',J=(ja,en)=>EN?en:ja;
 if(EN){document.documentElement.lang='en';document.title='ZOMBIE ISSEN';
  addEventListener('DOMContentLoaded',()=>{const a=$('mt'),b=$('ps');if(a)a.setAttribute('aria-label','Sound on/off');if(b)b.setAttribute('aria-label','Pause')})}
 var DOOR=null;
-let PAUSED=false,PZT=0,psV=false;let AC=null,MG=null,MU=null,RD=null,RG=null,lastCut=0,moanT=3,muted=false;
+let PAUSED=false,PZT=0,psV=false;let AC=null,MG=null,MU=null,BGG=null,SEG=null,RD=null,RG=null,lastCut=0,moanT=3,muted=false;
 try{muted=localStorage.getItem('zi_mute')==='1'}catch(e){}
-function applyMute(){if(MU)MU.gain.value=muted?0:1;for(const k in STRM){const o=STRM[k];if(!o.g)o.el.volume=Math.min(1,o.v*(muted?0:1))}const b=document.getElementById('mt');if(b)b.textContent=muted?'🔇':'🔊'}
+/* volume (settings, 0-100, saved): music = BGM; sound effects = everything else, the rain included */
+function volG(n){const v=OPT[n]===undefined?100:+OPT[n];return Math.pow(Math.max(0,Math.min(100,v))/100,2)}
+function volK(o){return volG(o.k==='rain'?'se':'bgm')}
+function volApply(){if(BGG)BGG.gain.value=volG('bgm');if(SEG)SEG.gain.value=volG('se');for(const k in STRM){const o=STRM[k];if(!o.g)o.el.volume=Math.min(1,o.v*(muted?0:1)*volK(o))}}
+function applyMute(){if(MU)MU.gain.value=muted?0:1;volApply();const b=document.getElementById('mt');if(b)b.textContent=muted?'🔇':'🔊'}
 function toggleMute(e){e.stopPropagation();e.preventDefault();muted=!muted;
  try{localStorage.setItem('zi_mute',muted?'1':'0')}catch(e2){}
  if(!muted)A();applyMute()}
@@ -132,8 +148,8 @@ const SFXB=new Set(['trev','tsh1','tsh2','tstg','ttr1','ttr2','tpull','msprout',
 /* streamed loops (BGM, rain): an <audio> element feeding the sound graph (mute / recording still work) */
 const STRU={bgm0:'../zombie-issen/sfx/bgm0.mp3',bgm1:'../zombie-issen/sfx/bgm1.mp3',bgm2:'../zombie-issen/sfx/bgm2.mp3',bgm3:'../zombie-issen/sfx/bgm3.mp3',rain:'../zombie-issen/sfx/rain.mp3'},STRM={};
 function strEl(k){if(STRM[k])return STRM[k];if(!AC)return null;const el=new Audio();el.src=STRU[k];el.loop=true;el.preload=k==='bgm0'?'auto':'none';el.setAttribute('playsinline','');
- let g=null;try{const n=AC.createMediaElementSource(el);g=AC.createGain();g.gain.value=0;n.connect(g);g.connect(MG)}catch(e){g=null}return STRM[k]={el,g,on:false,v:0,tm:null}}
-function strVol(o,v,f){o.v=v;if(o.g){const t=AC.currentTime,G=o.g.gain;G.cancelScheduledValues(t);G.setValueAtTime(G.value,t);if(f>0)G.linearRampToValueAtTime(v,t+f);else G.setValueAtTime(v,t)}else o.el.volume=Math.min(1,v*(muted?0:1))}
+ let g=null;try{const n=AC.createMediaElementSource(el);g=AC.createGain();g.gain.value=0;n.connect(g);g.connect(k==='rain'?SEG:BGG)}catch(e){g=null}return STRM[k]={k,el,g,on:false,v:0,tm:null}}
+function strVol(o,v,f){o.v=v;if(o.g){const t=AC.currentTime,G=o.g.gain;G.cancelScheduledValues(t);G.setValueAtTime(G.value,t);if(f>0)G.linearRampToValueAtTime(v,t+f);else G.setValueAtTime(v,t)}else o.el.volume=Math.min(1,v*(muted?0:1)*volK(o))}
 function strPlay(k,v,f){if(!A())return;const o=strEl(k);if(!o)return;o.on=true;if(o.tm){clearTimeout(o.tm);o.tm=null}strVol(o,v,f);if(o.el.paused&&!PAUSED)o.el.play().catch(()=>{})}
 function strStop(k,f){const o=STRM[k];if(!o||!o.on)return;o.on=false;strVol(o,0,f);if(o.tm)clearTimeout(o.tm);o.tm=setTimeout(()=>{o.tm=null;if(!o.on){o.el.pause();try{o.el.currentTime=0}catch(e){}}},f*1000+80)}
 /* iPhone: an element may only start inside a tap; every tap lets the ones that should be playing start, and prepares the others */
@@ -141,10 +157,10 @@ function strTap(){for(const k in STRU){const o=strEl(k);if(!o||o.ok)continue;if(
   if(!o.on){const p=o.el.play();if(p)p.then(()=>{if(!o.on)o.el.pause()}).catch(()=>{o.ok=0})}}
  for(const k in STRM){const o=STRM[k];if(o.on&&o.el.paused&&!PAUSED)o.el.play().catch(()=>{})}}
 function loadSfx(boss){for(const k in SFX){if(SFXB.has(k)!==!!boss||SFXL.has(k))continue;SFXL.add(k);fetch(SFX[k]).then(r=>r.arrayBuffer()).then(b=>new Promise((res,rej)=>AC.decodeAudioData(b,res,rej))).then(d=>{BUF[k]=d;if(k==='room'&&st==='intro')roomOn()}).catch(()=>{SFXL.delete(k)})}}
-function A(){if(AC===null){try{const C=window.AudioContext||window.webkitAudioContext;AC=new C();MG=AC.createGain();MG.gain.value=.5;MU=AC.createGain();MU.gain.value=muted?0:1;MG.connect(MU);MU.connect(AC.destination);try{RD=AC.createMediaStreamDestination();RG=AC.createGain();MG.connect(RG);RG.connect(RD)}catch(e2){RD=null}}catch(e){AC=false}if(AC){loadSfx();if(wave>=45||TESTW>=45)loadSfx(1)}}
+function A(){if(AC===null){try{const C=window.AudioContext||window.webkitAudioContext;AC=new C();MG=AC.createGain();MG.gain.value=.5;MU=AC.createGain();MU.gain.value=muted?0:1;MG.connect(MU);MU.connect(AC.destination);BGG=AC.createGain();SEG=AC.createGain();BGG.connect(MG);SEG.connect(MG);volApply();try{RD=AC.createMediaStreamDestination();RG=AC.createGain();MG.connect(RG);RG.connect(RD)}catch(e2){RD=null}}catch(e){AC=false}if(AC){loadSfx();if(wave>=45||TESTW>=45)loadSfx(1)}}
  if(AC&&AC.state!=='running'&&AC.state!=='closed'&&!PAUSED)AC.resume();return AC}
 function play(k,v,rate){if(!BUF[k]&&SFXB.has(k)&&AC)loadSfx(1);if(!A()||!BUF[k])return null;const s=AC.createBufferSource();s.buffer=BUF[k];s.playbackRate.value=rate||1;
- const g=AC.createGain();g.gain.value=v===undefined?1:v;s.connect(g);g.connect(MG);s.start();return s}
+ const g=AC.createGain();g.gain.value=v===undefined?1:v;s.connect(g);g.connect(SEG);s.start();return s}
 function roomOn(){if(roomSrc)return;const s=play('room',.45);if(s){s.loop=true;roomSrc=s}}
 /* rain (boss fight): loops; louder once the windows are broken */
 let SKYK=0;let RAINON=false,WBRK=false;
@@ -159,31 +175,31 @@ function nz(d){const n=Math.max(1,AC.sampleRate*d|0),b=AC.createBuffer(1,n,AC.sa
 function ev(g,t,a,d,v){g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v,t+a);g.gain.exponentialRampToValueAtTime(.0001,t+a+d)}
 function sWhoosh(){if(!A())return;const t=AC.currentTime,s=nz(.34),f=AC.createBiquadFilter(),g=AC.createGain();
  f.type='bandpass';f.Q.value=1.1;f.frequency.setValueAtTime(320,t);f.frequency.exponentialRampToValueAtTime(2800,t+.1);f.frequency.exponentialRampToValueAtTime(280,t+.3);
- ev(g,t,.015,.3,.55);s.connect(f);f.connect(g);g.connect(MG);s.start(t);s.stop(t+.36)}
+ ev(g,t,.015,.3,.55);s.connect(f);f.connect(g);g.connect(SEG);s.start(t);s.stop(t+.36)}
 function sCut(){if(!A())return;const now=performance.now();if(now-lastCut<45)return;lastCut=now;
  if(BUF.cut){play('cut',.95,.92+Math.random()*.18);return}
  const t=AC.currentTime,s=nz(.18),f=AC.createBiquadFilter(),g=AC.createGain();
- f.type='highpass';f.frequency.value=900;ev(g,t,.004,.15,.45);s.connect(f);f.connect(g);g.connect(MG);s.start(t);s.stop(t+.2);
+ f.type='highpass';f.frequency.value=900;ev(g,t,.004,.15,.45);s.connect(f);f.connect(g);g.connect(SEG);s.start(t);s.stop(t+.2);
  const o=AC.createOscillator(),g2=AC.createGain();o.type='sine';o.frequency.setValueAtTime(180,t);o.frequency.exponentialRampToValueAtTime(55,t+.16);
- ev(g2,t,.005,.18,.5);o.connect(g2);g2.connect(MG);o.start(t);o.stop(t+.22)}
+ ev(g2,t,.005,.18,.5);o.connect(g2);g2.connect(SEG);o.start(t);o.stop(t+.22)}
 function sBoom(){if(!A())return;if(BUF.boom){play('boom',1);return}
  const t=AC.currentTime,s=nz(1.1),f=AC.createBiquadFilter(),g=AC.createGain();
  f.type='lowpass';f.frequency.setValueAtTime(1800,t);f.frequency.exponentialRampToValueAtTime(120,t+.9);
- ev(g,t,.008,1.05,.95);s.connect(f);f.connect(g);g.connect(MG);s.start(t);s.stop(t+1.2);
+ ev(g,t,.008,1.05,.95);s.connect(f);f.connect(g);g.connect(SEG);s.start(t);s.stop(t+1.2);
  const o=AC.createOscillator(),g2=AC.createGain();o.type='sine';o.frequency.setValueAtTime(95,t);o.frequency.exponentialRampToValueAtTime(28,t+.8);
- ev(g2,t,.01,.9,.9);o.connect(g2);g2.connect(MG);o.start(t);o.stop(t+1)}
+ ev(g2,t,.01,.9,.9);o.connect(g2);g2.connect(SEG);o.start(t);o.stop(t+1)}
 function sZone(){if(!A())return;if(BUF.ready){play('ready',.8);return}
- const t=AC.currentTime;[1760,2640].forEach((fq,i)=>{const o=AC.createOscillator(),g=AC.createGain();o.type='triangle';o.frequency.value=fq;ev(g,t+i*.02,.004,.5,.1);o.connect(g);g.connect(MG);o.start(t);o.stop(t+.6)})}
+ const t=AC.currentTime;[1760,2640].forEach((fq,i)=>{const o=AC.createOscillator(),g=AC.createGain();o.type='triangle';o.frequency.value=fq;ev(g,t+i*.02,.004,.5,.1);o.connect(g);g.connect(SEG);o.start(t);o.stop(t+.6)})}
 function sMoan(){if(!A())return;{const k='moan'+(1+(Math.random()*3|0));if(BUF[k]){play(k,.55,.78+Math.random()*.3);return}}
  const t=AC.currentTime,o=AC.createOscillator(),lf=AC.createOscillator(),lg=AC.createGain(),f=AC.createBiquadFilter(),g=AC.createGain();
  o.type='sawtooth';o.frequency.setValueAtTime(78+Math.random()*26,t);o.frequency.linearRampToValueAtTime(58+Math.random()*18,t+1.1);
  lf.type='sine';lf.frequency.value=5.5;lg.gain.value=6;lf.connect(lg);lg.connect(o.frequency);
- f.type='lowpass';f.frequency.value=620;ev(g,t,.3,.95,.13);o.connect(f);f.connect(g);g.connect(MG);o.start(t);lf.start(t);o.stop(t+1.4);lf.stop(t+1.4)}
-function sThud(){if(!A())return;const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(140,t);o.frequency.exponentialRampToValueAtTime(40,t+.3);ev(g,t,.005,.32,.8);o.connect(g);g.connect(MG);o.start(t);o.stop(t+.4);
- const s=nz(.3),f=AC.createBiquadFilter(),g2=AC.createGain();f.type='lowpass';f.frequency.value=700;ev(g2,t,.005,.28,.5);s.connect(f);f.connect(g2);g2.connect(MG);s.start(t);s.stop(t+.34)}
-function sChime(){if(!A())return;const t=AC.currentTime;[659.3,587.3,493.9,392].forEach((fq,i)=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=fq;ev(g,t+i*.52,.02,1.5,.22);o.connect(g);g.connect(MG);o.start(t+i*.52);o.stop(t+i*.52+1.6)})}
-function sDing(){if(!A())return;const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=988;ev(g,t,.008,.5,.16);o.connect(g);g.connect(MG);o.start(t);o.stop(t+.6)}
-const R=new THREE.WebGLRenderer({canvas:$('gl'),antialias:true});const PR0=Math.min(devicePixelRatio,/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Mac/.test(navigator.platform||''))?1.5:2);R.setPixelRatio(PR0);
+ f.type='lowpass';f.frequency.value=620;ev(g,t,.3,.95,.13);o.connect(f);f.connect(g);g.connect(SEG);o.start(t);lf.start(t);o.stop(t+1.4);lf.stop(t+1.4)}
+function sThud(){if(!A())return;const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(140,t);o.frequency.exponentialRampToValueAtTime(40,t+.3);ev(g,t,.005,.32,.8);o.connect(g);g.connect(SEG);o.start(t);o.stop(t+.4);
+ const s=nz(.3),f=AC.createBiquadFilter(),g2=AC.createGain();f.type='lowpass';f.frequency.value=700;ev(g2,t,.005,.28,.5);s.connect(f);f.connect(g2);g2.connect(SEG);s.start(t);s.stop(t+.34)}
+function sChime(){if(!A())return;const t=AC.currentTime;[659.3,587.3,493.9,392].forEach((fq,i)=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=fq;ev(g,t+i*.52,.02,1.5,.22);o.connect(g);g.connect(SEG);o.start(t+i*.52);o.stop(t+i*.52+1.6)})}
+function sDing(){if(!A())return;const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=988;ev(g,t,.008,.5,.16);o.connect(g);g.connect(SEG);o.start(t);o.stop(t+.6)}
+const R=(()=>{try{return new THREE.WebGLRenderer({canvas:$('gl'),antialias:true})}catch(e){window.__ldFail(1);throw e}})();const PR0=Math.min(devicePixelRatio,/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Mac/.test(navigator.platform||''))?1.5:2);R.setPixelRatio(PR0);
 const scene=new THREE.Scene();scene.background=new THREE.Color(0xdfe6ee);
 const cam=new THREE.PerspectiveCamera(68,1,.1,60);cam.position.set(0,1.6,6);cam.lookAt(0,.9,-8);cam.updateMatrixWorld();
 const HEM=new THREE.HemisphereLight(0xdce7ff,0x4a3f2a,.62);scene.add(HEM);
@@ -569,7 +585,7 @@ function swordSlash(a){const p=Math.min(1,a.p),e=p*p*(3-2*p);
  const ext=a.p>1?(a.p-1)*1.1:0;
  sw.visible=true;sw.position.copy(swA2).addScaledVector(swD,-.55+2.1*e+ext);
  sw.quaternion.setFromUnitVectors(swUp,swD)}
-let riseMoan=0,st='title',wave=1,S=0,ts=.02,En=[],gib=[],corpses=[],dyn=[],TR=[],pend=[],stroke=null,last=performance.now(),after=0,cleared=false,best=0,MAXL=1100;
+let riseMoan=0,st='title',wave=1,S=0,ts=.02,En=[],gib=[],dyn=[],TR=[],pend=[],stroke=null,last=performance.now(),after=0,cleared=false,best=0,MAXL=1100;
 /* ベスト WAVE 一斉リセット: RESET_V の数字を変えて公開すると、次に開いた端末で一度だけ消える */
 const RESET_V='1';
 try{if(localStorage.getItem('zi_rv')!==RESET_V){localStorage.removeItem('ht_best');localStorage.removeItem('zi_bsc');localStorage.setItem('zi_rv',RESET_V)}}catch(e){}
@@ -1217,8 +1233,8 @@ function bossTick(dt,dr){const B=BOSS;if(!B)return;if(B.m==='tf3'||B.f3){fTick(B
  case 'hurt2':B.t+=dt;if(Math.random()<dt*14)sand(B.g.localToWorld(new THREE.Vector3((Math.random()-.5)*.3,1.1+Math.random()*.4,.15)),8,BLOOD,1.8,1,.3);B.U.pm.rotation.z=Math.sin(B.t*31)*.06;B.U.upper.rotation.x=.35+Math.sin(B.t*23)*.1;B.sx=.6+Math.sin(B.t*13)*.4;break}
  if(B.f2){B.g.position.y=B.lift||0;if(B.m!=='tf'&&Math.random()<dt*5)sand(B.g.localToWorld(new THREE.Vector3((Math.random()<.5?-1:1)*.13,1.2+Math.random()*.15,-.15)),6,BLOOD,1.5,1,.22);if(B.m!=='tf')B.lg=Math.sin((B.tt||0)*2)*.15}if(B.tn)tnTick(B,dt);
  B.g.position.x=B.x;B.g.position.z=B.z;tchPose(B)}
-function zekTex(){const c=document.createElement('canvas');c.width=64;c.height=48;const x=c.getContext('2d');x.fillStyle='#f2f0ea';x.fillRect(0,0,64,48);
- x.fillStyle='#111';x.font='bold 30px sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(String(1+(Math.random()*99|0)),32,26);return new THREE.CanvasTexture(c)}
+const ZEK=[];function zekTex(){if(ZEK.length>=10)return ZEK[Math.random()*10|0];const c=document.createElement('canvas');c.width=64;c.height=48;const x=c.getContext('2d');x.fillStyle='#f2f0ea';x.fillRect(0,0,64,48);
+ x.fillStyle='#111';x.font='bold 30px sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(String(1+(Math.random()*99|0)),32,26);const t=new THREE.CanvasTexture(c);ZEK.push(t);return t}
 function jumperMesh(cf){const z=zombieMesh(Object.assign({},cf,{shirt:pick([0xf0a81c,0x1f74d6,0xd8322a,0x1d9a6c]),pant:0x1b2340})),kids=z.children.slice(),R=new THREE.Group(),V0=new THREE.Vector3();
  const byB=b=>kids.filter(o=>o.userData.bone===b),SK=byB(2).find(o=>o.geometry.type==='SphereGeometry').material;
  // sleeveless shirt and shorts: shoulders, upper arms and shins show skin
@@ -1411,7 +1427,7 @@ let GIBMAX=300;
 /* ---- auto quality: watch the frame time; step the load down while slow, back up once fast again ----
    level 0 normal / 1 lower resolution / 2 pieces cap 200 / 3 cap 120 / 4 pieces turn into props sooner */
 const FZ={s:1,a:1.5,l:5,f:10},PRL=Math.min(PR0,1),PRH=Math.min(devicePixelRatio,2),QS=[{pr:PRH,cap:300,fz:-1},{pr:PR0,cap:300,fz:0},{pr:PRL,cap:300,fz:0},{pr:PRL,cap:200,fz:0},{pr:PRL*.75,cap:120,fz:1},{pr:PRL*.75,cap:120,fz:1}];
-const OPT=(()=>{const o={gfx:'auto',gore:'on',pop:'all'};try{Object.assign(o,JSON.parse(localStorage.getItem('zi_opt')||'{}'))}catch(e){}return o})(),GFXL={auto:0,high:0,std:1,low:4};
+const OPT=(()=>{const o={gfx:'auto',gore:'on',pop:'all',bgm:100,se:100};try{Object.assign(o,JSON.parse(localStorage.getItem('zi_opt')||'{}'))}catch(e){}return o})(),GFXL={auto:0,high:0,std:1,low:4};
 let GORE='on',GC=null;
 let QPEND=null;function qFlush(){if(QPEND){const f=QPEND;QPEND=null;f()}}
 let QL=0;const QW={w:[],wg:0,ws:0,a:[],t:0,bad:0,good:0,now:0,last:0,lastUp:-99,upWait:8,med:0,n:[],sl:[],nf:0,sf:0};
@@ -1488,7 +1504,7 @@ function vitalScore(e,s){const dx=s.x2-s.x1,dy=s.y2-s.y1,l=Math.hypot(dx,dy)||1,
  if(r.v<100){r.v=100;r.k=null;r.x=n?cx/n:e.x;r.y=n?cy/n:0}
  if(e.dog||e.jm||e.ky||e.sh||e.bomb)r.v*=1.5;r.v=Math.round(r.v);return r}
 /* kind 'i' = each zombie, 't' = totals (stroke / explosion); the option hides them */
-function popAdd(x,y,t,c,sz,sub,lo,kind){if(NOPOP)return;const o=OPT.pop||'all';if(o==='off'||(o==='total'&&kind==='i'))return;
+function popAdd(x,y,t,c,sz,sub,lo,kind){const o=OPT.pop||'all';if(o==='off'||(o==='total'&&kind==='i'))return;
  POP.push({x:Math.max(70,Math.min(innerWidth-70,x)),y:Math.max(56,Math.min(innerHeight-30,y)),t,c,sz,sub,lo,a:0})}
 /* one stroke: each zombie's points (x1.5 when it was about to bite), then (sum) x (number cut) x (short line bonus) */
 function scStroke(s){const H=[];return{
@@ -1516,7 +1532,7 @@ function scBoss(base,c,lab,pt){c=Math.max(0,Math.min(1,c||0));const k=1+c,v=Math
 function scBossBody(B){const r=B.vs||{v:100,k:null,x:innerWidth/2,y:innerHeight*.4};B.vs=null;const v=r.v*100,T=r.k?VPT[r.k]:null;SC+=v;
  bossPop(v,T?T[2]:J('一閃!','ONE FLASH!'),r.x,r.y-30,T&&T[3]?'#ff3b3b':'#fff')}
 const PFC={};let OCF='';
-function pf(z){z=Math.round(z);return PFC[z]||(PFC[z]=SYSF?'900 '+z+'px system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif':'400 '+z+'px Iceberg,DotGothic16,system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif')}
+function pf(z){z=Math.round(z);return PFC[z]||(PFC[z]='400 '+z+'px Iceberg,DotGothic16,system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif')}
 function setF(z){const f=pf(z);if(f!==OCF){oc.font=f;OCF=f}}
 function popDraw(dr){if(!POP.length)return;OCF='';oc.textAlign='center';oc.textBaseline='middle';oc.lineJoin='round';oc.strokeStyle='rgba(0,0,0,.8)';
  POP=POP.filter(p=>{p.a+=dr;if(p.a>1.4)return false;p.dy=p.y-28*(p.a/1.4);p.al=p.a>1?1-(p.a-1)/.4:1;p.dz=Math.round(p.sz*(p.a<.12?1.3-.3*p.a/.12:1));
@@ -1627,7 +1643,7 @@ function explode(cx,cz){flash(.92,'#fff6e4');shakeT=.95;fireball(cx,1.25,cz);sBo
  dyn.slice().forEach(d0=>{const q=d0.body.position,d=Math.hypot(q.x-cx,q.z-cz);if(d>6)return;const f=d0.body.mass*(7-d);
   d0.body.wakeUp();d0.body.applyImpulse(new CANNON.Vec3((q.x-cx)/(d||1)*f,f*.8,(q.z-cz)/(d||1)*f),new CANNON.Vec3(0,0,0));
   const i=dyn.indexOf(d0);if(i>=0){dyn.splice(i,1);furnReal(d0.mesh);gib.push({mesh:d0.mesh,b:d0.body,age:0,nc:1,vt:8})}})}
-function clearField(){En.forEach(e=>{scene.remove(e.g);disposeTree(e.g)});En=[];gib.forEach(dropGib);gib=[];corpses.forEach(m=>scene.remove(m));corpses=[];fx.forEach(fxKill);fx.length=0;XL.intensity=0;sn=0;SCM.count=0;blD0=1e9;blD1=-1;shakeT=0;$('gl').style.transform='';$('ov').style.transform=''}
+function clearField(){En.forEach(e=>{scene.remove(e.g);disposeTree(e.g)});En=[];gib.forEach(dropGib);gib=[];fx.forEach(fxKill);fx.length=0;XL.intensity=0;sn=0;SCM.count=0;blD0=1e9;blD1=-1;shakeT=0;$('gl').style.transform='';$('ov').style.transform=''}
 let bnT=null,bnH=null;
 function banner(t,ms,sz,tw){const b=$('bn');b.style.fontSize=(sz||34)+'px';b.style.opacity=1;
  if(bnT){clearInterval(bnT);bnT=null}
@@ -1757,12 +1773,12 @@ function howTo(){if($('ht'))return;const d=document.createElement('div');d.id='h
  '<button type="button" class="b2 cl" id="htc">閉じる</button></div>';
  document.body.appendChild(d);['pointerdown','pointerup','click'].forEach(n=>d.addEventListener(n,ev=>ev.stopPropagation()));
  $('htc').addEventListener('click',()=>d.remove())}
-function title(){$('scr').innerHTML=EN?'<h1>ZOMBIE ISSEN</h1><p>Bored in class, I started to daydream.<br>What if zombies burst into the classroom?</p><p>Best WAVE '+best+'<br>Best score '+fmtN(bestS)+'</p><div class="tb"><button id="pl" type="button">Play</button><button id="hw" class="b2" type="button">How to Play</button><button id="op" class="b2" type="button">Settings</button></div>'
+function title(){{const l=$('ld');if(l)l.remove()}$('scr').innerHTML=EN?'<h1>ZOMBIE ISSEN</h1><p>Bored in class, I started to daydream.<br>What if zombies burst into the classroom?</p><p>Best WAVE '+best+'<br>Best score '+fmtN(bestS)+'</p><div class="tb"><button id="pl" type="button">Play</button><button id="hw" class="b2" type="button">How to Play</button><button id="op" class="b2" type="button">Settings</button></div>'
  :'<h1>ゾンビ一閃</h1><p>退屈な授業中、ふと妄想した。<br>教室にゾンビが雪崩れ込んできたら。</p><p>ベスト WAVE '+best+'<br>ベストスコア '+fmtN(bestS)+' 点</p><div class="tb"><button id="pl" type="button">プレイ</button><button id="hw" class="b2" type="button">遊び方</button><button id="op" class="b2" type="button">設定</button></div>';
  ['pl','hw','op'].forEach(i=>noProp($(i)));$('op').addEventListener('click',()=>{A();optUI()});$('pl').addEventListener('click',()=>{A();start();strTap()});$('hw').addEventListener('click',()=>{A();howTo()});
  $('scr').appendChild(adSlot('title'))}
 /* ---- pause ---- */
-const canPause=()=>st==='ready'||st==='cut'||st==='after'||st==='cine';
+const canPause=()=>st==='ready'||st==='cut'||st==='after'||st==='cine'||st==='intro';
 function pauseGame(){if(PAUSED||!canPause())return;PAUSED=true;PZT=performance.now();
  if(st==='cut'&&stroke){stroke=null;st='ready';recAbort()}
  if(AC&&AC.state==='running')AC.suspend();for(const k in STRM)STRM[k].el.pause();
@@ -1903,7 +1919,7 @@ function frame(now){requestAnimationFrame(frame);if(PAUSED){last=now;return}if(M
  else if(swA){swA.p+=dr/.45;if(swA.p>1.4){swA=null;sw.visible=false}else swordSlash(swA)}
  else sw.visible=false;
  if(blD1>=0){const at=BL.instanceMatrix;at.updateRange.offset=blD0*16;at.updateRange.count=(blD1-blD0)*16;at.needsUpdate=true;blD0=1e9;blD1=-1}
- CLK.tick();if(FBM)FBM.material.color.copy(BL.material.color);if(!ZV)R.render(scene,cam);
+ CLK.tick();fbColor();if(!ZV)R.render(scene,cam);
  oc.clearRect(0,0,ov.width,ov.height);oc.lineCap='round';
  if(BOSS&&BOSS.tl&&(BOSS.m==='swing'||BOSS.m==='fly')){const L=BOSS.tl,k=.55+.45*Math.abs(Math.sin(now/90));oc.globalAlpha=k;oc.strokeStyle='#ffd21e';oc.shadowColor='#ffb000';oc.shadowBlur=18;oc.lineWidth=7;oc.beginPath();oc.moveTo(L[0],L[1]);oc.lineTo(L[2],L[3]);oc.stroke();oc.shadowBlur=0;oc.globalAlpha=1}
  TR.forEach(t=>{oc.globalAlpha=Math.max(0,t.a);oc.strokeStyle=t.w?'#888':'#fff';oc.shadowColor=t.w?'transparent':'#4fc3ff';oc.shadowBlur=t.w?0:10;oc.lineWidth=t.w?2:(t.a>.86?14:5);oc.beginPath();oc.moveTo(t.x1,t.y1);oc.lineTo(t.x2,t.y2);oc.stroke()});oc.globalAlpha=1;oc.shadowBlur=0;
@@ -1917,9 +1933,9 @@ function frame(now){requestAnimationFrame(frame);if(PAUSED){last=now;return}if(M
  if(bl.length){const ag=(now-bt0)/1000;oc.globalAlpha=.95;bl.forEach(b=>{if(ag<b.d)return;const k=Math.min(1,(ag-b.d)/.1);oc.fillStyle=b.r>140?GC.d1:GC.d2;oc.beginPath();oc.arc(b.x,b.y,b.r*k,0,6.28);oc.fill()});oc.globalAlpha=1}
  // HUD / overlays: touch the page only when a value changes (each write makes the phone redraw that text)
  {const zz=(st==='cut')?1:0;zv+=(zz-zv)*.28;if(zv<.004)zv=0;hudSet(0,'zn','o',zv.toFixed(2))}
- if(!NOHUD){const T0=st==='title'||st==='intro';hudSet(1,'sc','t',T0?J('ゾンビ一閃','ZOMBIE ISSEN'):'WAVE '+wave);hudSet(2,'spt','t',T0?'':fmtN(SC)+J(' 点',' PTS'));
+ {const T0=st==='title'||st==='intro';hudSet(1,'sc','t',T0?J('ゾンビ一閃','ZOMBIE ISSEN'):'WAVE '+wave);hudSet(2,'spt','t',T0?'':fmtN(SC)+J(' 点',' PTS'));
  hudSet(3,'rm','t',st==='intro'?J('タップでスキップ','Tap to skip'):st==='title'?'':J('\u6b8b\u308a ','LEFT ')+(En.length+(bossW()?1:0)));}
- {const ris=En.some(e=>e.rt!==undefined||e.ru!==undefined),dk=st==='ready'&&!bossW()&&ris?'.5':'0';if(!NODK)hudSet(4,'dk','o',dk);
+ {const ris=En.some(e=>e.rt!==undefined||e.ru!==undefined),dk=st==='ready'&&!bossW()&&ris?'.5':'0';hudSet(4,'dk','o',dk);
  hudSet(5,'ib','w',(stroke?Math.max(0,1-stroke.len/MAXL)*100:100).toFixed(1)+'%');hudSet(6,'ib','o',ris||bossBlock()?'.3':'1')}bsTick(dr);
  recTick(now);
 }
@@ -1949,39 +1965,55 @@ function optUI(){if($('opt'))return;const d=document.createElement('div');d.id='
  const row=(k,list)=>'<div class="og">'+list.map(([v,t])=>'<button type="button" class="b2'+((k==='lang'?LANG:OPT[k])===v?' on':'')+'" data-k="'+k+'" data-v="'+v+'">'+t+'</button>').join('')+'</div>';
  d.innerHTML=EN?'<div class="in"><h2>Settings</h2><h3>Graphics</h3>'+row('gfx',[['auto','Auto (recommended)'],['high','High'],['std','Standard'],['low','Light']])+
   '<p class="nt">Auto: starts at high quality and lowers it automatically when the game slows down.</p><h3>Gore</h3>'+row('gore',[['on','On'],['green','Mild'],['off','Off']])+
-  '<p class="nt">Blood stains on clothes change from the next zombies that appear.</p><h3>Score popups</h3>'+row('pop',[['all','All'],['total','Totals only'],['off','Off']])+'<p class="nt">The score at the top is always shown.</p><h3>Language / 言語</h3>'+row('lang',[['ja','日本語'],['en','English']])+
+  '<p class="nt">Blood stains on clothes change from the next zombies that appear.</p><h3>Score popups</h3>'+row('pop',[['all','All'],['total','Totals only'],['off','Off']])+'<p class="nt">The score at the top is always shown.</p><h3>Volume</h3>'+'<div class="vr"><label>Music<input type="range" min="0" max="100" step="5" data-v="bgm" value="'+OPT.bgm+'"></label><label>Sound effects<input type="range" min="0" max="100" step="5" data-v="se" value="'+OPT.se+'"></label></div>'+'<h3>Language / 言語</h3>'+row('lang',[['ja','日本語'],['en','English']])+
   '<p class="nt">Changing the language reloads the page.</p><button type="button" class="b2 cl" id="opc">Close</button></div>'
   :'<div class="in"><h2>設定</h2><h3>グラフィック</h3>'+row('gfx',[['auto','自動（おすすめ）'],['high','高画質'],['std','標準'],['low','軽量']])+
   '<p class="nt">自動：高画質で始めて、重いときは自動で下げます</p><h3>流血表現</h3>'+row('gore',[['on','あり'],['green','控えめ'],['off','なし']])+
-  '<p class="nt">服の血の模様は、次に出てくるゾンビから変わります</p><h3>スコアの表示</h3>'+row('pop',[['all','すべて'],['total','合計だけ'],['off','なし']])+'<p class="nt">画面上の合計点は、いつも表示されます</p><h3>言語 / Language</h3>'+row('lang',[['ja','日本語'],['en','English']])+
+  '<p class="nt">服の血の模様は、次に出てくるゾンビから変わります</p><h3>スコアの表示</h3>'+row('pop',[['all','すべて'],['total','合計だけ'],['off','なし']])+'<p class="nt">画面上の合計点は、いつも表示されます</p><h3>音量</h3>'+'<div class="vr"><label>BGM<input type="range" min="0" max="100" step="5" data-v="bgm" value="'+OPT.bgm+'"></label><label>効果音<input type="range" min="0" max="100" step="5" data-v="se" value="'+OPT.se+'"></label></div>'+'<h3>言語 / Language</h3>'+row('lang',[['ja','日本語'],['en','English']])+
   '<p class="nt">言語を変えると、ページを読み込み直します</p><button type="button" class="b2 cl" id="opc">閉じる</button></div>';
  document.body.appendChild(d);['pointerdown','pointerup','click'].forEach(n=>d.addEventListener(n,ev=>ev.stopPropagation()));
  d.querySelectorAll('.og .b2').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.k,v=b.dataset.v;
   if(k==='lang'){if(v===LANG)return;OPT.lang=v;saveOpt();const u=new URL(location.href);u.searchParams.delete('lang');location.replace(u.href);return}
   OPT[k]=v;saveOpt();
   b.parentNode.querySelectorAll('.b2').forEach(x=>x.classList.toggle('on',x===b));if(k==='gfx')applyGfx();else if(k==='gore')setGore(v)}));
+ d.querySelectorAll('.vr input').forEach(r=>{r.addEventListener('input',()=>{OPT[r.dataset.v]=+r.value;volApply()});r.addEventListener('change',()=>{OPT[r.dataset.v]=+r.value;saveOpt();volApply();if(r.dataset.v==='se')play('cut',.9)})});
  $('opc').addEventListener('click',()=>d.remove())}
 setGore(OPT.gore);
-/* ---- floor blood baked into one picture ----
-   Every stain on the floor is a little quad, and there can be 100,000+ of them by the late waves. At the break between waves the
-   floor stains are drawn once into a texture laid over the floor and stop being drawn one by one (walls and ceiling stay as they are).
-   The picture holds only the shape (white); its colour follows the blood stains' own colour (gore setting, the dark boss fight). */
-const FBX0=-6.1,FBX1=9.3,FBZ0=-6.2,FBZ1=8.2,FBN=4096;let FBRT=null,FBM=null,FBS=null,FBC=null,FBI=null;
-function fbInit(){const n=QT===2?1024:2048,w=FBX1-FBX0,h=FBZ1-FBZ0,cx=(FBX0+FBX1)/2,cz=(FBZ0+FBZ1)/2;
- FBRT=new THREE.WebGLRenderTarget(n,n,{depthBuffer:false,stencilBuffer:false});
- const ge=new THREE.PlaneGeometry(w,h);ge.rotateX(-Math.PI/2);
- FBM=new THREE.Mesh(ge,new THREE.MeshBasicMaterial({map:FBRT.texture,color:BL.material.color.getHex(),alphaTest:.5,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1}));
- FBM.position.set(cx,.004,cz);FBM.userData.nocut=1;scene.add(FBM);
- FBC=new THREE.OrthographicCamera(-w/2,w/2,h/2,-h/2,.1,20);FBC.up.set(0,0,-1);FBC.position.set(cx,10,cz);FBC.lookAt(cx,0,cz);FBC.updateMatrixWorld();
+/* ---- blood stains baked into pictures ----
+   Every stain is a little quad, and there can be 100,000+ of them by the late waves. At the break between waves the stains on the floor,
+   the ceiling and the four walls are drawn once into a texture laid over that surface, and stop being drawn one by one.
+   Not baked (kept as they are): the window bays (their stains are thrown into the room when the glass breaks), the lamps, the hallway's far wall.
+   The pictures hold only the shape (white); their colour follows the stains' own colour (gore setting, the dark boss fight). */
+const FBN=4096,FBK=[];let FBS=null,FBI=null;
+// ax: the axis the surface faces along, sg: +1/-1, c: where the stains sit on that axis (+-tol), pos: where the picture is laid,
+// a0..b1: the bounds on the other two axes (x,z / z,y / x,y), res: picture size, ok: extra test on the stain's position
+function fbSurf(ax,sg,c,tol,pos,a0,a1,b0,b1,res,ok){
+ const n=new THREE.Vector3(ax==='x'?sg:0,ax==='y'?sg:0,ax==='z'?sg:0),o=ax==='x'?['z','y']:ax==='y'?['x','z']:['x','y'],w=a1-a0,h=b1-b0,ix={x:12,y:13,z:14};
+ const p=new THREE.Vector3();p[ax]=pos;p[o[0]]=(a0+a1)/2;p[o[1]]=(b0+b1)/2;
+ const rt=new THREE.WebGLRenderTarget(res[0],res[1],{depthBuffer:false,stencilBuffer:false});
+ const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:rt.texture,color:BL.material.color.getHex(),alphaTest:.5,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1}));
+ m.position.copy(p);m.lookAt(p.clone().add(n));m.userData.nocut=1;scene.add(m);m.updateMatrixWorld();
+ // the camera that draws into the picture: in front of the surface, looking at it, with the picture's own axes
+ const cm=new THREE.OrthographicCamera(-w/2,w/2,h/2,-h/2,.1,20);cm.position.copy(p).addScaledVector(n,5);cm.quaternion.copy(m.quaternion);cm.updateMatrixWorld();
+ const ni=ax==='x'?4:ax==='y'?5:6,pi=ix[ax],ia=ix[o[0]],ib=ix[o[1]];
+ FBK.push({rt,m,cm,f:0,M:null,own:(A,j)=>A[j+ni]*sg>.99&&Math.abs(A[j+pi]-c)<tol&&A[j+ia]>a0&&A[j+ia]<a1&&A[j+ib]>b0&&A[j+ib]<b1&&(!ok||ok(A[j+12],A[j+13],A[j+14]))})}
+function fbInit(){const L=QT===2,F=L?1024:2048,C=L?512:1024,Wd=L?[512,128]:[1024,256];
+ fbSurf('y',1,0,.05,.004,-6.1,9.3,-6.2,8.2,[F,F]);                              // floor (and the hallway)
+ fbSurf('y',-1,3.442,.05,3.438,-6.1,9.3,-6.2,8.2,[C,C]);                        // ceiling (not the lamps, they hang lower)
+ fbSurf('x',1,-5.942,.05,-5.938,-6.1,8.1,0,3.5,Wd,(x,y,z)=>!inBay(y,z));        // window wall, not the window bays
+ fbSurf('x',-1,5.942,.05,5.938,-6.1,8.1,0,3.5,Wd);                              // hallway-side wall
+ fbSurf('z',1,-5.95,.08,-5.899,-6.1,6.1,0,3.5,Wd);                              // blackboard wall (board, clock, notices: laid just in front of them)
+ fbSurf('z',-1,7.992,.05,7.988,-6.1,6.1,0,3.5,Wd);                              // back wall
  FBS=new THREE.Scene();FBI=new THREE.InstancedMesh(BG,new THREE.MeshBasicMaterial({color:0xffffff,map:BL.material.map,alphaTest:.45,side:THREE.DoubleSide}),FBN);FBI.frustumCulled=false;FBS.add(FBI);fbClear()}
-function fbClear(){if(!FBRT)return;const c=R.getClearColor(new THREE.Color()),a=R.getClearAlpha();R.setRenderTarget(FBRT);R.setClearColor(0x000000,0);R.clear(true,false,false);R.setRenderTarget(null);R.setClearColor(c,a)}
-function fbBake(min){if(!FBRT||BL.count<(min===undefined?3000:min))return;const A=BL.instanceMatrix.array,n=BL.count,M=FBI.instanceMatrix.array;let k=0,f=0;
- const flush=()=>{if(!f)return;FBI.count=f;FBI.instanceMatrix.needsUpdate=true;const ac=R.autoClear;R.autoClear=false;R.setRenderTarget(FBRT);R.render(FBS,FBC);R.setRenderTarget(null);R.autoClear=ac;f=0};
+function fbClear(){if(!FBK.length)return;const c=R.getClearColor(new THREE.Color()),a=R.getClearAlpha();R.setClearColor(0x000000,0);FBK.forEach(s=>{R.setRenderTarget(s.rt);R.clear(true,false,false)});R.setRenderTarget(null);R.setClearColor(c,a)}
+function fbColor(){const c=BL.material.color;for(const s of FBK)s.m.material.color.copy(c)}
+function fbBake(min){if(!FBK.length||BL.count<(min===undefined?3000:min))return;const A=BL.instanceMatrix.array,n=BL.count,M=FBI.instanceMatrix.array;let k=0;
+ FBK.forEach(s=>{s.f=0;if(!s.M)s.M=new Float32Array(FBN*16)});
+ const flush=s=>{if(!s.f)return;M.set(s.M.subarray(0,s.f*16));FBI.count=s.f;FBI.instanceMatrix.needsUpdate=true;const ac=R.autoClear;R.autoClear=false;R.setRenderTarget(s.rt);R.render(FBS,s.cm);R.setRenderTarget(null);R.autoClear=ac;s.f=0};
  for(let i=0;i<n;i++){const j=i*16;if(A[j+15]===0)continue; // emptied (the glass broke)
-  const x=A[j+12],y=A[j+13],z=A[j+14];
-  if(A[j+5]>.99&&y<.02&&x>FBX0&&x<FBX1&&z>FBZ0&&z<FBZ1){M.set(A.subarray(j,j+16),f*16);if(++f===FBN)flush()}
-  else{if(k!==i)A.copyWithin(k*16,j,j+16);k++}}
- flush();bn=k;BL.count=k;blD0=0;blD1=k}
+  let s=null;for(const q of FBK)if(q.own(A,j)){s=q;break}
+  if(s){s.M.set(A.subarray(j,j+16),s.f*16);if(++s.f===FBN)flush(s)}else{if(k!==i)A.copyWithin(k*16,j,j+16);k++}}
+ FBK.forEach(flush);bn=k;BL.count=k;blD0=0;blD1=k}
 mergeStatic();fbInit();
 layout();title();precompile();requestAnimationFrame(frame);
 </script>
