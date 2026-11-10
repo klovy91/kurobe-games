@@ -1,4 +1,5 @@
 User-agent: *
 Disallow: /zombie-issen-test/
+Disallow: /nandemo-eisei-test/
 
 Sitemap: https://kurobe-games.com/sitemap.xml
