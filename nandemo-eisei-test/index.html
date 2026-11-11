@@ -53,9 +53,9 @@ html,body{height:100%;margin:0;background:#05070f;color:#fff;overflow:hidden;tou
 #scr ol{margin:0;padding:10px 14px 10px 32px;text-align:left;font-size:14px;line-height:1.8;background:rgba(255,255,255,.06);border-radius:10px;max-width:340px}
 #scr .sc2{font-size:30px}
 #scr h3{margin:6px 0 0;font-size:15px;opacity:.9}
-.dex{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:360px}
-.dex span{display:flex;flex-direction:column;align-items:center;width:64px;font-size:10px;opacity:.9}
-.dex img{width:38px;height:38px}
+.dex{display:grid;grid-template-columns:repeat(6,1fr);gap:8px 4px;width:min(100%,380px);padding:10px 6px;background:rgba(255,255,255,.06);border-radius:10px}
+.dex span{display:flex;flex-direction:column;align-items:center;font-size:9px;line-height:1.3;opacity:.9;white-space:nowrap;overflow:hidden}
+.dex img{width:32px;height:32px}
 .dex .no img{filter:brightness(0) invert(.25)}.dex .no{opacity:.6}
 .btn{pointer-events:auto;min-width:200px;padding:15px 36px;border:0;border-radius:999px;background:#2f6bff;color:#fff;font-size:20px;font-weight:900;letter-spacing:.1em;cursor:pointer;box-shadow:0 4px 18px rgba(47,107,255,.5);-webkit-tap-highlight-color:transparent}
 .btn:active{transform:scale(.97);opacity:.85}
@@ -91,8 +91,8 @@ if(!window.__glok){window.__ldFail(true);return}
 var R=1,RMAX=8.5,MU=70,HS=1/250,FXS=2.66;
 var RT=4.5,A1=4*MU,TK=.35,NK=88,KD=1.5;  /* rocket: 1 boost straight up just enough to coast to RT, 2 coast to the top, 3 sideways kick (TK seconds) */
 var DVLO=1.2,DVHI=7.6,FILL=2.4;          /* the hold sets the sideways kick: DVLO..DVHI, divided by the item's weight */
-var SIZE=[0,0.23,0.28,0.33,0.4],SPR=2.7;
-var TCOL=[0,0x8fb7ff,0x7dffb0,0xffd36b,0xff8af0];
+var SIZE=[0,0.23,0.28,0.33,0.4,0.48],SPR=2.7;
+var TCOL=[0,0x8fb7ff,0x7dffb0,0xffd36b,0xff8af0,0xffffff];
 
 /* ---------- items & recipes (5th value = weight; heavy things need a longer hold) ---------- */
 var DEF=[
@@ -101,14 +101,23 @@ var DEF=[
  ['onigiri','🍙','おにぎり',2],['sushi','🍣','すし',2],['meat','🍖','にく',2],['milk','🥛','ぎゅうにゅう',2],['fegg','🍳','めだまやき',2],
  ['onsen','♨️','おんせん',2],['ufo','🛸','UFO',2],['comet','☄️','すいせい',2],
  ['burger','🍔','ハンバーガー',3],['juice','🥤','バナナジュース',3],['sandw','🥪','サンドイッチ',3],['bento','🍱','おべんとう',3],
- ['alien','👽','うちゅうじん',4],['earth','🌏','ちきゅう',4]];
+ ['senbei','🍘','せんべい',2],['sake','🍶','おさけ',2],['curry','🍛','カレー',2],['sea','🌊','うみ',2],['whale','🐋','くじら',2],
+ ['rain','🌧\uFE0F','あめ',2],['monkey','🐒','うちゅうザル',2],['pancake','🥞','パンケーキ',2],['baguette','🥖','フランスパン',2],
+ ['pudding','🍮','プリン',3],['rainbow','🌈','にじ',3],['gorilla','🦍','ゴリラ',3],
+ ['alien','👽','うちゅうじん',4],['earth','🌏','ちきゅう',4],['parfait','🍨','パフェ',4],['set','🍟','セット',4],
+ ['moon','🌕','つき',5]];
 var REC=[['rice','nori','onigiri'],['rice','fish','sushi'],['cow','fire','meat'],['cow','water','milk'],['egg','fire','fegg'],
  ['water','fire','onsen'],['cow','rocket','ufo'],['fire','rocket','comet'],['meat','bread','burger'],['milk','banana','juice'],
- ['fegg','bread','sandw'],['onigiri','fish','bento'],['ufo','burger','alien'],['comet','water','earth']];
+ ['fegg','bread','sandw'],['onigiri','fish','bento'],['ufo','burger','alien'],['comet','water','earth'],
+ ['rice','fire','senbei'],['rice','water','sake'],['rice','cow','curry'],['nori','water','sea'],['fish','water','whale'],
+ ['water','rocket','rain'],['banana','rocket','monkey'],['egg','banana','pancake'],['bread','fire','baguette'],
+ ['milk','egg','pudding'],['pudding','banana','parfait'],['rain','fire','rainbow'],['monkey','banana','gorilla'],
+ ['burger','juice','set'],['comet','sea','earth'],['earth','comet','moon']];
 var ITEM={},BASE=[],RECIPE={},PART={},RESULTS=[];
 DEF.forEach(function(d){ITEM[d[0]]={id:d[0],e:d[1],n:d[2],t:d[3],w:d[4]||1};if(d[3]===1)BASE.push(d[0])});
 function key(a,b){return a<b?a+'+'+b:b+'+'+a}
-REC.forEach(function(r){RECIPE[key(r[0],r[1])]=r[2];(PART[r[0]]=PART[r[0]]||[]).push(r[1]);(PART[r[1]]=PART[r[1]]||[]).push(r[0]);RESULTS.push(r[2])});
+REC.forEach(function(r){RECIPE[key(r[0],r[1])]=r[2];(PART[r[0]]=PART[r[0]]||[]).push(r[1]);(PART[r[1]]=PART[r[1]]||[]).push(r[0]);if(RESULTS.indexOf(r[2])<0)RESULTS.push(r[2])});
+RESULTS.sort(function(a,b){return ITEM[a].t-ITEM[b].t});
 
 /* ---------- storage ---------- */
 function ls(k,d){try{var v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}}
@@ -292,8 +301,7 @@ function reorbit(b){setLine(b.ln,orbit(b.x,b.y,b.vx,b.vy,b.s).pts)}
 function kill(b){b.alive=false;[b.sp,b.hs,b.ln,b.tl].forEach(function(o){scene.remove(o);if(o.isLine)o.geometry.dispose();o.material.dispose()})}
 function clearAll(){bodies.forEach(function(b){if(b.alive)kill(b)});bodies=[];flight=null}
 
-function pickNext(){var c=[];bodies.forEach(function(b){if(b.alive&&!b.leaving)(PART[b.type]||[]).forEach(function(p){if(ITEM[p].t===1)c.push(p)})});
- if(c.length&&Math.random()<.55)return c[Math.random()*c.length|0];return BASE[Math.random()*BASE.length|0]}
+function pickNext(){return BASE[Math.random()*BASE.length|0]}  /* fully random */
 var nxEl=document.getElementById('nx'),pnEl=document.getElementById('pn'),gaEl=document.getElementById('ga'),giEl=document.getElementById('gi'),gpEl=document.getElementById('gp'),gtEl=document.getElementById('gt');
 function loadPad(){pad.type=queue.shift();queue.push(pickNext());
  pad.sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex(pad.type),transparent:true,depthWrite:false}));pad.sp.scale.setScalar(.001);scene.add(pad.sp);pad.ready=true;pad.t=0;
@@ -348,7 +356,7 @@ function merge(a,c,res){var M=a.m+c.m,x=(a.x*a.m+c.x*c.m)/M,y=(a.y*a.m+c.y*c.m)/
  if(flight===a||flight===c)flight=null;kill(a);kill(c);
  var s=SIZE[ITEM[res].t],r=Math.hypot(x,y),rmin=R+s*.9;if(r<rmin){x*=rmin/r;y*=rmin/r;r=rmin}
  var v=Math.sqrt(MU/r),nb=mkBody(res,x,y,-sg*y/r*v,sg*x/r*v,M);nb.pop=0;nb.lf=1;nb.spin=(a.spin+c.spin)/2;
- merges++;combo=comboT>0?combo+1:1;comboT=4;var t=ITEM[res].t,pts=[0,0,500,1200,3000][t]*combo,isNew=dex.indexOf(res)<0;
+ merges++;combo=comboT>0?combo+1:1;comboT=4;var t=ITEM[res].t,pts=[0,0,500,1200,3000,6000][t]*combo,isNew=dex.indexOf(res)<0;
  if(isNew){dex.push(res);ss('ne_dex',dex);pts+=1000}
  addScore(pts);SFX.merge(combo);slow(.25,.55);flash=.3;flEl.style.background='#fff';shk=Math.max(shk,.04);
  burst(x,y,44,['#ffe27a','#7dffb0','#8fb7ff','#ff8af0','#ffffff'],1.8,1,.09);ring(x,y,TCOL[t],1.2,.7);ring(x,y,0xffffff,.6,.45);
