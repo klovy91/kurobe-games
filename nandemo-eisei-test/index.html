@@ -97,6 +97,7 @@ var R=1,RMAX=8.5,RFAR=16,MU=70,HS=1/250,FXS=2.66; /* RMAX = edge of the overview
 var A1=4*MU,TK=.35,NK=88,KD=1.5,RLO=4,RSPAN=2; /* 1st hold: how high it climbs (RLO..RLO+RSPAN, around the old fixed height ~4.65; less for heavy items); boost just enough to coast to that top */
 var K2LO=.3,K2SPAN=1.2,FILL=2.4;      /* 2nd hold at the top: sideways kick = (K2LO..K2LO+K2SPAN) x circular speed there, divided by weight */
 var SIZE=[0,0.23,0.28,0.33,0.38,0.5],SPR=2.7;
+var MRG=1.8;  /* merge reach = 1.8 x the bounce distance */
 var TCOL=[0,0x8fb7ff,0x7dffb0,0xffd36b,0xff8af0,0xffffff];
 
 /* ---------- items & recipes (5th value = weight; heavy things need a longer hold) ---------- */
@@ -449,8 +450,9 @@ function step(h){var n=bodies.length,i,b;
   if(r>RFAR||(r>RMAX&&(b.vx*b.vx+b.vy*b.vy)/2-MU/r>=0&&b.x*b.vx+b.y*b.vy>0))escape(b)}
  for(i=0;i<n;i++){var a=bodies[i];if(!a.alive||a.leaving)continue;
   for(var j=i+1;j<n;j++){var c=bodies[j];if(!c.alive||c.leaving)continue;var dx=c.x-a.x,dy=c.y-a.y,d=Math.hypot(dx,dy);
-   if(d<a.s+c.s&&d>1e-6){var res=state==='play'?RECIPE[key(a.type,c.type)]:null;
-    if(res){merge(a,c,res);break}else if(!(a.cool[c.id]>0))bounce(a,c,dx,dy,d)}}}}
+   var res=state==='play'?RECIPE[key(a.type,c.type)]:null;
+   if(res&&d<(a.s+c.s)*MRG){merge(a,c,res);break}                      /* merging reaches further than bouncing */
+   if(!res&&d<a.s+c.s&&d>1e-6&&!(a.cool[c.id]>0))bounce(a,c,dx,dy,d)}}}
 
 /* ---------- screens ---------- */
 var scrEl=document.getElementById('scr'),btEl=document.getElementById('bt');
