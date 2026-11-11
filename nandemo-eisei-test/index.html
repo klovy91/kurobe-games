@@ -38,7 +38,7 @@ html,body{height:100%;margin:0;background:#05070f;color:#fff;overflow:hidden;tou
 #gp{position:absolute;top:-3px;bottom:-3px;width:2px;background:#ffe27a;box-shadow:0 0 6px #ffe27a}
 #gi{position:absolute;top:-6px;bottom:-6px;width:5px;margin-left:-2px;border-radius:3px;background:#fff;box-shadow:0 0 8px #fff;left:0}
 #gt{font-size:12px;opacity:.7;text-shadow:0 0 6px #000}
-#msg{position:fixed;left:0;right:0;top:30%;text-align:center;font-size:min(40px,7.4vw);white-space:nowrap;font-weight:900;letter-spacing:.06em;pointer-events:none;opacity:0;text-shadow:0 0 18px rgba(0,0,0,.8)}
+#msg{position:fixed;left:0;right:0;top:19%;text-align:center;font-size:min(40px,7.4vw);white-space:nowrap;font-weight:900;letter-spacing:.06em;pointer-events:none;opacity:0;text-shadow:0 0 18px rgba(0,0,0,.8)}
 #msg.go{animation:mp 1.1s ease-out forwards}
 @keyframes mp{0%{opacity:0;transform:scale(.5)}12%{opacity:1;transform:scale(1.12)}22%{transform:scale(1)}75%{opacity:1}100%{opacity:0;transform:translateY(-20px)}}
 #fx{position:fixed;inset:0;pointer-events:none;overflow:hidden}
@@ -74,7 +74,7 @@ html,body{height:100%;margin:0;background:#05070f;color:#fff;overflow:hidden;tou
 <div id="fx"></div><div id="fl"></div>
 <div id="hud" class="f"><div id="sc">0<small>BEST 0</small></div><div><div id="lv"></div><div id="nx"></div></div></div>
 <div id="msg" class="f"></div>
-<div id="bt"><div id="pn"></div><div id="ga"><div id="gp"></div><div id="gi"></div></div><div id="gt">長押しで溜めて、離して発射</div></div>
+<div id="bt"><div id="pn"></div><div id="ga"><div id="gp"></div><div id="gi"></div></div><div id="gt">長押しで高さを決めて、離して打ち上げ</div></div>
 <div id="scr"></div>
 <button id="mt" type="button" aria-label="音の切り替え">🔊</button>
 <div id="ld">読み込み中…</div>
@@ -94,8 +94,8 @@ if(!window.__glok){window.__ldFail(true);return}
 
 /* ---------- world constants (planet radius = 1; orbit plane = world XY, facing the camera) ---------- */
 var R=1,RMAX=8.5,RFAR=16,MU=70,HS=1/250,FXS=2.66; /* RMAX = edge of the overview screen; satellites may go past it and come back, they only leave for good past RFAR or when moving faster than escape speed */
-var RT=4.5,A1=4*MU,TK=.35,NK=88,KD=1.5;  /* rocket: 1 boost straight up just enough to coast to RT, 2 coast to the top, 3 sideways kick (TK seconds) */
-var DVLO=1.2,DVHI=7.6,FILL=2.4;          /* the hold sets the sideways kick: DVLO..DVHI, divided by the item's weight */
+var A1=4*MU,TK=.35,NK=88,KD=1.5,RLO=2,RSPAN=10; /* 1st hold: how high it climbs (RLO..RLO+RSPAN, less for heavy items); boost just enough to coast to that top */
+var K2LO=.3,K2SPAN=1.2,FILL=2.4;      /* 2nd hold at the top: sideways kick = (K2LO..K2LO+K2SPAN) x circular speed there, divided by weight */
 var SIZE=[0,0.23,0.28,0.33,0.38,0.5],SPR=2.7;
 var TCOL=[0,0x8fb7ff,0x7dffb0,0xffd36b,0xff8af0,0xffffff];
 
@@ -221,12 +221,12 @@ addEventListener('resize',fit);
 
 /* ---------- flight math ---------- */
 function rStart(s){return R+.07+s*.9}
-function dvOf(g,w){return (DVLO+(DVHI-DVLO)*g)/w}
+function apexOf(g,w){var r=RLO+RSPAN*g/w;return r>=RFAR?40:r}
+function kickAK(g,w,r){return (K2LO+K2SPAN*g)/w*Math.sqrt(MU/r)/TK}
 /* one step of a launched rocket (shared by the game and the dotted guide line, so they match exactly) */
 function fstep(o,h){var r=Math.hypot(o.x,o.y),rx=o.x/r,ry=o.y/r,vr=o.vx*rx+o.vy*ry,k=-MU/(r*r*r),ax=k*o.x,ay=k*o.y;o.thr=0;
- if(o.ph===1){var need=Math.sqrt(Math.max(0,2*MU*(1/r-1/RT))),gr=MU/(r*r),a1=A1;    /* last boost step: only what is needed to coast exactly to RT */
+ if(o.ph===1){var need=Math.sqrt(Math.max(0,2*MU*(1/r-1/o.RT))),gr=MU/(r*r),a1=A1;    /* last boost step: only what is needed to coast exactly to RT */
   if(vr+(A1-gr)*h>=need){a1=Math.max(0,(need-vr)/h+gr);o.ph=2}ax+=a1*rx;ay+=a1*ry;o.dx=rx;o.dy=ry;o.thr=1}
- if(o.ph===2&&vr<=0)o.ph=3;
  if(o.ph===3){var gx=ry-KD*vr*rx,gy=-rx-KD*vr*ry,gl=Math.hypot(gx,gy);gx/=gl;gy/=gl;ax+=o.AK*gx;ay+=o.AK*gy;o.dx=gx;o.dy=gy;o.thr=2;if(++o.kt>=NK)o.ph=4}
  o.vx+=ax*h;o.vy+=ay*h;o.x+=o.vx*h;o.y+=o.vy*h}
 function orbit(x,y,vx,vy,s){var r=Math.hypot(x,y),v2=vx*vx+vy*vy,h=x*vy-y*vx,rv=x*vx+y*vy,
@@ -236,9 +236,10 @@ function orbit(x,y,vx,vy,s){var r=Math.hypot(x,y),v2=vx*vx+vy*vy,h=x*vy-y*vx,rv=
   if(rr<rc){crash=true;rr=rc}else if(rr>RFAR){esc=true;rr=RFAR}
   pts.push(rr*Math.cos(th),rr*Math.sin(th));if(crash||esc)break}
  return {pts:pts,crash:crash,esc:esc,e:e}}
-function predict(g,type,pts){var d=ITEM[type],s=SIZE[d.t],o={x:0,y:rStart(s),vx:0,vy:0,ph:1,kt:0,AK:dvOf(g,d.w)/TK};if(pts)pts.push(o.x,o.y);
- for(var i=0;o.ph<4;i++){if(i>4000)return {ok:false,crash:true,e:9};fstep(o,HS);if(pts&&i%8===7)pts.push(o.x,o.y);if(i>=23&&Math.hypot(o.x,o.y)<R+s*.6)return {ok:false,crash:true,e:9}}
- var q=orbit(o.x,o.y,o.vx,o.vy,s);if(pts)for(i=0;i<q.pts.length;i++)pts.push(q.pts[i]);return {ok:!q.crash&&!q.esc,crash:q.crash,esc:q.esc,e:q.e}}
+/* what the sideways kick would give right now (same steps as the game) */
+function kickPredict(b,g2,pts){var o={x:b.x,y:b.y,vx:b.vx,vy:b.vy,ph:3,kt:0,AK:kickAK(g2,b.d.w,Math.hypot(b.x,b.y))},i=0;if(pts)pts.push(o.x,o.y);
+ while(o.ph<4){fstep(o,HS);if(pts&&++i%8===0)pts.push(o.x,o.y)}
+ var q=orbit(o.x,o.y,o.vx,o.vy,b.s);if(pts)for(i=0;i<q.pts.length;i++)pts.push(q.pts[i]);return {ok:!q.crash&&!q.esc,crash:q.crash,esc:q.esc,e:q.e}}
 var LN=260;
 function mkLine(col,dashed){var g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(LN*3),3));
  var m=dashed?new THREE.LineDashedMaterial({color:col,dashSize:.07,gapSize:.05,transparent:true,opacity:.9,depthWrite:false}):new THREE.LineBasicMaterial({color:col,transparent:true,opacity:.2,depthWrite:false});
@@ -308,14 +309,15 @@ var SFX={
  bye:function(){tone(820,.8,'square',.06,140)},
  tok:function(v){var q=Math.min(1,v);tone(1100-q*500,.08+q*.08,'triangle',.1+q*.15,500);if(q>.4)noise(.15,.15*q,3000,500)},
  planet:function(){[523,659,784,1047,1319,1568,2093].forEach(function(f,i){tone(f,.9,'triangle',.14,0,i*.07)});tone(130,1.4,'sine',.3,65);noise(1.6,.18,7000,1200,.15)},
+ ping:function(){tone(1320,.15,'square',.07);tone(1760,.3,'triangle',.13,0,.08)},
  over:function(){[392,330,262,196].forEach(function(f,i){tone(f,.45,'triangle',.16,0,i*.18)})}};
 var mtEl=document.getElementById('mt');function mtShow(){mtEl.textContent=muted?'🔇':'🔊'}mtShow();
 mtEl.addEventListener('click',function(e){e.stopPropagation();muted=!muted;ss('ne_mute',muted);au();if(master)master.gain.value=muted?0:.45;mtShow()});
 
 /* ---------- game state ---------- */
 var bodies=[],nid=1,state='title',lives=3,score=0,combo=0,comboT=0,launches=0,merges=0;
-var queue=[],pad={type:null,sp:null,ready:false,t:0},charging=false,g=0,padOff=0,padV=0,flight=null,predFade=0;
-var predLine=mkLine(0xffffff,true);predLine.visible=false;
+var queue=[],pad={type:null,sp:null,ready:false,t:0},charging=0,gMode=-1,waitT=0,g=0,padOff=0,padV=0,flight=null,predFade=0;
+var predLine=mkLine(0xffffff,true);predLine.visible=false;var tgtLine=mkLine(0xffffff,true);tgtLine.visible=false;
 
 function mkBody(type,x,y,vx,vy,m){var d=ITEM[type],s=SIZE[d.t];
  var sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex(type),transparent:true,depthWrite:false}));sp.scale.setScalar(s*SPR);scene.add(sp);
@@ -331,13 +333,21 @@ function pickNext(){return BASE[Math.random()*BASE.length|0]}  /* fully random *
 var nxEl=document.getElementById('nx'),pnEl=document.getElementById('pn'),gaEl=document.getElementById('ga'),giEl=document.getElementById('gi'),gpEl=document.getElementById('gp'),gtEl=document.getElementById('gt');
 function loadPad(){pad.type=queue.shift();queue.push(pickNext());
  pad.sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex(pad.type),transparent:true,depthWrite:false}));pad.sp.scale.setScalar(.001);scene.add(pad.sp);pad.ready=true;pad.t=0;
- var lo=-1,hi=-1,pf=-1,be=9;for(var i=0;i<=200;i++){var o=predict(i/200,pad.type,null);if(o.ok){if(lo<0)lo=i/200;hi=i/200;if(o.e<be){be=o.e;pf=i/200}}else if(lo>=0)break}
- gaEl.style.background='linear-gradient(90deg,rgba(255,90,110,.55) 0 '+(lo*100)+'%,rgba(80,230,150,.75) '+(lo*100)+'% '+(hi*100)+'%,rgba(255,90,110,.55) '+(hi*100)+'% 100%)';
- gpEl.style.left=(pf*100)+'%';giEl.style.left='0%';
+ giEl.style.left='0%';gMode=-1;
  nxEl.innerHTML='NEXT '+img(queue[0])+img(queue[1]);hints()}
 function wTag(id){var w=ITEM[id].w;return w>=1.2?'<b style="color:#ff9f6b">（おもい）</b>':w<=.75?'<b style="color:#9fe8ff">（かるい）</b>':''}
-function hints(){var any=false;bodies.forEach(function(b){b.hint=!!(pad.ready&&b.alive&&!b.leaving&&RECIPE[key(pad.type,b.type)]);if(b.hint)any=true});
- pnEl.innerHTML=pad.ready?img(pad.type)+ITEM[pad.type].n+wTag(pad.type)+(any?'<small>　光っている衛星と合体できる!</small>':''):''}
+function curType(){return flight&&flight.ph===2&&flight.wait?flight.type:(!flight&&pad.ready?pad.type:null)}
+function hints(){var t=curType(),any=false;bodies.forEach(function(b){b.hint=!!(t&&b!==flight&&b.alive&&!b.leaving&&RECIPE[key(t,b.type)]);if(b.hint)any=true});
+ pnEl.innerHTML=t?img(t)+ITEM[t].n+wTag(t)+(any?'<small>　光っている衛星と合体できる!</small>':''):''}
+/* gauge: 1st hold = height (blue: on screen / orange: past the screen edge / red: too high, gone), 2nd hold = sideways kick (green = orbit) */
+function gauge1(type){var w=ITEM[type].w,gS=Math.min(1,(RMAX-RLO)/RSPAN*w)*100,gF=Math.min(1,(RFAR-RLO)/RSPAN*w)*100;
+ gaEl.style.background='linear-gradient(90deg,rgba(90,200,255,.65) 0 '+gS+'%,rgba(255,170,60,.75) '+gS+'% '+gF+'%,rgba(255,90,110,.6) '+gF+'% 100%)';gpEl.style.display='none';gtEl.textContent='1回目：長押しで高さを決めて、離して打ち上げ'}
+function gauge2(b){var lo=-1,hi=-1,pf=-1,be=9;for(var i=0;i<=200;i++){var o=kickPredict(b,i/200,null);if(o.ok){if(lo<0)lo=i/200;hi=i/200;if(o.e<be){be=o.e;pf=i/200}}else if(lo>=0)break}
+ if(lo<0){lo=hi=0}gaEl.style.background='linear-gradient(90deg,rgba(255,90,110,.55) 0 '+(lo*100)+'%,rgba(80,230,150,.75) '+(lo*100)+'% '+(hi*100)+'%,rgba(255,90,110,.55) '+(hi*100)+'% 100%)';
+ gpEl.style.display=pf<0?'none':'';gpEl.style.left=(pf*100)+'%';gtEl.textContent='2回目：長押しして、離して横に噴射'}
+function syncGauge(){var m=state!=='play'?0:flight&&flight.ph===2&&flight.wait?2:(!flight&&pad.ready?1:0);if(m===gMode)return;gMode=m;giEl.style.left='0%';
+ if(m===1)gauge1(pad.type);else if(m===2)gauge2(flight);else{gaEl.style.background='rgba(255,255,255,.1)';gpEl.style.display='none';gtEl.textContent=flight&&flight.ph<=2&&!flight.waited?'頂上で もう一度 長押し!':''}
+ hints()}
 
 var scEl=document.getElementById('sc'),lvEl=document.getElementById('lv');
 function hud(){scEl.innerHTML=score+'<small>BEST '+Math.max(best,score)+(state==='title'?'':'　★ '+made.length)+'</small>';var h='';for(var i=0;i<3;i++)h+=i<lives?'♥':'<i>♥</i>';lvEl.innerHTML=h}
@@ -345,9 +355,11 @@ function addScore(n){score+=n;hud()}
 
 /* ---------- input ---------- */
 function down(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a'))return;au();
- if(state!=='play'||charging||!pad.ready)return;charging=true;g=0;predLine.visible=true;predFade=1;predLine.material.opacity=.9;chgStart()}
-function up(){if(!charging)return;charging=false;chgStop();launch()}
-function cancel(){if(!charging)return;charging=false;chgStop();predLine.visible=false;giEl.style.left='0%'}
+ if(state!=='play'||charging)return;
+ if(flight&&flight.ph===2&&flight.wait)charging=2;else if(!flight&&pad.ready)charging=1;else return;
+ g=0;predLine.visible=true;predFade=1;predLine.material.opacity=.9;chgStart()}
+function up(){if(!charging)return;var c=charging;charging=0;chgStop();tgtLine.visible=false;if(c===1)launch();else kickGo(flight)}
+function cancel(){if(!charging)return;charging=0;chgStop();predLine.visible=false;tgtLine.visible=false;giEl.style.left='0%'}
 addEventListener('pointerdown',down);addEventListener('pointerup',up);addEventListener('pointercancel',cancel);addEventListener('blur',cancel);
 addEventListener('keydown',function(e){if(e.code==='Space'){e.preventDefault();if(!e.repeat)down(null)}});
 addEventListener('keyup',function(e){if(e.code==='Space')up()});
@@ -355,16 +367,17 @@ addEventListener('contextmenu',function(e){e.preventDefault()});
 
 /* release: short freeze, BANG, pad recoils, smoke, then the burn carries it up and over */
 function launch(){var d=ITEM[pad.type],s=SIZE[d.t],b=mkBody(pad.type,0,rStart(s),0,0);
- b.ph=1;b.kt=0;b.fs=0;b.AK=dvOf(g,d.w)/TK;b.launched=true;b.str=1;b.ln.visible=false;b.pw=g;flight=b;
+ b.ph=1;b.kt=0;b.fs=0;b.RT=apexOf(g,d.w);b.waited=false;b.wait=false;b.launched=true;if(b.RT>=RFAR)label(0,R+1.2,'高すぎ!','bad',1.5,-20);b.str=1;b.ln.visible=false;b.pw=g;flight=b;
  scene.remove(pad.sp);pad.sp.material.dispose();pad.sp=null;pad.ready=false;pad.t=0;launches++;giEl.style.left='0%';
  hitStop=.06+.06*g;shk=.03+.09*g;flash=.12+.1*g;flEl.style.background='#fff';padV=.5+1.1*g;
  SFX.thump(g);SFX.roar();
  for(var i=0;i<34;i++){var side=i%2?1:-1,v=.5+Math.random()*(1.2+g);emit(SM,side*.22,R+.08,side*v,Math.random()*.25,1+Math.random()*.8,.09+Math.random()*.06,Math.random()<.5?'#c9ced8':'#8e96a5',2.6,.18,.85)}
  burst(0,R+.08,18,['#ffe27a','#ff8a3a','#ffffff'],1.4,.4,.08);hints()}
 /* at the top: judge right away (finish the sideways kick ahead of time on a copy), freeze a moment, then the 2nd stage fires */
-function kick(b){if(state==='title')return;
- if(state==='play'&&b.launched){var o={x:b.x,y:b.y,vx:b.vx,vy:b.vy,ph:3,kt:b.kt,AK:b.AK};while(o.ph<4)fstep(o,HS);judge(b,orbit(o.x,o.y,o.vx,o.vy,b.s))}
- hitStop=Math.max(hitStop,.09);SFX.kick();shk=Math.max(shk,.05+.06*b.pw);flash=Math.max(flash,.12);flEl.style.background='#fff';
+function enterWait(b){b.wait=true;b.waited=true;waitT=0;msg('今! 長押し!','#ffe27a');SFX.ping();ring(b.x,b.y,0xffe27a,.9,.6)}
+function kickGo(b){if(!b||!b.alive||b.ph!==2)return;b.wait=false;b.ph=3;b.kt=0;b.pw=g;b.AK=kickAK(g,b.d.w,Math.hypot(b.x,b.y));
+ if(state==='play'&&b.launched)judge(b,kickPredict(b,g,null));
+ hitStop=Math.max(hitStop,.09);SFX.kick();shk=Math.max(shk,.05+.06*g);flash=Math.max(flash,.12);flEl.style.background='#fff';
  burst(b.x,b.y,26,['#ffe27a','#ff8a3a','#ffffff'],1.8,.5,.08);ring(b.x,b.y,0xffb347,.7,.4)}
 function judge(b,o){
  if(o.crash){label(b.x,b.y,'パワー不足…','bad',1.4,-20)}
@@ -372,7 +385,7 @@ function judge(b,o){
  else{var gr=o.e<.06?['PERFECT ORBIT!','#ffe27a',300]:o.e<.16?['GREAT ORBIT!','#7dffb0',150]:['ORBIT IN','#9fd0ff',50];
   msg(gr[0],gr[1]);addScore(gr[2]);label(b.x,b.y,'+'+gr[2],'pt',1.1,-26);b.lf=1;
   ring(b.x,b.y,gr[1],gr[2]===300?1.1:.7,.6);if(gr[2]===300){SFX.perfect();slow(.3,.45);burst(b.x,b.y,30,['#ffe27a','#fff','#ffb347'],1.6,.8,.07)}else SFX.good()}}
-function burnout(b){b.ph=0;b.ln.visible=true;reorbit(b);if(flight===b){flight=null;camBody=b;followT=.9}}
+function burnout(b){b.ph=0;b.ln.visible=true;reorbit(b);if(flight===b){flight=null;camBody=b;followT=.9}hints()}
 
 /* ---------- physics ---------- */
 function crash(b){kill(b);if(flight===b)flight=null;SFX.boom();shk=Math.max(shk,.14);flash=.35;flEl.style.background='#ff5a3a';
@@ -428,7 +441,8 @@ function bounce(a,c,dx,dy,d){var nx=dx/d,ny=dy/d,rvx=c.vx-a.vx,rvy=c.vy-a.vy,vn=
   burst(px,py,6+Math.round(I*22),['#ffffff','#ffe9a8','#aac4ff'],.8+I*1.6,.35,.05);chips(px,py,2+Math.round(I*10),.6+I*1.4);shk=Math.max(shk,I*.05*Math.min(2,M/.04))}}
 function step(h){var n=bodies.length,i,b;
  for(i=0;i<n;i++){b=bodies[i];if(!b.alive)continue;var r;
-  if(b.ph){var p0=b.ph;fstep(b,h);b.fs++;if(p0===2&&b.ph===3)kick(b);if(b.ph===4)burnout(b)}
+  if(b.ph){fstep(b,h);b.fs++;if(b.ph===4)burnout(b);
+   else if(b.ph===2&&!b.waited&&b.RT<RFAR&&state==='play'){var rr=Math.hypot(b.x,b.y);if((b.vx*b.x+b.vy*b.y)/rr<=.25*Math.sqrt(MU/b.RT))enterWait(b)}}
   else{r=Math.hypot(b.x,b.y);var k=-MU/(r*r*r);b.vx+=k*b.x*h;b.vy+=k*b.y*h;b.x+=b.vx*h;b.y+=b.vy*h}
   if(b.leaving)continue;r=Math.hypot(b.x,b.y);
   if(r<R+b.s*.6&&!(b.ph&&b.fs<24)){crash(b);continue}
@@ -443,7 +457,7 @@ var scrEl=document.getElementById('scr'),btEl=document.getElementById('bt');
 function dexHtml(){return '<h3>ずかん '+dex.length+' / '+RESULTS.length+'</h3><div class="dex">'+RESULTS.map(function(id){var k=dex.indexOf(id)>=0;return '<span class="'+(k?'':'no')+'">'+img(id)+(k?ITEM[id].n:'？')+'</span>'}).join('')+'</div>'}
 function title(){state='title';scrEl.style.display='flex';
  scrEl.innerHTML='<h1 class="f">なんでも衛星</h1><p>なんでも打ち上げて、人工衛星にしよう。</p>'+
- '<ol><li><b>長押し</b>でパワーを溜めて、<b>離して</b>発射</li><li>重いものほど、しっかり溜めないと上がらない</li><li>軌道に乗せられないと残機が減る(3機)</li><li><b>光っている衛星</b>にぶつけると合体!</li><li>合体を重ねて<b>惑星</b>を作ろう</li><li>相性の悪いもの同士は弾き合う</li></ol>'+
+ '<ol><li>1回目の<b>長押し</b>で高さを決めて、<b>離して</b>打ち上げ</li><li>頂上で2回目の<b>長押し</b>、離して横に噴射して軌道へ</li><li>重いものほど、しっかり溜めないと上がらない</li><li>軌道に乗せられないと残機が減る(3機)</li><li><b>光っている衛星</b>にぶつけると合体!</li><li>合体を重ねて<b>惑星</b>を作ろう</li><li>相性の悪いもの同士は弾き合う</li></ol>'+
  '<button class="btn" id="pl" type="button">スタート</button><p class="f" style="opacity:.75">BEST '+best+'</p>';
  document.getElementById('pl').addEventListener('click',start);
  clearAll();for(var i=0;i<6;i++){var r=2+i*.95,a=Math.random()*6.283,v=Math.sqrt(MU/r),t=BASE[Math.random()*BASE.length|0];mkBody(t,r*Math.cos(a),r*Math.sin(a),Math.sin(a)*v,-Math.cos(a)*v)}
@@ -462,19 +476,25 @@ function gameOver(){state='over';cancel();pad.ready=false;if(pad.sp){scene.remov
 var last=performance.now(),T=0,acc=0,camT=new THREE.Vector3(),camP=new THREE.Vector3();
 function easeBack(t){var c=1.9;return 1+(c+1)*Math.pow(t-1,3)+c*Math.pow(t-1,2)}
 function loop(now){requestAnimationFrame(loop);var dt=Math.min(.05,Math.max(0,(now-last)/1000));last=now;T+=dt;
- if(slowT>0){slowT-=dt;ts+=(slowLow-ts)*Math.min(1,dt*25)}else ts+=(1-ts)*Math.min(1,dt*5);
+ var base=1;if(state==='play'&&flight&&flight.alive){if(flight.ph===2&&(flight.wait||charging===2))base=.12;else if(flight.ph<=2&&!flight.waited)base=2.2}
+ if(slowT>0){slowT-=dt;ts+=(slowLow-ts)*Math.min(1,dt*25)}else ts+=(base-ts)*Math.min(1,dt*(base<ts?8:3));
  var gdt=dt*ts;if(hitStop>0){hitStop-=dt;gdt=0}
  /* pad: sinks while charging, springs back after launch */
- if(charging)padOff=-.035*g;else{padV+=(-260*padOff-11*padV)*dt;padOff+=padV*dt}
+ if(charging===1)padOff=-.035*g;else{padV+=(-260*padOff-11*padV)*dt;padOff+=padV*dt}
  padMesh.position.y=R+.03+padOff;
  if(state==='play'){
   if(!pad.ready){pad.t+=dt;if(pad.t>.6&&hitStop<=0)loadPad()}
-  else if(pad.sp){pad.t+=dt;var f=Math.min(1,pad.t*4),ps=SIZE[ITEM[pad.type].t],sc=ps*SPR*(f<1?easeBack(f):1),sq=charging?.24*g:0,jt=charging?g*.012:0;
+  else if(pad.sp){pad.t+=dt;var f=Math.min(1,pad.t*4),ps=SIZE[ITEM[pad.type].t],sc=ps*SPR*(f<1?easeBack(f):1),sq=charging===1?.24*g:0,jt=charging===1?g*.012:0;
    pad.sp.scale.set(sc*(1+sq),sc*(1-sq),1);pad.sp.position.set((Math.random()-.5)*jt,rStart(ps)+padOff-sc*sq*.35+(Math.random()-.5)*jt,0)}
-  if(charging){g+=dt/FILL;var pts=[],o=predict(Math.min(g,1),pad.type,pts);setLine(predLine,pts);
-   predLine.material.color.set(!o.ok?0xff5a6e:o.e<.06?0xffe27a:0x7dffb0);giEl.style.left=(Math.min(g,1)*100)+'%';chgSet(Math.min(g,1));
-   shk=Math.max(shk,.004+.022*g);if(Math.random()<dt*(1.5+g*12))SFX.creak(g);
-   if(Math.random()<dt*g*30){var sd=Math.random()<.5?1:-1;emit(SM,sd*.34,R+.06,sd*(.2+Math.random()*.4),.1+Math.random()*.2,.6,.05,'#c9ced8',2,.3,.5)}
+  syncGauge();
+  if(flight&&flight.wait&&charging!==2){waitT+=dt;if(waitT>3){flight.wait=false;label(flight.x,flight.y,'まにあわなかった…','bad',1.6,-20);gMode=-1}}
+  if(charging){g+=dt/FILL;var gg=Math.min(g,1);giEl.style.left=(gg*100)+'%';chgSet(gg);
+   if(charging===1){var rt=apexOf(gg,ITEM[pad.type].w),rv=Math.min(rt,RFAR),c1=rt>=RFAR?0xff5a6e:rt>RMAX?0xffb347:0x8fdcff,cp=[];
+    setLine(predLine,[0,rStart(SIZE[ITEM[pad.type].t]),0,rv]);predLine.material.color.set(c1);
+    for(var ci=0;ci<=128;ci++){var ca=ci/128*6.2832;cp.push(rv*Math.cos(ca),rv*Math.sin(ca))}setLine(tgtLine,cp);tgtLine.visible=true;tgtLine.material.color.set(c1);
+    shk=Math.max(shk,.004+.022*gg);if(Math.random()<dt*(1.5+gg*12))SFX.creak(gg);
+    if(Math.random()<dt*gg*30){var sd=Math.random()<.5?1:-1;emit(SM,sd*.34,R+.06,sd*(.2+Math.random()*.4),.1+Math.random()*.2,.6,.05,'#c9ced8',2,.3,.5)}}
+   else if(flight){var pts=[],o=kickPredict(flight,gg,pts);setLine(predLine,pts);predLine.material.color.set(!o.ok?0xff5a6e:o.e<.06?0xffe27a:0x7dffb0);shk=Math.max(shk,.004+.01*gg)}
    if(g>=1){g=1;up()}}
   gtEl.style.opacity=charging?'0':''}
  if(!charging&&predLine.visible){if(!flight)predFade-=dt*3;predLine.material.opacity=.9*Math.max(0,predFade);if(predFade<=0)predLine.visible=false}
@@ -504,8 +524,9 @@ function loop(now){requestAnimationFrame(loop);var dt=Math.min(.05,Math.max(0,(n
  planet.rotation.y+=dt*.05;clouds.rotation.y+=dt*.07;beacon.material.opacity=.4+.6*(Math.sin(T*5)>0?1:0);
  /* camera: close-up on the pad while charging, chases the rocket and pulls back as it climbs, then back to the whole view */
  if(followT>0)followT-=dt;var tb=flight||(followT>0&&camBody&&camBody.alive?camBody:null),tx=0,ty=ovY,tD=ovD;
- if(state==='play'&&charging){ty=R+.9;tD=dFor(2.7-.5*g)}
- else if(state==='play'&&tb){tx=tb.x*.6;ty=R+(tb.y-R)*.6;tD=Math.min(ovD,dFor(Math.max(2.7,.62*Math.hypot(tb.x,tb.y-R)+1.6)))}
+ if(state==='play'&&charging===1){var rv2=Math.min(apexOf(Math.min(g,1),ITEM[pad.type].w),RFAR),u2=Math.min(1,(rv2-RLO)/(RMAX-RLO));ty=(R+.9)*(1-u2)+ovY*u2;tD=Math.max(dFor(2.7),dFor(rv2*1.12))}
+ else if(state==='play'&&flight&&flight.ph===2&&(flight.wait||charging===2)){ty=ovY;tD=Math.max(ovD,dFor(Math.hypot(flight.x,flight.y)*1.15))}
+ else if(state==='play'&&tb){tx=tb.x*.6;ty=R+(tb.y-R)*.6;tD=dFor(Math.max(2.7,.62*Math.hypot(tb.x,tb.y-R)+1.6))}
  var cr=Math.min(1,dt*(tD<camD?3.2:1.6));camX+=(tx-camX)*cr;camY+=(ty-camY)*cr;camD+=(tD-camD)*cr;
  shk*=Math.pow(.02,dt);var sa=shk*camD*.09;camT.set(camX,camY,0);
  cam.position.set(camX+camDir.x*camD+(Math.random()-.5)*sa,camY+camDir.y*camD+(Math.random()-.5)*sa,camDir.z*camD+(Math.random()-.5)*sa);cam.lookAt(camT);
