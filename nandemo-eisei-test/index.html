@@ -165,6 +165,14 @@ function drawPlanet(x,id){var P=PLD[id],cx=64,cy=64,r=38,rg=P[3]==='ring';x.shad
  x.fillStyle=sh;x.fillRect(0,0,128,128);x.restore();
  if(rg){x.strokeStyle='rgba(245,232,190,.95)';x.lineWidth=7;x.beginPath();x.ellipse(cx,cy,60,15,-.35,0,Math.PI);x.stroke()}}
 function tex(id){return TEX[id]||(TEX[id]=new THREE.CanvasTexture(icon(id)))}
+/* trail colour per item: read the icon's own colour and make it vivid (falls back to a colour picked from the name) */
+var COL={};
+function itemCol(id){if(COL[id]!=null)return COL[id];var r=0,g=0,b=0,n=0;
+ try{var d=icon(id).getContext('2d').getImageData(0,0,128,128).data;for(var i=0;i<d.length;i+=16){var R=d[i],G=d[i+1],B=d[i+2],A=d[i+3],mx=Math.max(R,G,B),mn=Math.min(R,G,B);
+  if(A>200&&mx>40&&(mx-mn)/mx>.25){var w=(mx-mn)/255;r+=R*w;g+=G*w;b+=B*w;n+=w}}}catch(e){}
+ var c=new THREE.Color(),h=0;for(var k=0;k<id.length;k++)h=(h*31+id.charCodeAt(k))%360;
+ if(n>3){c.setRGB(r/n/255,g/n/255,b/n/255);var hsl={};c.getHSL(hsl);c.setHSL(hsl.h,Math.max(.7,hsl.s),.62)}else c.setHSL(h/360,.75,.62);
+ return COL[id]=c.getHex()}
 function iurl(id){return URL_[id]||(URL_[id]=icon(id).toDataURL())}
 function img(id){return '<img src="'+iurl(id)+'" alt="">'}
 
@@ -325,7 +333,7 @@ var predLine=mkLine(0xffffff,true);predLine.visible=false;var tgtLine=mkLine(0xf
 function mkBody(type,x,y,vx,vy,m){var d=ITEM[type],s=SIZE[d.t];
  var sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex(type),transparent:true,depthWrite:false}));sp.scale.setScalar(s*SPR);scene.add(sp);
  var hs=new THREE.Sprite(new THREE.SpriteMaterial({map:hintT,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));hs.visible=false;scene.add(hs);
- var b={id:nid++,type:type,d:d,s:s,m:m||d.w*s*s,x:x,y:y,vx:vx,vy:vy,sp:sp,hs:hs,ln:mkLine(TCOL[d.t]),tl:mkTrail(TCOL[d.t]),tr:[],tt:0,
+ var b={id:nid++,type:type,d:d,s:s,m:m||d.w*s*s,x:x,y:y,vx:vx,vy:vy,sp:sp,hs:hs,ln:mkLine(itemCol(type)),tl:mkTrail(itemCol(type)),tr:[],tt:0,
   alive:true,leaving:0,rot:0,spin:(Math.random()-.5)*1.2,pop:1,lf:0,str:0,cool:{},hint:false,ph:0,kt:0,fs:0,AK:0,dx:0,dy:1,thr:0};
  bodies.push(b);reorbit(b);return b}
 function reorbit(b){setLine(b.ln,orbit(b.x,b.y,b.vx,b.vy,b.s).pts)}
