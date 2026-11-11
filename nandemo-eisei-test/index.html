@@ -404,7 +404,7 @@ function merge(a,c,res){var direct=state==='play'&&flight&&(a===flight||c===flig
  merges++;combo=comboT>0?combo+1:1;comboT=4;var pts=(P?8000:[0,0,500,1200,3000][t])*combo,isNew=dex.indexOf(res)<0;
  if(isNew){dex.push(res);ss('ne_dex',dex);pts+=P?3000:1000}if(direct)pts+=1000;
  addScore(pts);flEl.style.background='#fff';
- focus={x:x,y:y,t:P?1.8:1.1,E:P?2.6:1.5};
+ focus={x:x,y:y,b:P?null:nb,t:P?1.8:1.1,E:P?2.6:1.5};  /* the camera follows the new satellite */
  if(P){planetBirth(res,x,y);SFX.planet();slow(.15,1.6);flash=.6;shk=Math.max(shk,.1);
   burst(x,y,90,['#ffe27a','#ffffff','#8fb7ff','#ff8af0','#7dffb0'],2.8,1.5,.14);ring(x,y,0xffffff,1,1);ring(x,y,0xffe27a,.7,.8);ring(x,y,0x8fb7ff,1.5,1.4);
   msg(ITEM[res].n+' たんじょう!','#ffe27a')}
@@ -531,7 +531,7 @@ function loop(now){requestAnimationFrame(loop);var dt=Math.min(.05,Math.max(0,(n
  if(followT>0)followT-=dt;var tb=flight||(followT>0&&camBody&&camBody.alive?camBody:null),tx=0,ty=ovY,tD=ovD;
  if(state==='play'&&charging===1){var rv2=Math.min(apexOf(Math.min(g,1),ITEM[pad.type].w),RFAR),u2=Math.min(1,(rv2-RLO)/(RMAX-RLO));ty=(R+.9)*(1-u2)+ovY*u2;tD=Math.max(dFor(2.7),dFor(rv2*1.12))}
  else if(state==='play'&&flight&&flight.ph===2&&(flight.wait||charging===2)){ty=ovY;tD=Math.max(ovD,dFor(Math.hypot(flight.x,flight.y)*1.15))}
- else if(state==='play'&&focus&&!charging){tx=focus.x;ty=focus.y;tD=dFor(focus.E)}
+ else if(state==='play'&&focus&&!charging){var fb=focus.b&&focus.b.alive?focus.b:focus;tx=fb.x;ty=fb.y;tD=dFor(focus.E)}
  else if(state==='play'&&tb){tx=tb.x*.6;ty=R+(tb.y-R)*.6;tD=dFor(Math.max(2.7,.62*Math.hypot(tb.x,tb.y-R)+1.6))}
  if(focus){focus.t-=dt;if(focus.t<=0||state!=='play')focus=null}
  var cr=Math.min(1,dt*(focus&&!charging?5:tD<camD?3.2:1.6));camX+=(tx-camX)*cr;camY+=(ty-camY)*cr;camD+=(tD-camD)*cr;
