@@ -107,7 +107,7 @@ var DEF=[
  ['onigiri','🍙','おにぎり',2],['sushi','🍣','すし',2],['curry','🍛','カレー',2],['senbei','🍘','せんべい',2],['meat','🍖','にく',2],
  ['milk','🥛','ぎゅうにゅう',2],['ufo','🛸','UFO',2],['fegg','🍳','めだまやき',2],['pancake','🥞','パンケーキ',2],['onsen','♨️','おんせん',2],
  ['sea','🌊','うみ',2],['whale','🐋','くじら',2],['rain','🌧️','あめ',2],['comet','☄️','すいせい',2],['baguette','🥖','フランスパン',2],
- ['monkey','🐒','うちゅうザル',2],
+ ['monkey','🐒','うちゅうザル',2],['fry','🍤','フライ',2],['chick','🐣','うちゅうひよこ',2],['dolphin','🐬','うちゅうイルカ',2],['jungle','🌴','ジャングル',2],
  ['volcano','🌋','かざん',3],['bento','🍱','おべんとう',3],['burger','🍔','ハンバーガー',3],['pudding','🍮','プリン',3],['cloud','☁️','くも',3],
  ['gorilla','🦍','ゴリラ',3],['donut','🍩','ドーナツ',3],['alien','👽','うちゅうじん',3],['sandw','🥪','サンドイッチ',3],
  ['parfait','🍨','パフェ',4],
@@ -118,12 +118,14 @@ var REC=[
  ['rice','nori','onigiri'],['rice','fish','sushi'],['rice','cow','curry'],['rice','fire','senbei'],['cow','fire','meat'],['cow','water','milk'],
  ['cow','rocket','ufo'],['egg','fire','fegg'],['egg','banana','pancake'],['water','fire','onsen'],['nori','water','sea'],['fish','water','whale'],
  ['water','rocket','rain'],['fire','rocket','comet'],['bread','fire','baguette'],['banana','rocket','monkey'],
+ ['nori','fish','sushi'],['nori','fire','senbei'],['rice','rocket','onigiri'],['cow','banana','milk'],['water','bread','pancake'],['egg','bread','sandw'],
+ ['bread','banana','sandw'],['fish','bread','fry'],['egg','rocket','chick'],['fish','rocket','dolphin'],['water','banana','jungle'],
  ['onsen','fire','volcano'],['onigiri','sushi','bento'],['senbei','onigiri','bento'],['meat','bread','burger'],['baguette','meat','burger'],
  ['milk','egg','pudding'],['rain','fire','cloud'],['monkey','banana','gorilla'],['pancake','fire','donut'],['ufo','monkey','alien'],['fegg','bread','sandw'],
- ['pudding','banana','parfait'],
+ ['pudding','banana','parfait'],['fry','onigiri','bento'],['chick','monkey','alien'],
  ['sea','volcano','earth'],['volcano','comet','mars'],['donut','cloud','saturn'],['whale','cloud','neptune'],
  ['bento','burger','gourmet'],['curry','burger','gourmet'],['sandw','bento','gourmet'],['parfait','pancake','sweets'],
- ['gorilla','whale','animal'],['alien','comet','ufostar']];
+ ['gorilla','whale','animal'],['alien','comet','ufostar'],['chick','whale','animal'],['dolphin','sea','neptune'],['jungle','gorilla','animal']];
 var ITEM={},BASE=[],RECIPE={},PART={},RESULTS=[];
 DEF.forEach(function(d){ITEM[d[0]]={id:d[0],e:d[1],n:d[2],t:d[3],w:d[4]||1,pl:!!d[5]};if(d[3]===1)BASE.push(d[0])});
 function key(a,b){return a<b?a+'+'+b:b+'+'+a}
@@ -319,6 +321,19 @@ mtEl.addEventListener('click',function(e){e.stopPropagation();muted=!muted;ss('n
 var bodies=[],nid=1,state='title',lives=3,score=0,combo=0,comboT=0,launches=0,merges=0;
 var queue=[],pad={type:null,sp:null,ready:false,t:0},charging=0,gMode=-1,waitT=0,g=0,padOff=0,padV=0,flight=null,predFade=0;
 var predLine=mkLine(0xffffff,true);predLine.visible=false;var tgtLine=mkLine(0xffffff,true);tgtLine.visible=false;
+/* aim: while the 1st hold is charging, look ahead (rocket climb + every satellite) and mark the first satellite the rocket would hit */
+var aimT=(function(){var c=document.createElement('canvas');c.width=c.height=128;var x=c.getContext('2d');x.strokeStyle='#fff';x.lineWidth=7;
+ x.beginPath();x.arc(64,64,40,0,6.283);x.stroke();x.lineWidth=8;[[64,4,64,30],[64,98,64,124],[4,64,30,64],[98,64,124,64]].forEach(function(l){x.beginPath();x.moveTo(l[0],l[1]);x.lineTo(l[2],l[3]);x.stroke()});return new THREE.CanvasTexture(c)})();
+var aimSp=new THREE.Sprite(new THREE.SpriteMaterial({map:aimT,transparent:true,depthWrite:false,depthTest:false}));aimSp.visible=false;scene.add(aimSp);
+var aimDot=new THREE.Sprite(new THREE.SpriteMaterial({map:dotT,transparent:true,depthWrite:false,depthTest:false,blending:THREE.AdditiveBlending}));aimDot.visible=false;scene.add(aimDot);
+var aimHit=null;
+function predictHit(gg){var t=pad.type,d=ITEM[t],s=SIZE[d.t],o={x:0,y:rStart(s),vx:0,vy:0,ph:1,kt:0,RT:apexOf(gg,d.w)},q=[];
+ bodies.forEach(function(b){if(b.alive&&!b.leaving&&!b.ph)q.push({b:b,x:b.x,y:b.y,vx:b.vx,vy:b.vy,m:!!RECIPE[key(t,b.type)]})});if(!q.length)return null;
+ for(var i=0;i<1200;i++){fstep(o,HS);
+  for(var j=0;j<q.length;j++){var u=q[j],r=Math.hypot(u.x,u.y),k=-MU/(r*r*r);u.vx+=k*u.x*HS;u.vy+=k*u.y*HS;u.x+=u.vx*HS;u.y+=u.vy*HS;
+   if(i>=24&&Math.hypot(u.x-o.x,u.y-o.y)<(u.m?(s+u.b.s)*MRG:s+u.b.s))return {b:u.b,merge:u.m,x:o.x,y:o.y}}
+  if(o.ph===2){var rr=Math.hypot(o.x,o.y);if((o.vx*o.x+o.vy*o.y)/rr<=.25*Math.sqrt(MU/o.RT))break}}
+ return null}
 
 function mkBody(type,x,y,vx,vy,m){var d=ITEM[type],s=SIZE[d.t];
  var sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex(type),transparent:true,depthWrite:false}));sp.scale.setScalar(s*SPR);scene.add(sp);
@@ -395,12 +410,12 @@ function crash(b){kill(b);if(flight===b)flight=null;SFX.boom();shk=Math.max(shk,
  ring(b.x,b.y,0xff7a3a,.6,.5);label(b.x,b.y,'墜落!','bad big',1.3,-20);loseLife()}
 function escape(b){b.leaving=.001;if(flight===b)flight=null;SFX.bye();label(b.x,b.y,'さようなら〜','bad',1.5,-20);loseLife()}
 function loseLife(){if(state!=='play')return;lives--;hud();hints();if(lives<=0)gameOver()}
-function merge(a,c,res){var M=a.m+c.m,x=(a.x*a.m+c.x*c.m)/M,y=(a.y*a.m+c.y*c.m)/M,h=(a.x*a.vy-a.y*a.vx)*a.m+(c.x*c.vy-c.y*c.vx)*c.m,sg=h>=0?1:-1;
+function merge(a,c,res){var direct=state==='play'&&flight&&(a===flight||c===flight)&&flight.ph<=2,M=a.m+c.m,x=(a.x*a.m+c.x*c.m)/M,y=(a.y*a.m+c.y*c.m)/M,h=(a.x*a.vy-a.y*a.vx)*a.m+(c.x*c.vy-c.y*c.vx)*c.m,sg=h>=0?1:-1;
  if(flight===a||flight===c)flight=null;kill(a);kill(c);
  var P=ITEM[res].pl,t=ITEM[res].t,s=SIZE[t],r=Math.hypot(x,y),rmin=R+s*.9;if(r<rmin){x*=rmin/r;y*=rmin/r;r=rmin}
  if(!P){var v=Math.sqrt(MU/r),nb=mkBody(res,x,y,-sg*y/r*v,sg*x/r*v,M);nb.pop=0;nb.lf=1;nb.spin=(a.spin+c.spin)/2}
  merges++;combo=comboT>0?combo+1:1;comboT=4;var pts=(P?8000:[0,0,500,1200,3000][t])*combo,isNew=dex.indexOf(res)<0;
- if(isNew){dex.push(res);ss('ne_dex',dex);pts+=P?3000:1000}
+ if(isNew){dex.push(res);ss('ne_dex',dex);pts+=P?3000:1000}if(direct)pts+=1000;
  addScore(pts);flEl.style.background='#fff';
  focus={x:x,y:y,t:P?1.8:1.1,E:P?2.6:1.5};
  if(P){planetBirth(res,x,y);SFX.planet();slow(.15,1.6);flash=.6;shk=Math.max(shk,.1);
@@ -409,7 +424,7 @@ function merge(a,c,res){var M=a.m+c.m,x=(a.x*a.m+c.x*c.m)/M,y=(a.y*a.m+c.y*c.m)/
  else{SFX.merge(combo);slow(.2,1);flash=.3;shk=Math.max(shk,.04);
   burst(x,y,44,['#ffe27a','#7dffb0','#8fb7ff','#ff8af0','#ffffff'],1.8,1,.09);ring(x,y,TCOL[t],.5,.7);ring(x,y,0xffffff,.28,.45);if(isNew)msg('NEW!','#ffe27a')}
  label(x,y,img(res)+ITEM[res].n+'!','big'+(isNew?' new':''),1.7,-30);
- label(x,y,(isNew?'NEW! ':'')+'+'+pts+(combo>1?'　×'+combo+' COMBO':''),'pt',1.6,6);
+ label(x,y,(isNew?'NEW! ':'')+'+'+pts+(combo>1?'　×'+combo+' COMBO':''),'pt',1.6,6);if(direct)label(x,y,'直撃!','big new',1.6,-62);
  hints()}
 /* satellites outside the screen: an icon with an arrow at the screen edge (gold when it can merge with the next item) */
 function edges(){return {l:36,r:W-36,t:Math.min(.22*H,92)+30,b:H-Math.min(.28*H,128)-30}}
@@ -460,7 +475,7 @@ var scrEl=document.getElementById('scr'),btEl=document.getElementById('bt');
 function dexHtml(){return '<h3>ずかん '+dex.length+' / '+RESULTS.length+'</h3><div class="dex">'+RESULTS.map(function(id){var k=dex.indexOf(id)>=0;return '<span class="'+(k?'':'no')+'">'+img(id)+(k?ITEM[id].n:'？')+'</span>'}).join('')+'</div>'}
 function title(){state='title';scrEl.style.display='flex';
  scrEl.innerHTML='<h1 class="f">なんでも衛星</h1><p>なんでも打ち上げて、人工衛星にしよう。</p>'+
- '<ol><li>1回目の<b>長押し</b>で高さを決めて、<b>離して</b>打ち上げ</li><li>頂上で2回目の<b>長押し</b>、離して横に噴射して軌道へ</li><li>重いものほど、しっかり溜めないと上がらない</li><li>軌道に乗せられないと残機が減る(3機)</li><li><b>光っている衛星</b>にぶつけると合体!</li><li>合体を重ねて<b>惑星</b>を作ろう</li><li>相性の悪いもの同士は弾き合う</li></ol>'+
+ '<ol><li>1回目の<b>長押し</b>で高さを決めて、<b>離して</b>打ち上げ</li><li>頂上で2回目の<b>長押し</b>、離して横に噴射して軌道へ</li><li>重いものほど、しっかり溜めないと上がらない</li><li>軌道に乗せられないと残機が減る(3機)</li><li><b>光っている衛星</b>にぶつけると合体!</li><li>上昇中のロケットを当てると<b>直撃</b>!(照準が出たら離す)</li><li>合体を重ねて<b>惑星</b>を作ろう</li><li>相性の悪いもの同士は弾き合う</li></ol>'+
  '<button class="btn" id="pl" type="button">スタート</button><p class="f" style="opacity:.75">BEST '+best+'</p>';
  document.getElementById('pl').addEventListener('click',start);
  clearAll();for(var i=0;i<6;i++){var r=2+i*.95,a=Math.random()*6.283,v=Math.sqrt(MU/r),t=BASE[Math.random()*BASE.length|0];mkBody(t,r*Math.cos(a),r*Math.sin(a),Math.sin(a)*v,-Math.cos(a)*v)}
@@ -493,13 +508,19 @@ function loop(now){requestAnimationFrame(loop);var dt=Math.min(.05,Math.max(0,(n
   if(flight&&flight.wait&&charging!==2){waitT+=dt;if(waitT>3){flight.wait=false;label(flight.x,flight.y,'まにあわなかった…','bad',1.6,-20);gMode=-1}}
   if(charging){g+=dt/FILL;var gg=Math.min(g,1);giEl.style.left=(gg*100)+'%';chgSet(gg);
    if(charging===1){var rt=apexOf(gg,ITEM[pad.type].w),rv=Math.min(rt,RFAR),c1=rt>=RFAR?0xff5a6e:rt>RMAX?0xffb347:0x8fdcff,cp=[];
-    setLine(predLine,[0,rStart(SIZE[ITEM[pad.type].t]),0,rv]);predLine.material.color.set(c1);
+    aimHit=predictHit(gg);if(aimHit)rv=Math.min(rv,Math.hypot(aimHit.x,aimHit.y));
+    setLine(predLine,[0,rStart(SIZE[ITEM[pad.type].t]),0,rv]);predLine.material.color.set(aimHit?(aimHit.merge?0xffe27a:0xff5a6e):c1);
     for(var ci=0;ci<=128;ci++){var ca=ci/128*6.2832;cp.push(rv*Math.cos(ca),rv*Math.sin(ca))}setLine(tgtLine,cp);tgtLine.visible=true;tgtLine.material.color.set(c1);
     shk=Math.max(shk,.004+.022*gg);if(Math.random()<dt*(1.5+gg*12))SFX.creak(gg);
     if(Math.random()<dt*gg*30){var sd=Math.random()<.5?1:-1;emit(SM,sd*.34,R+.06,sd*(.2+Math.random()*.4),.1+Math.random()*.2,.6,.05,'#c9ced8',2,.3,.5)}}
    else if(flight){var pts=[],o=kickPredict(flight,gg,pts);setLine(predLine,pts);predLine.material.color.set(!o.ok?0xff5a6e:o.e<.06?0xffe27a:0x7dffb0);shk=Math.max(shk,.004+.01*gg)}
    if(g>=1){g=1;up()}}
-  gtEl.style.opacity=charging?'0':''}
+  if(charging!==1){if(aimHit)gMode=-1;aimHit=null}
+  if(aimHit&&aimHit.b.alive){var ac=aimHit.merge?0xffe27a:0xff5a6e;aimSp.visible=aimDot.visible=true;aimSp.position.set(aimHit.b.x,aimHit.b.y,0);aimSp.scale.setScalar(aimHit.b.s*5.2*(1+.08*Math.sin(T*10)));
+   aimSp.material.rotation+=dt*2;aimSp.material.color.set(ac);aimDot.position.set(aimHit.x,aimHit.y,0);aimDot.scale.setScalar(.5);aimDot.material.color.set(ac);
+   gtEl.textContent=aimHit.merge?'離すと命中! 合体できる':'離すと命中…弾かれる'}
+  else{aimSp.visible=aimDot.visible=false}
+  gtEl.style.opacity=charging&&!aimHit?'0':''}
  if(!charging&&predLine.visible){if(!flight)predFade-=dt*3;predLine.material.opacity=.9*Math.max(0,predFade);if(predFade<=0)predLine.visible=false}
  if(comboT>0)comboT-=gdt;
  acc+=gdt;var ns=0;while(acc>=HS&&ns<40){step(HS);acc-=HS;ns++}if(ns>=40)acc=0;
