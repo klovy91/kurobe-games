@@ -105,9 +105,9 @@ var TCOL=[0,0x8fb7ff,0x7dffb0,0xffd36b,0xff8af0,0xffffff];
 var DEF=[
  ['rice','🍚','ごはん',1,1],['nori','','のり',1,.88],['fish','🐟','さかな',1,1],['cow','🐄','うし',1,1.14],['fire','🔥','ひ',1,.9],
  ['water','💧','みず',1,.96],['egg','🥚','たまご',1,.92],['bread','🍞','パン',1,.94],['banana','🍌','バナナ',1,.96],['rocket','🚀','ロケット',1,.88],
- ['onigiri','🍙','おにぎり',2],['sushi','🍣','すし',2],['curry','🍛','カレー',2],['senbei','🍘','せんべい',2],['meat','🍖','にく',2],
+ ['onigiri','🍙','おにぎり',2],['sushi','🍣','すし',2],['curry','','ぎゅうどん',2],['senbei','🍘','せんべい',2],['meat','🍖','にく',2],
  ['milk','🥛','ぎゅうにゅう',2],['ufo','🛸','UFO',2],['fegg','🍳','めだまやき',2],['pancake','🥞','パンケーキ',2],['onsen','♨️','おんせん',2],
- ['sea','🌊','うみ',2],['whale','🐋','くじら',2],['rain','🌧️','あめ',2],['comet','☄️','すいせい',2],['baguette','🥖','フランスパン',2],
+ ['sea','🌊','うみ',2],['whale','🐋','くじら',3],['comet','☄️','すいせい',2],['baguette','🥖','フランスパン',2],
  ['monkey','🐒','うちゅうザル',2],['fry','🍤','フライ',2],['chick','🐣','うちゅうひよこ',2],['dolphin','🐬','うちゅうイルカ',2],['jungle','🌴','ジャングル',2],['paddy','🌾','たんぼ',2],
  ['volcano','🌋','かざん',3],['bento','🍱','おべんとう',3],['burger','🍔','ハンバーガー',3],['pudding','🍮','プリン',3],['cloud','☁️','くも',3],
  ['gorilla','🦍','うちゅうゴリラ',3],['donut','🍩','ドーナツ',3],['alien','👽','うちゅうじん',3],['sandw','🥪','サンドイッチ',3],
@@ -123,20 +123,15 @@ var DEF=[
  ['gourmet','','グルメ星',5,0,1],['sweets','','スイーツ星',5,0,1],['animal','','どうぶつ星',5,0,1],['ufostar','','UFO星',5,0,1]];
 var REC=[
  ['rice','nori','onigiri'],['rice','fish','sushi'],['rice','cow','curry'],['rice','fire','senbei'],['cow','fire','meat'],['cow','water','milk'],
- ['cow','rocket','ufo'],['egg','fire','fegg'],['egg','banana','pancake'],['water','fire','onsen'],['nori','water','sea'],['fish','water','whale'],
- ['water','rocket','rain'],['fire','rocket','comet'],['bread','fire','baguette'],['banana','rocket','monkey'],
- ['nori','fish','sushi'],['nori','fire','senbei'],['rice','rocket','onigiri'],['cow','banana','milk'],['water','bread','pancake'],['egg','bread','sandw'],
- ['bread','banana','sandw'],['fish','bread','fry'],['egg','rocket','chick'],['fish','rocket','dolphin'],['water','banana','jungle'],
- ['rice','egg','fegg'],['rice','water','paddy'],['rice','banana','pancake'],['nori','egg','sushi'],['nori','bread','sandw'],['fish','fire','fry'],
- ['fish','egg','sushi'],['fish','cow','whale'],['cow','egg','pudding'],['cow','bread','burger'],['fire','banana','donut'],['bread','rocket','ufo'],
- ['onsen','fire','volcano'],['onigiri','sushi','bento'],['senbei','onigiri','bento'],['meat','bread','burger'],['baguette','meat','burger'],
- ['milk','egg','pudding'],['rain','fire','cloud'],['monkey','banana','gorilla'],['pancake','fire','donut'],['ufo','monkey','alien'],['fegg','bread','sandw'],
- ['pudding','banana','parfait'],['fry','onigiri','bento'],['chick','monkey','alien'],
- ['onigiri','curry','bento'],['baguette','fegg','sandw'],['pancake','milk','pudding'],['ufo','comet','alien'],
- ['sea','volcano','earth'],['volcano','comet','mars'],['donut','cloud','saturn'],['whale','cloud','neptune'],
- ['bento','burger','gourmet'],['curry','burger','gourmet'],['sandw','bento','gourmet'],['parfait','pancake','sweets'],
- ['gorilla','whale','animal'],['alien','comet','ufostar'],['chick','whale','animal'],['dolphin','sea','neptune'],['jungle','gorilla','animal'],
- ['whale','sea','neptune'],['paddy','sea','earth'],['paddy','gorilla','animal']];
+ ['cow','rocket','ufo'],['egg','fire','fegg'],['egg','banana','pancake'],['water','fire','onsen'],['nori','water','sea'],['fish','water','sea'],
+ ['fire','rocket','comet'],['bread','fire','baguette'],['banana','rocket','monkey'],['nori','fish','sushi'],['egg','bread','sandw'],['bread','banana','sandw'],
+ ['fish','bread','fry'],['egg','rocket','chick'],['fish','rocket','dolphin'],['water','banana','jungle'],['rice','water','paddy'],['fish','fire','fry'],
+ ['cow','bread','burger'],['onsen','fire','volcano'],['onigiri','sushi','bento'],['senbei','onigiri','bento'],['meat','bread','burger'],['baguette','meat','burger'],
+ ['milk','egg','pudding'],['monkey','banana','gorilla'],['pancake','fire','donut'],['ufo','monkey','alien'],['fegg','bread','sandw'],['pudding','banana','parfait'],
+ ['fry','onigiri','bento'],['onigiri','curry','bento'],['baguette','fegg','sandw'],['ufo','comet','alien'],['sea','volcano','earth'],['volcano','comet','mars'],
+ ['donut','cloud','saturn'],['bento','burger','gourmet'],['curry','burger','gourmet'],['sandw','bento','gourmet'],['parfait','pancake','sweets'],['gorilla','whale','animal'],
+ ['alien','comet','ufostar'],['chick','whale','animal'],['dolphin','sea','neptune'],['jungle','gorilla','animal'],['whale','sea','neptune'],['paddy','sea','earth'],
+ ['fish','sea','whale'],['sea','fire','cloud']];
 var ITEM={},BASE=[],RECIPE={},PART={},RESULTS=[];
 DEF.forEach(function(d){ITEM[d[0]]={id:d[0],e:d[1],n:d[2],t:d[3],w:d[4]||1,pl:!!d[5]};if(d[3]===1)BASE.push(d[0])});
 function key(a,b){return a<b?a+'+'+b:b+'+'+a}
@@ -147,7 +142,7 @@ var GROUPS={
  food:{pl:'gourmet',l:['lfood1','lfood2','lfood3'],m:'rice nori bread egg onigiri sushi curry senbei meat fegg baguette fry bento burger sandw'},
  sweet:{pl:'sweets',l:['lsweet1','lsweet2','lsweet3'],m:'banana milk pancake pudding donut parfait'},
  life:{pl:'animal',l:['llife1','llife2','llife3'],m:'fish cow whale monkey chick dolphin jungle gorilla'},
- nat:{pl:'earth',l:['lnat1','lnat2','lnat3'],m:'water fire onsen sea rain volcano cloud paddy'},
+ nat:{pl:'earth',l:['lnat1','lnat2','lnat3'],m:'water fire onsen sea volcano cloud paddy'},
  space:{pl:'ufostar',l:['lspace1','lspace2','lspace3'],m:'rocket ufo comet alien'}},CAT={};
 Object.keys(GROUPS).forEach(function(k){var G=GROUPS[k];G.m.split(' ').concat(G.l).forEach(function(id){CAT[id]=k});G.l.forEach(function(id){if(RESULTS.indexOf(id)<0)RESULTS.push(id)})});
 RESULTS.sort(function(a,b){return ITEM[a].t-ITEM[b].t});
@@ -168,6 +163,7 @@ function icon(id){if(ICON[id])return ICON[id];var d=ITEM[id],c=document.createEl
  if(d.pl){drawPlanet(x,id);return ICON[id]=c}
  if(SPACE[id]){drawSpace(x,d.e);return ICON[id]=c}
  if(id==='lfood3'){drawRestaurant(x);return ICON[id]=c}
+ if(id==='curry'){drawGyudon(x);return ICON[id]=c}
  if(id==='llife1'||id==='llife2'||id==='llife3'){drawLife(x,id);return ICON[id]=c}
  if(d.e){x.font='92px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(d.e,64,70)}
  else{x.fillStyle='#17271c';rrect(x,22,26,84,76,9);x.fill();x.shadowBlur=0;x.strokeStyle='rgba(130,180,130,.35)';x.lineWidth=2;
@@ -223,6 +219,16 @@ function drawLife(x,id){x.save();x.shadowColor='rgba(255,255,255,.6)';x.shadowBl
    x.beginPath();x.moveTo(cx+8*Math.cos(t),cy+8*Math.sin(t));x.lineTo(cx+7*Math.cos(t+2.4),cy+7*Math.sin(t+2.4));x.lineTo(cx+7*Math.cos(t-2.4),cy+7*Math.sin(t-2.4));x.closePath();x.fill()});
   emo(x,'🌳',34,64,24);emo(x,'🐦',30,104,64);emo(x,'🐟',30,64,104);emo(x,'🐞',28,24,64);emo(x,'🌍',30,64,64);return}
  x.restore()}
+/* gyudon (beef bowl), drawn: bowl, rice, simmered beef, onion, red ginger */
+function drawGyudon(x){x.save();x.shadowColor='rgba(255,255,255,.6)';x.shadowBlur=9;
+ x.fillStyle='#fbf7ee';x.beginPath();x.ellipse(64,62,46,16,0,0,6.283);x.fill();x.restore();
+ var bg=x.createLinearGradient(0,62,0,112);bg.addColorStop(0,'#c0392b');bg.addColorStop(1,'#7b1e16');x.fillStyle=bg;
+ x.beginPath();x.moveTo(18,62);x.quadraticCurveTo(24,112,64,112);x.quadraticCurveTo(104,112,110,62);x.closePath();x.fill();
+ x.fillStyle='#1d1d1d';x.fillRect(46,108,36,6);x.strokeStyle='rgba(255,220,150,.7)';x.lineWidth=2;x.beginPath();x.moveTo(26,74);x.quadraticCurveTo(64,84,102,74);x.stroke();
+ x.fillStyle='#9a5a2e';[[48,56,20,9,-.2],[76,54,22,8,.25],[62,64,24,8,0],[38,64,14,6,.3],[90,64,14,6,-.3]].forEach(function(b){x.beginPath();x.ellipse(b[0],b[1],b[2],b[3],b[4],0,6.283);x.fill()});
+ x.strokeStyle='#6e3b18';x.lineWidth=2;[[40,54,58,58],[70,52,88,55],[52,63,72,65]].forEach(function(l){x.beginPath();x.moveTo(l[0],l[1]);x.quadraticCurveTo((l[0]+l[2])/2,l[1]-4,l[2],l[3]);x.stroke()});
+ x.strokeStyle='rgba(255,250,220,.9)';x.lineWidth=3;[[54,50,64,47],[66,60,78,58],[44,60,50,57]].forEach(function(l){x.beginPath();x.moveTo(l[0],l[1]);x.lineTo(l[2],l[3]);x.stroke()});
+ x.fillStyle='#ff4d6d';[[86,52],[90,56],[84,57]].forEach(function(q){x.fillRect(q[0],q[1],5,3)})}
 function tex(id){return TEX[id]||(TEX[id]=new THREE.CanvasTexture(icon(id)))}
 /* trail colour per item: read the icon's own colour and make it vivid (falls back to a colour picked from the name) */
 var COL={};
