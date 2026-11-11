@@ -60,7 +60,8 @@ html,body{height:100%;margin:0;background:#05070f;color:#fff;overflow:hidden;tou
 .dex{display:grid;grid-template-columns:repeat(6,1fr);gap:8px 4px;width:min(100%,380px);padding:10px 6px;background:rgba(255,255,255,.06);border-radius:10px}
 .dex span{display:flex;flex-direction:column;align-items:center;font-size:9px;line-height:1.25;opacity:.9;text-align:center;word-break:break-all}
 .dex img{width:32px;height:32px}
-.mk{display:flex;flex-wrap:wrap;justify-content:center;gap:2px;max-width:340px}.mk img{width:34px;height:34px}
+.mk{display:flex;flex-direction:column;align-items:flex-start;gap:2px;max-width:340px;font-size:14px}.mk span{display:flex;align-items:center;gap:6px}.mk img{width:30px;height:30px}
+#msg small{display:block;font-size:.62em;letter-spacing:.02em}
 .dex .no img{filter:brightness(0) invert(.25)}.dex .no{opacity:.6}
 .btn{pointer-events:auto;min-width:200px;padding:15px 36px;border:0;border-radius:999px;background:#2f6bff;color:#fff;font-size:20px;font-weight:900;letter-spacing:.1em;cursor:pointer;box-shadow:0 4px 18px rgba(47,107,255,.5);-webkit-tap-highlight-color:transparent}
 .btn:active{transform:scale(.97);opacity:.85}
@@ -346,7 +347,7 @@ var fxEl=document.getElementById('fx'),labels=[],flEl=document.getElementById('f
 function scr(x,y){v3.set(x,y+.12,0).project(cam);return [(v3.x+1)/2*W,(1-v3.y)/2*H]}
 function label(x,y,html,cls,dur,dy){var el=document.createElement('div');el.className='fl '+(cls||'');el.innerHTML=html;fxEl.appendChild(el);labels.push({el:el,x:x,y:y,t:0,d:dur||1.3,dy:dy||0})}
 var msgEl=document.getElementById('msg');
-function msg(t,col){msgEl.textContent=t;msgEl.style.color=col||'#fff';msgEl.classList.remove('go');void msgEl.offsetWidth;msgEl.classList.add('go')}
+function msg(t,col,html){if(html)msgEl.innerHTML=t;else msgEl.textContent=t;msgEl.style.color=col||'#fff';msgEl.classList.remove('go');void msgEl.offsetWidth;msgEl.classList.add('go')}
 var ts=1,slowT=0,slowLow=1,hitStop=0;function slow(v,d){slowLow=v;slowT=d}
 
 /* ---------- sound (synthesized, no files) ---------- */
@@ -471,12 +472,12 @@ function merge(a,c,res){var direct=state==='play'&&flight&&(a===flight||c===flig
  if(isNew){dex.push(res);ss('ne_dex',dex);pts+=P?3000:1000}if(direct)pts+=1000;
  addScore(pts);flEl.style.background='#fff';
  focus={x:x,y:y,b:P?null:nb,t:P?1.8:1.1,E:P?2.6:1.5};  /* the camera follows the new satellite */
- if(P){planetBirth(res,x,y);SFX.planet();slow(.15,1.6);flash=.6;shk=Math.max(shk,.1);
+ if(P){var nm=planetName(res);planetBirth(res,x,y,nm);SFX.planet();slow(.15,1.6);flash=.6;shk=Math.max(shk,.1);
   burst(x,y,90,['#ffe27a','#ffffff','#8fb7ff','#ff8af0','#7dffb0'],2.8,1.5,.14);ring(x,y,0xffffff,1,1);ring(x,y,0xffe27a,.7,.8);ring(x,y,0x8fb7ff,1.5,1.4);
-  msg(ITEM[res].n+' たんじょう!','#ffe27a')}
+  msg('<small>'+nm+'</small>たんじょう!','#ffe27a',true)}
  else{SFX.merge(combo);slow(.2,1);flash=.3;shk=Math.max(shk,.04);
   burst(x,y,44,['#ffe27a','#7dffb0','#8fb7ff','#ff8af0','#ffffff'],1.8,1,.09);ring(x,y,TCOL[t],.5,.7);ring(x,y,0xffffff,.28,.45);if(isNew)msg('NEW!','#ffe27a')}
- label(x,y,img(res)+ITEM[res].n+'!','big'+(isNew?' new':''),1.7,-30);
+ label(x,y,img(res)+(P?nm:ITEM[res].n)+'!','big'+(isNew?' new':''),1.7,-30);
  label(x,y,(isNew?'NEW! ':'')+'+'+pts+(combo>1?'　×'+combo+' COMBO':''),'pt',1.6,6);if(direct)label(x,y,'直撃!','big new',1.6,-62);
  hints()}
 /* satellites outside the screen: an icon with an arrow at the screen edge (gold when it can merge with the next item) */
@@ -491,7 +492,18 @@ function offUpd(){var E=edges(),cx=(E.l+E.r)/2,cy=(E.t+E.b)/2;
   else if(b.off)b.off.style.display='none'})}
 /* a finished planet pops up big, then flies off into deep space and stays there as part of the sky */
 var made=[],deps=[],skyPl=[];
-function planetBirth(res,x,y){made.push(res);hud();var sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex(res),transparent:true,depthWrite:false}));sp.position.set(x,y,0);sp.scale.setScalar(.001);scene.add(sp);
+/* each new planet gets its own name: a "feel" word + something that planet is about + 星 (e.g. あまあまキャンディ星) */
+var PLN={earth:[['あおあお','みずみず','さわさわ','すやすや','ぽかぽか'],['うみ','もり','そら','みどり','おか']],
+ mars:[['あかあか','めらめら','カラカラ','ぼうぼう','ひりひり'],['さばく','かざん','ルビー','トマト','ゆうやけ']],
+ saturn:[['くるくる','きらきら','ぐるぐる','ふわふわ','ゆらゆら'],['わっか','リング','フラフープ','ドーナツ','うずまき']],
+ neptune:[['ひえひえ','しんしん','ゆらゆら','すいすい','つるつる'],['こおり','ブルー','うずしお','かきごおり','ソーダ']],
+ gourmet:[['もぐもぐ','ほかほか','がっつり','じゅうじゅう','ぱくぱく'],['ごはん','ラーメン','からあげ','オムライス','たこやき']],
+ sweets:[['あまあま','ふわふわ','とろとろ','しゅわしゅわ','ぷるぷる'],['キャンディ','マシュマロ','プリン','クリーム','チョコ']],
+ animal:[['もふもふ','がおがお','ぴょんぴょん','のしのし','わいわい'],['サバンナ','ジャングル','パンダ','ペンギン','ライオン']],
+ ufostar:[['ピコピコ','ふしぎ','ワープ','ビビビ','キラキラ'],['ビーム','うちゅうじん','ギャラクシー','UFO','コスモ']]};
+function pick(a){return a[Math.random()*a.length|0]}
+function planetName(id){var P=PLN[id];return P?pick(P[0])+pick(P[1])+'星':ITEM[id].n}
+function planetBirth(res,x,y,nm){made.push({id:res,n:nm});hud();var sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex(res),transparent:true,depthWrite:false}));sp.position.set(x,y,0);sp.scale.setScalar(.001);scene.add(sp);
  var a=Math.random()*6.283,rr=7+Math.random()*5,k=Math.min(1,cam.aspect*1.1);
  deps.push({sp:sp,x:x,y:y,t:0,tx:Math.cos(a)*rr*k,ty:Math.sin(a)*rr*.85+4,tz:-48,S:SIZE[5]*SPR*1.5})}
 function updDeps(dt){deps=deps.filter(function(d){d.t+=dt;var S=d.S;
@@ -539,7 +551,7 @@ function gameOver(){state='over';cancel();pad.ready=false;if(pad.sp){scene.remov
  var nb=score>best;if(nb){best=score;ss('ne_best',best)}
  setTimeout(function(){scrEl.style.display='flex';btEl.style.visibility='hidden';
   scrEl.innerHTML='<h1 class="f">GAME OVER</h1><p class="f sc2">SCORE '+score+'</p><p class="f">'+(nb?'<span style="color:#ffe27a">NEW RECORD!</span>':'BEST '+best)+'</p>'+
-  '<p>つくった星 <b>'+made.length+'</b> 個</p>'+(made.length?'<div class="mk">'+made.map(img).join('')+'</div>':'')+'<p>打ち上げ '+launches+'回 ／ 合体 '+merges+'回</p>'+dexHtml()+
+  '<p>つくった星 <b>'+made.length+'</b> 個</p>'+(made.length?'<div class="mk">'+made.map(function(m){return '<span>'+img(m.id)+m.n+'</span>'}).join('')+'</div>':'')+'<p>打ち上げ '+launches+'回 ／ 合体 '+merges+'回</p>'+dexHtml()+
   '<button class="btn" id="rt" type="button">もう一度</button><a class="b2" href="../">ほかのゲーム</a>';
   document.getElementById('rt').addEventListener('click',start)},1500)}
 
