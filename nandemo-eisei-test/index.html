@@ -100,10 +100,10 @@ var SIZE=[0,0.23,0.28,0.33,0.38,0.5],SPR=2.7;
 var MRG=1.8;  /* merge reach = 1.8 x the bounce distance */
 var TCOL=[0,0x8fb7ff,0x7dffb0,0xffd36b,0xff8af0,0xffffff];
 
-/* ---------- items & recipes (5th value = weight; heavy things need a longer hold) ---------- */
+/* ---------- items & recipes (5th value = weight 0.88..1.14; heavy things need a little longer hold) ---------- */
 var DEF=[
- ['rice','🍚','ごはん',1,1],['nori','','のり',1,.7],['fish','🐟','さかな',1,1],['cow','🐄','うし',1,1.35],['fire','🔥','ひ',1,.75],
- ['water','💧','みず',1,.9],['egg','🥚','たまご',1,.8],['bread','🍞','パン',1,.85],['banana','🍌','バナナ',1,.9],['rocket','🚀','ロケット',1,.7],
+ ['rice','🍚','ごはん',1,1],['nori','','のり',1,.88],['fish','🐟','さかな',1,1],['cow','🐄','うし',1,1.14],['fire','🔥','ひ',1,.9],
+ ['water','💧','みず',1,.96],['egg','🥚','たまご',1,.92],['bread','🍞','パン',1,.94],['banana','🍌','バナナ',1,.96],['rocket','🚀','ロケット',1,.88],
  ['onigiri','🍙','おにぎり',2],['sushi','🍣','すし',2],['curry','🍛','カレー',2],['senbei','🍘','せんべい',2],['meat','🍖','にく',2],
  ['milk','🥛','ぎゅうにゅう',2],['ufo','🛸','UFO',2],['fegg','🍳','めだまやき',2],['pancake','🥞','パンケーキ',2],['onsen','♨️','おんせん',2],
  ['sea','🌊','うみ',2],['whale','🐋','くじら',2],['rain','🌧️','あめ',2],['comet','☄️','すいせい',2],['baguette','🥖','フランスパン',2],
@@ -336,7 +336,7 @@ function loadPad(){pad.type=queue.shift();queue.push(pickNext());
  pad.sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex(pad.type),transparent:true,depthWrite:false}));pad.sp.scale.setScalar(.001);scene.add(pad.sp);pad.ready=true;pad.t=0;
  giEl.style.left='0%';gMode=-1;
  nxEl.innerHTML='NEXT '+img(queue[0])+img(queue[1]);hints()}
-function wTag(id){var w=ITEM[id].w;return w>=1.2?'<b style="color:#ff9f6b">（おもい）</b>':w<=.75?'<b style="color:#9fe8ff">（かるい）</b>':''}
+function wTag(id){var w=ITEM[id].w;return w>=1.1?'<b style="color:#ff9f6b">（おもい）</b>':w<=.9?'<b style="color:#9fe8ff">（かるい）</b>':''}
 function curType(){return flight&&flight.ph===2&&flight.wait?flight.type:(!flight&&pad.ready?pad.type:null)}
 function hints(){var t=curType(),any=false;bodies.forEach(function(b){b.hint=!!(t&&b!==flight&&b.alive&&!b.leaving&&RECIPE[key(t,b.type)]);if(b.hint)any=true});
  pnEl.innerHTML=t?img(t)+ITEM[t].n+wTag(t)+(any?'<small>　光っている衛星と合体できる!</small>':''):''}
