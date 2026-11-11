@@ -95,7 +95,7 @@ if(!window.__glok){window.__ldFail(true);return}
 /* ---------- world constants (planet radius = 1; orbit plane = world XY, facing the camera) ---------- */
 var R=1,RMAX=8.5,RFAR=16,MU=70,HS=1/250,FXS=2.66; /* RMAX = edge of the overview screen; satellites may go past it and come back, they only leave for good past RFAR or when moving faster than escape speed */
 var A1=4*MU,TK=.35,NK=88,KD=1.5,RLO=2,RSPAN=3; /* 1st hold: how high it climbs (RLO..RLO+RSPAN = 2x..5x the planet radius; less for heavy items); boost just enough to coast to that top */
-var K2LO=.3,K2SPAN=1.2,FILL=1.6;      /* 2nd hold at the top: sideways kick = (K2LO..K2LO+K2SPAN) x circular speed there, divided by weight */
+var K2LO=.3,K2SPAN=1.2,FILL=1.2;      /* 2nd hold at the top: sideways kick = (K2LO..K2LO+K2SPAN) x circular speed there, divided by weight */
 var SIZE=[0,0.23,0.28,0.33,0.38,0.5],SPR=2.7;
 var MRG=1.8;  /* merge reach = 1.8 x the bounce distance */
 var TCOL=[0,0x8fb7ff,0x7dffb0,0xffd36b,0xff8af0,0xffffff];
