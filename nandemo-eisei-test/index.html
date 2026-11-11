@@ -16,6 +16,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>なんでも衛星</title>
 <meta name="description" content="長押しでパワーを溜めて、離して打ち上げ。なんでも人工衛星にして、ぶつけて合体させる無料のブラウザゲーム。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Kurobe Games">
+<meta property="og:title" content="なんでも衛星">
+<meta property="og:description" content="長押しで打ち上げて、なんでも人工衛星に。ぶつけて合体させて、惑星をつくろう。無料のブラウザゲーム。">
+<meta property="og:url" content="https://kurobe-games.com/nandemo-eisei/">
+<meta property="og:image" content="https://kurobe-games.com/nandemo-eisei/og.jpg">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:locale" content="ja_JP"><meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="なんでも衛星">
+<meta name="twitter:description" content="長押しで打ち上げて、なんでも人工衛星に。ぶつけて合体させて、惑星をつくろう。無料のブラウザゲーム。">
+<meta name="twitter:image" content="https://kurobe-games.com/nandemo-eisei/og.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="../nandemo-eisei/icon-32.png">
+<link rel="apple-touch-icon" href="../nandemo-eisei/icon-180.png">
 <meta name="theme-color" content="#05070f">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Iceberg&display=swap">
@@ -67,6 +81,17 @@ html,body{height:100%;margin:0;background:#05070f;color:#fff;overflow:hidden;tou
 .btn:active{transform:scale(.97);opacity:.85}
 .b2{pointer-events:auto;display:inline-flex;padding:9px 18px;border-radius:999px;border:1.5px solid rgba(255,255,255,.8);color:#fff;text-decoration:none;font-weight:700;font-size:14px}
 #mt{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));width:42px;height:42px;border:0;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;font-size:18px;cursor:pointer;z-index:12;-webkit-tap-highlight-color:transparent}
+#pa{position:fixed;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));width:42px;height:42px;border:0;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;font-size:15px;cursor:pointer;z-index:12;display:none;-webkit-tap-highlight-color:transparent}
+#pz{position:fixed;inset:0;z-index:30;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(4,6,14,.86);padding:24px;text-align:center;touch-action:pan-y}
+#pz h2{margin:0 0 8px;font-size:30px;letter-spacing:.1em}
+.bt{cursor:pointer;background:transparent;font-family:inherit}
+.op{display:flex;align-items:center;justify-content:space-between;gap:10px;width:min(92vw,380px);font-size:14px;text-align:left}
+.op div{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.ob{border:1.5px solid rgba(255,255,255,.6);background:transparent;color:#fff;border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer;font-family:inherit}
+.ob.on{background:#2f6bff;border-color:#2f6bff}
+.adw{pointer-events:auto;width:100%;display:flex;flex-direction:column;align-items:center;gap:3px;margin-top:18px}
+.adw small{font-size:10px;letter-spacing:.2em;opacity:.5}
+.adw iframe{display:block;border:0;background:transparent;width:100%;overflow:hidden}
 #ld{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;font-size:15px;line-height:1.8;background:#05070f}
 </style>
 </head>
@@ -75,23 +100,28 @@ html,body{height:100%;margin:0;background:#05070f;color:#fff;overflow:hidden;tou
 <div id="fx"></div><div id="fl"></div>
 <div id="hud" class="f"><div id="sc">0<small>BEST 0</small></div><div><div id="lv"></div><div id="nx"></div></div></div>
 <div id="msg" class="f"></div>
-<div id="bt"><div id="pn"></div><div id="ga"><div id="gp"></div><div id="gi"></div></div><div id="gt">長押しで高さを決めて、離して打ち上げ</div></div>
+<div id="bt"><div id="pn"></div><div id="ga"><div id="gp"></div><div id="gi"></div></div><div id="gt"></div></div>
 <div id="scr"></div>
-<button id="mt" type="button" aria-label="音の切り替え">🔊</button>
+<button id="mt" type="button" aria-label="sound">🔊</button><button id="pa" type="button" aria-label="pause">❚❚</button><div id="pz"></div>
 <div id="ld">読み込み中…</div>
 <script>
-(function(){var c=document.createElement('canvas');try{window.__glok=!!(window.WebGLRenderingContext&&(c.getContext('webgl')||c.getContext('experimental-webgl')))}catch(e){window.__glok=false}
+(function(){/* language: ?lang=ja|en (this visit only) > saved setting (ne_opt.lang) > browser language */
+ var q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1],L=q;if(!L){try{var o=JSON.parse(localStorage.getItem('ne_opt')||'{}');if(o.lang==='ja'||o.lang==='en')L=o.lang}catch(e){}}
+ if(!L)L=/^ja\b/i.test(navigator.language||'ja')?'ja':'en';window.__EN=L==='en';
+ if(window.__EN){document.documentElement.lang='en';document.title='Anything Satellite';var ld=document.getElementById('ld');if(ld)ld.textContent='Loading…'}
+ var c=document.createElement('canvas');try{window.__glok=!!(window.WebGLRenderingContext&&(c.getContext('webgl')||c.getContext('experimental-webgl')))}catch(e){window.__glok=false}
  window.__ldFail=function(gl){var l=document.getElementById('ld');if(!l)return;l.style.display='flex';
-  l.innerHTML=gl?'お使いの端末・ブラウザでは3D表示（WebGL）が使えないため、遊べません。<br>別のブラウザや端末でお試しください。':'ゲームの読み込みに失敗しました。<br>通信環境を確かめて、ページを読み込み直してください。'};
+  l.innerHTML=window.__EN?(gl?'This device or browser cannot show 3D (WebGL), so the game cannot run.<br>Please try another browser or device.':'The game failed to load.<br>Check your connection and reload the page.'):(gl?'お使いの端末・ブラウザでは3D表示（WebGL）が使えないため、遊べません。<br>別のブラウザや端末でお試しください。':'ゲームの読み込みに失敗しました。<br>通信環境を確かめて、ページを読み込み直してください。')};
  addEventListener('error',function(e){if(e.filename&&e.filename.split('#')[0]===location.href.split('#')[0])window.__ldFail(!window.__glok)});})();
 </script>
 <!-- three.js r128 (MIT): served from this site, not a CDN -->
-<script src="../zombie-issen/lib/three.min.js"></script>
+<script src="../nandemo-eisei/lib/three.min.js"></script>
 <script>
 (function(){
 'use strict';
 if(!window.THREE){window.__ldFail(false);return}
 if(!window.__glok){window.__ldFail(true);return}
+var EN=!!window.__EN;function J(ja,en){return EN?en:ja}
 
 /* ---------- world constants (planet radius = 1; orbit plane = world XY, facing the camera) ---------- */
 var R=1,RMAX=8.5,RFAR=16,MU=70,HS=1/250,FXS=2.66; /* RMAX = edge of the overview screen; satellites may go past it and come back, they only leave for good past RFAR or when moving faster than escape speed */
@@ -133,7 +163,14 @@ var REC=[
  ['alien','comet','ufostar'],['chick','whale','animal'],['dolphin','sea','neptune'],['jungle','gorilla','animal'],['whale','sea','neptune'],['paddy','sea','earth'],
  ['fish','sea','whale'],['sea','fire','cloud']];
 var ITEM={},BASE=[],RECIPE={},PART={},RESULTS=[];
-DEF.forEach(function(d){ITEM[d[0]]={id:d[0],e:d[1],n:d[2],t:d[3],w:d[4]||1,pl:!!d[5]};if(d[3]===1)BASE.push(d[0])});
+var ENN={rice:'Rice',nori:'Seaweed',fish:'Fish',cow:'Cow',fire:'Fire',water:'Water',egg:'Egg',bread:'Bread',banana:'Banana',rocket:'Rocket',
+ onigiri:'Rice Ball',sushi:'Sushi',curry:'Beef Bowl',senbei:'Rice Cracker',meat:'Meat',milk:'Milk',ufo:'UFO',fegg:'Fried Egg',pancake:'Pancake',onsen:'Hot Spring',
+ sea:'Sea',comet:'Comet',baguette:'Baguette',monkey:'Space Monkey',fry:'Fried Fish',chick:'Space Chick',dolphin:'Space Dolphin',jungle:'Jungle',paddy:'Rice Paddy',
+ volcano:'Volcano',bento:'Bento',burger:'Burger',pudding:'Pudding',cloud:'Cloud',gorilla:'Space Gorilla',donut:'Donut',alien:'Alien',sandw:'Sandwich',whale:'Whale',parfait:'Parfait',
+ lfood1:'Feast',lfood2:'Big Pot',lfood3:'Restaurant',lsweet1:'Candy',lsweet2:'Cupcake',lsweet3:'Cake',llife1:'Herd',llife2:'Zoo',llife3:'Ecosystem',
+ lnat1:'Sprout',lnat2:'Great Tree',lnat3:'Mountain',lspace1:'Satellite',lspace2:'Shooting Star',lspace3:'Asteroid',
+ earth:'Earth',mars:'Mars',saturn:'Saturn',neptune:'Neptune',gourmet:'Gourmet Planet',sweets:'Sweets Planet',animal:'Animal Planet',ufostar:'UFO Planet'};
+DEF.forEach(function(d){ITEM[d[0]]={id:d[0],e:d[1],n:EN&&ENN[d[0]]||d[2],t:d[3],w:d[4]||1,pl:!!d[5]};if(d[3]===1)BASE.push(d[0])});
 function key(a,b){return a<b?a+'+'+b:b+'+'+a}
 REC.forEach(function(r){RECIPE[key(r[0],r[1])]=r[2];(PART[r[0]]=PART[r[0]]||[]).push(r[1]);(PART[r[1]]=PART[r[1]]||[]).push(r[0]);if(RESULTS.indexOf(r[2])<0)RESULTS.push(r[2])});
 /* groups: two things of the same group always merge (their own recipe first, otherwise the group's lump one size up; a large lump makes the group's planet).
@@ -152,7 +189,9 @@ RESULTS.sort(function(a,b){return ITEM[a].t-ITEM[b].t});
 /* ---------- storage ---------- */
 function ls(k,d){try{var v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}}
 function ss(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
-var best=+ls('ne_best',0)||0,dex=ls('ne_dex',[]),muted=ls('ne_mute',false)===true;
+var best=+ls('ne_best',0)||0,dex=ls('ne_dex',[]),OPT=ls('ne_opt',{});if(!OPT||typeof OPT!=='object')OPT={};
+var muted=OPT.se===false||(OPT.se===undefined&&ls('ne_mute',false)===true),SHK=OPT.shake===false?0:1,LO=OPT.gfx==='lo';
+function saveOpt(){ss('ne_opt',OPT)}
 if(!Array.isArray(dex))dex=[];dex=dex.filter(function(id){return RESULTS.indexOf(id)>=0});
 
 /* ---------- icons ---------- */
@@ -297,7 +336,7 @@ function img(id){return '<img src="'+iurl(id)+'" alt="">'}
 /* ---------- three.js scene ---------- */
 var cv=document.getElementById('gl'),ren;
 try{ren=new THREE.WebGLRenderer({canvas:cv,antialias:true})}catch(e){window.__ldFail(true);return}
-ren.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+ren.setPixelRatio(Math.min(window.devicePixelRatio||1,LO?1:2));
 var scene=new THREE.Scene(),cam=new THREE.PerspectiveCamera(36,1,0.1,900);
 scene.add(new THREE.AmbientLight(0x4a5878,0.6));
 var sun=new THREE.DirectionalLight(0xffffff,1.15);sun.position.set(-4,4,5);scene.add(sun);
@@ -393,8 +432,8 @@ function mkPool(n,add){var a=[];for(var i=0;i<n;i++){var sp=new THREE.Sprite(new
 var FX=mkPool(300,true),SM=mkPool(160,false);
 function emit(P,x,y,vx,vy,life,size,col,grow,drag,op){var p=P[P.i=(P.i+1)%P.length];p.s.visible=true;p.s.position.set(x,y,(Math.random()-.5)*.06);
  p.vx=vx*FXS;p.vy=vy*FXS;p.vz=(Math.random()-.5)*.3*FXS;p.l=p.L=life;p.z=size*FXS;p.gr=grow||0;p.dr=drag==null?.25:drag;p.op=op==null?1:op;p.s.material.color.set(col);p.s.material.opacity=p.op}
-function burst(x,y,n,cols,spd,life,size){for(var i=0;i<n;i++){var a=Math.random()*6.283,v=spd*(.3+Math.random()*.7);emit(FX,x,y,v*Math.cos(a),v*Math.sin(a),life*(.5+Math.random()*.5),size*(.6+Math.random()*.6),cols[i%cols.length])}}
-function chips(x,y,n,spd){for(var i=0;i<n;i++){var a=Math.random()*6.283,v=spd*(.4+Math.random()*.6);emit(SM,x,y,v*Math.cos(a),v*Math.sin(a),.5+Math.random()*.5,.035+Math.random()*.03,Math.random()<.5?'#d8dde6':'#8d96a6',0,.6,1)}}
+function burst(x,y,n,cols,spd,life,size){if(LO)n=Math.ceil(n/2);for(var i=0;i<n;i++){var a=Math.random()*6.283,v=spd*(.3+Math.random()*.7);emit(FX,x,y,v*Math.cos(a),v*Math.sin(a),life*(.5+Math.random()*.5),size*(.6+Math.random()*.6),cols[i%cols.length])}}
+function chips(x,y,n,spd){if(LO)n=Math.ceil(n/2);for(var i=0;i<n;i++){var a=Math.random()*6.283,v=spd*(.4+Math.random()*.6);emit(SM,x,y,v*Math.cos(a),v*Math.sin(a),.5+Math.random()*.5,.035+Math.random()*.03,Math.random()<.5?'#d8dde6':'#8d96a6',0,.6,1)}}
 function updPool(P,gdt){for(var i=0;i<P.length;i++){var p=P[i];if(p.l<=0)continue;p.l-=gdt;if(p.l<=0){p.s.visible=false;continue}
  var dm=Math.pow(p.dr,gdt);p.vx*=dm;p.vy*=dm;p.vz*=dm;p.s.position.x+=p.vx*gdt;p.s.position.y+=p.vy*gdt;p.s.position.z+=p.vz*gdt;var q=p.l/p.L;
  p.s.scale.setScalar(p.z*(p.gr?1+p.gr*(1-q):.4+q*.6));p.s.material.opacity=p.op*(p.gr?Math.min(1,q*1.6):q)}}
@@ -441,7 +480,8 @@ var SFX={
  ping:function(){tone(1320,.15,'square',.07);tone(1760,.3,'triangle',.13,0,.08)},
  over:function(){[392,330,262,196].forEach(function(f,i){tone(f,.45,'triangle',.16,0,i*.18)})}};
 var mtEl=document.getElementById('mt');function mtShow(){mtEl.textContent=muted?'🔇':'🔊'}mtShow();
-mtEl.addEventListener('click',function(e){e.stopPropagation();muted=!muted;ss('ne_mute',muted);au();if(master)master.gain.value=muted?0:.45;mtShow()});
+function setMute(m){muted=m;OPT.se=!m;saveOpt();au();if(master)master.gain.value=muted?0:.45;mtShow()}
+mtEl.addEventListener('click',function(e){e.stopPropagation();setMute(!muted)});
 
 /* ---------- game state ---------- */
 var bodies=[],nid=1,state='title',lives=3,score=0,combo=0,comboT=0,launches=0,merges=0;
@@ -464,18 +504,18 @@ function loadPad(){pad.type=queue.shift();queue.push(pickNext());
  pad.sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex(pad.type),transparent:true,depthWrite:false}));pad.sp.scale.setScalar(.001);scene.add(pad.sp);pad.ready=true;pad.t=0;
  giEl.style.left='0%';gMode=-1;
  nxEl.innerHTML='NEXT '+img(queue[0])+img(queue[1]);hints()}
-function wTag(id){var w=ITEM[id].w;return w>=1.1?'<b style="color:#ff9f6b">（おもい）</b>':w<=.9?'<b style="color:#9fe8ff">（かるい）</b>':''}
+function wTag(id){var w=ITEM[id].w;return w>=1.1?'<b style="color:#ff9f6b">'+J('（おもい）',' (heavy)')+'</b>':w<=.9?'<b style="color:#9fe8ff">'+J('（かるい）',' (light)')+'</b>':''}
 function curType(){return flight&&flight.ph===2&&flight.wait?flight.type:(!flight&&pad.ready?pad.type:null)}
 function hints(){var t=curType(),any=false;bodies.forEach(function(b){b.hint=!!(t&&b!==flight&&b.alive&&!b.leaving&&mergeResult(t,b.type));if(b.hint)any=true});
- pnEl.innerHTML=t?img(t)+ITEM[t].n+wTag(t)+(any?'<small>　光っている衛星と合体できる!</small>':''):''}
+ pnEl.innerHTML=t?img(t)+ITEM[t].n+wTag(t)+(any?'<small>'+J('　光っている衛星と合体できる!','  Merge with the glowing ones!')+'</small>':''):''}
 /* gauge: 1st hold = height (blue: on screen / orange: past the screen edge / red: too high, gone), 2nd hold = sideways kick (green = orbit) */
 function gauge1(type){var w=ITEM[type].w,gS=Math.min(1,(RMAX-RLO)/RSPAN*w)*100,gF=Math.min(1,(RFAR-RLO)/RSPAN*w)*100;
- gaEl.style.background='linear-gradient(90deg,rgba(90,200,255,.65) 0 '+gS+'%,rgba(255,170,60,.75) '+gS+'% '+gF+'%,rgba(255,90,110,.6) '+gF+'% 100%)';gpEl.style.display='none';gtEl.textContent='1回目：長押しで高さを決めて、離して打ち上げ'}
+ gaEl.style.background='linear-gradient(90deg,rgba(90,200,255,.65) 0 '+gS+'%,rgba(255,170,60,.75) '+gS+'% '+gF+'%,rgba(255,90,110,.6) '+gF+'% 100%)';gpEl.style.display='none';gtEl.textContent=J('1回目：長押しで高さを決めて、離して打ち上げ','1st: hold to set the height, release to launch')}
 function gauge2(b){var lo=-1,hi=-1,pf=-1,be=9;for(var i=0;i<=200;i++){var o=kickPredict(b,i/200,null);if(o.ok){if(lo<0)lo=i/200;hi=i/200;if(o.e<be){be=o.e;pf=i/200}}else if(lo>=0)break}
  if(lo<0){lo=hi=0}gaEl.style.background='linear-gradient(90deg,rgba(255,90,110,.55) 0 '+(lo*100)+'%,rgba(80,230,150,.75) '+(lo*100)+'% '+(hi*100)+'%,rgba(255,90,110,.55) '+(hi*100)+'% 100%)';
- gpEl.style.display=pf<0?'none':'';gpEl.style.left=(pf*100)+'%';gtEl.textContent='2回目：長押しして、離して横に噴射'}
+ gpEl.style.display=pf<0?'none':'';gpEl.style.left=(pf*100)+'%';gtEl.textContent=J('2回目：長押しして、離して横に噴射','2nd: hold, then release to burn sideways')}
 function syncGauge(){var m=state!=='play'?0:flight&&flight.ph===2&&flight.wait?2:(!flight&&pad.ready?1:0);if(m===gMode)return;gMode=m;giEl.style.left='0%';
- if(m===1)gauge1(pad.type);else if(m===2)gauge2(flight);else{gaEl.style.background='rgba(255,255,255,.1)';gpEl.style.display='none';gtEl.textContent=flight&&flight.ph<=2&&!flight.waited?'頂上で もう一度 長押し!':''}
+ if(m===1)gauge1(pad.type);else if(m===2)gauge2(flight);else{gaEl.style.background='rgba(255,255,255,.1)';gpEl.style.display='none';gtEl.textContent=flight&&flight.ph<=2&&!flight.waited?J('頂上で もう一度 長押し!','At the top, hold again!'):''}
  hints()}
 
 var scEl=document.getElementById('sc'),lvEl=document.getElementById('lv');
@@ -483,34 +523,34 @@ function hud(){scEl.innerHTML=score+'<small>BEST '+Math.max(best,score)+(state==
 function addScore(n){score+=n;hud()}
 
 /* ---------- input ---------- */
-function down(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a'))return;au();
+function down(e){if(paused||(e&&e.target&&e.target.closest&&e.target.closest('button,a,#pz')))return;au();
  if(state!=='play'||charging)return;
  if(flight&&flight.ph===2&&flight.wait)charging=2;else if(!flight&&pad.ready)charging=1;else return;
  g=0;predLine.visible=true;predFade=1;predLine.material.opacity=.9;chgStart()}
 function up(){if(!charging)return;var c=charging;charging=0;chgStop();tgtLine.visible=false;if(c===1)launch();else kickGo(flight)}
 function cancel(){if(!charging)return;charging=0;chgStop();predLine.visible=false;tgtLine.visible=false;giEl.style.left='0%'}
 addEventListener('pointerdown',down);addEventListener('pointerup',up);addEventListener('pointercancel',cancel);addEventListener('blur',cancel);
-addEventListener('keydown',function(e){if(e.code==='Space'){e.preventDefault();if(!e.repeat)down(null)}});
+addEventListener('keydown',function(e){if(e.code==='Escape'||e.code==='KeyP'){if(paused&&pzEl.querySelector('#pzr'))pauseOff();else pauseOn();return}if(e.code==='Space'){e.preventDefault();if(!e.repeat)down(null)}});
 addEventListener('keyup',function(e){if(e.code==='Space')up()});
 addEventListener('contextmenu',function(e){e.preventDefault()});
 
 /* release: short freeze, BANG, pad recoils, smoke, then the burn carries it up and over */
 function launch(){var d=ITEM[pad.type],s=SIZE[d.t],b=mkBody(pad.type,0,rStart(s),0,0);
- b.ph=1;b.kt=0;b.fs=0;b.RT=apexOf(g,d.w);b.waited=false;b.wait=false;b.launched=true;if(b.RT>=RFAR)label(0,R+1.2,'高すぎ!','bad',1.5,-20);b.str=1;b.ln.visible=false;b.pw=g;flight=b;
+ b.ph=1;b.kt=0;b.fs=0;b.RT=apexOf(g,d.w);b.waited=false;b.wait=false;b.launched=true;if(b.RT>=RFAR)label(0,R+1.2,J('高すぎ!','Too high!'),'bad',1.5,-20);b.str=1;b.ln.visible=false;b.pw=g;flight=b;
  scene.remove(pad.sp);pad.sp.material.dispose();pad.sp=null;pad.ready=false;pad.t=0;launches++;giEl.style.left='0%';
  hitStop=.06+.06*g;shk=.03+.09*g;flash=.12+.1*g;flEl.style.background='#fff';padV=.5+1.1*g;
  SFX.thump(g);SFX.roar();
  for(var i=0;i<34;i++){var side=i%2?1:-1,v=.5+Math.random()*(1.2+g);emit(SM,side*.22,R+.08,side*v,Math.random()*.25,1+Math.random()*.8,.09+Math.random()*.06,Math.random()<.5?'#c9ced8':'#8e96a5',2.6,.18,.85)}
  burst(0,R+.08,18,['#ffe27a','#ff8a3a','#ffffff'],1.4,.4,.08);hints()}
 /* at the top: judge right away (finish the sideways kick ahead of time on a copy), freeze a moment, then the 2nd stage fires */
-function enterWait(b){b.wait=true;b.waited=true;waitT=0;msg('今! 長押し!','#ffe27a');SFX.ping();ring(b.x,b.y,0xffe27a,.9,.6)}
+function enterWait(b){b.wait=true;b.waited=true;waitT=0;msg(J('今! 長押し!','NOW! Hold!'),'#ffe27a');SFX.ping();ring(b.x,b.y,0xffe27a,.9,.6)}
 function kickGo(b){if(!b||!b.alive||b.ph!==2)return;b.wait=false;b.ph=3;b.kt=0;b.pw=g;b.AK=kickAK(g,b.d.w,Math.hypot(b.x,b.y));
  if(state==='play'&&b.launched)judge(b,kickPredict(b,g,null));
  hitStop=Math.max(hitStop,.09);SFX.kick();shk=Math.max(shk,.05+.06*g);flash=Math.max(flash,.12);flEl.style.background='#fff';
  burst(b.x,b.y,26,['#ffe27a','#ff8a3a','#ffffff'],1.8,.5,.08);ring(b.x,b.y,0xffb347,.7,.4)}
 function judge(b,o){
- if(o.crash){label(b.x,b.y,'パワー不足…','bad',1.4,-20)}
- else if(o.esc){label(b.x,b.y,'パワー過多!','bad',1.4,-20)}
+ if(o.crash){label(b.x,b.y,J('パワー不足…','Not enough power…'),'bad',1.4,-20)}
+ else if(o.esc){label(b.x,b.y,J('パワー過多!','Too much power!'),'bad',1.4,-20)}
  else{var gr=o.e<.06?['PERFECT ORBIT!','#ffe27a',300]:o.e<.16?['GREAT ORBIT!','#7dffb0',150]:['ORBIT IN','#9fd0ff',50];
   msg(gr[0],gr[1]);addScore(gr[2]);label(b.x,b.y,'+'+gr[2],'pt',1.1,-26);b.lf=1;
   ring(b.x,b.y,gr[1],gr[2]===300?1.1:.7,.6);if(gr[2]===300){SFX.perfect();slow(.3,.45);burst(b.x,b.y,30,['#ffe27a','#fff','#ffb347'],1.6,.8,.07)}else SFX.good()}}
@@ -520,8 +560,8 @@ function burnout(b){b.ph=0;b.ln.visible=true;reorbit(b);if(flight===b){flight=nu
 function crash(b){kill(b);if(flight===b)flight=null;SFX.boom();shk=Math.max(shk,.14);flash=.35;flEl.style.background='#ff5a3a';
  burst(b.x,b.y,46,['#ffe27a','#ff8a3a','#ff3b3b','#ffffff'],2.2,.9,.12);chips(b.x,b.y,16,1.6);
  for(var i=0;i<10;i++)emit(SM,b.x,b.y,(Math.random()-.5)*.6,(Math.random()-.5)*.6,1.4,.1,'#5d6470',2.5,.3,.8);
- ring(b.x,b.y,0xff7a3a,.6,.5);label(b.x,b.y,'墜落!','bad big',1.3,-20);loseLife()}
-function escape(b){b.leaving=.001;if(flight===b)flight=null;SFX.bye();label(b.x,b.y,'さようなら〜','bad',1.5,-20);loseLife()}
+ ring(b.x,b.y,0xff7a3a,.6,.5);label(b.x,b.y,J('墜落!','Crashed!'),'bad big',1.3,-20);loseLife()}
+function escape(b){b.leaving=.001;if(flight===b)flight=null;SFX.bye();label(b.x,b.y,J('さようなら〜','Bye-bye~'),'bad',1.5,-20);loseLife()}
 function loseLife(){if(state!=='play')return;lives--;hud();hints();if(lives<=0)gameOver()}
 function merge(a,c,res){var direct=state==='play'&&flight&&(a===flight||c===flight)&&flight.ph<=2,M=a.m+c.m,x=(a.x*a.m+c.x*c.m)/M,y=(a.y*a.m+c.y*c.m)/M,h=(a.x*a.vy-a.y*a.vx)*a.m+(c.x*c.vy-c.y*c.vx)*c.m,sg=h>=0?1:-1;
  if(flight===a||flight===c)flight=null;kill(a);kill(c);
@@ -533,11 +573,11 @@ function merge(a,c,res){var direct=state==='play'&&flight&&(a===flight||c===flig
  focus={x:x,y:y,b:P?null:nb,t:P?1.8:1.1,E:P?2.6:1.5};  /* the camera follows the new satellite */
  if(P){var nm=planetName(res);planetBirth(res,x,y,nm);SFX.planet();slow(.15,1.6);flash=.6;shk=Math.max(shk,.1);
   burst(x,y,90,['#ffe27a','#ffffff','#8fb7ff','#ff8af0','#7dffb0'],2.8,1.5,.14);ring(x,y,0xffffff,1,1);ring(x,y,0xffe27a,.7,.8);ring(x,y,0x8fb7ff,1.5,1.4);
-  msg('<small>'+nm.n+'</small>たんじょう!','#ffe27a',true)}
+  msg('<small>'+nm.n+'</small>'+J('たんじょう!','is born!'),'#ffe27a',true)}
  else{SFX.merge(combo);slow(.2,1);flash=.3;shk=Math.max(shk,.04);
   burst(x,y,44,['#ffe27a','#7dffb0','#8fb7ff','#ff8af0','#ffffff'],1.8,1,.09);ring(x,y,TCOL[t],.5,.7);ring(x,y,0xffffff,.28,.45);if(isNew)msg('NEW!','#ffe27a')}
  label(x,y,(P?pimg(nm)+nm.n:img(res)+ITEM[res].n)+'!','big'+(isNew?' new':''),1.7,-30);
- label(x,y,(isNew?'NEW! ':'')+'+'+pts+(combo>1?'　×'+combo+' COMBO':''),'pt',1.6,6);if(direct)label(x,y,'直撃!','big new',1.6,-62);
+ label(x,y,(isNew?'NEW! ':'')+'+'+pts+(combo>1?'　×'+combo+' COMBO':''),'pt',1.6,6);if(direct)label(x,y,J('直撃!','Direct hit!'),'big new',1.6,-62);
  hints()}
 /* satellites outside the screen: an icon with an arrow at the screen edge (gold when it can merge with the next item) */
 function edges(){return {l:36,r:W-36,t:Math.min(.22*H,92)+30,b:H-Math.min(.28*H,128)-30}}
@@ -560,8 +600,16 @@ var PLN={earth:[['あおあお','みずみず','さわさわ','すやすや','�
  sweets:[['あまあま','ふわふわ','とろとろ','しゅわしゅわ','ぷるぷる'],['キャンディ','マシュマロ','プリン','クリーム','チョコ']],
  animal:[['もふもふ','がおがお','ぴょんぴょん','のしのし','わいわい'],['サバンナ','ジャングル','パンダ','ペンギン','ライオン']],
  ufostar:[['ピコピコ','ふしぎ','ワープ','ビビビ','キラキラ'],['ビーム','うちゅうじん','ギャラクシー','UFO','コスモ']]};
+var FEN={'あおあお':'Deep Blue','みずみず':'Fresh','さわさわ':'Breezy','すやすや':'Sleepy','ぽかぽか':'Cozy','あかあか':'Crimson','めらめら':'Blazing','カラカラ':'Dusty','ぼうぼう':'Roaring','ひりひり':'Spicy',
+ 'くるくる':'Twirly','きらきら':'Sparkly','ぐるぐる':'Swirly','ふわふわ':'Fluffy','ゆらゆら':'Swaying','ひえひえ':'Chilly','しんしん':'Snowy','すいすい':'Swimmy','つるつる':'Slippery',
+ 'もぐもぐ':'Munchy','ほかほか':'Steamy','がっつり':'Hearty','じゅうじゅう':'Sizzling','ぱくぱく':'Chomping','あまあま':'Sweet','とろとろ':'Melty','しゅわしゅわ':'Fizzy','ぷるぷる':'Wobbly',
+ 'もふもふ':'Fuzzy','がおがお':'Growly','ぴょんぴょん':'Hoppy','のしのし':'Stompy','わいわい':'Lively','ピコピコ':'Beepy','ふしぎ':'Mystic','ワープ':'Warp','ビビビ':'Zappy','キラキラ':'Twinkly'};
+var OEN={'うみ':'Ocean','もり':'Forest','そら':'Sky','みどり':'Green','おか':'Hill','さばく':'Desert','かざん':'Volcano','ルビー':'Ruby','トマト':'Tomato','ゆうやけ':'Sunset',
+ 'わっか':'Halo','リング':'Ring','フラフープ':'Hula Hoop','ドーナツ':'Donut','うずまき':'Spiral','こおり':'Ice','ブルー':'Blue','うずしお':'Whirlpool','かきごおり':'Shaved Ice','ソーダ':'Soda',
+ 'ごはん':'Rice','ラーメン':'Ramen','からあげ':'Karaage','オムライス':'Omurice','たこやき':'Takoyaki','キャンディ':'Candy','マシュマロ':'Marshmallow','プリン':'Pudding','クリーム':'Cream','チョコ':'Choco',
+ 'サバンナ':'Savanna','ジャングル':'Jungle','パンダ':'Panda','ペンギン':'Penguin','ライオン':'Lion','ビーム':'Beam','うちゅうじん':'Alien','ギャラクシー':'Galaxy','UFO':'UFO','コスモ':'Cosmo'};
 function pick(a){return a[Math.random()*a.length|0]}
-function planetName(id){var P=PLN[id],f=P?pick(P[0]):'',o=P?pick(P[1]):'';return {id:id,f:f,o:o,n:P?f+o+'星':ITEM[id].n}}
+function planetName(id){var P=PLN[id],f=P?pick(P[0]):'',o=P?pick(P[1]):'';return {id:id,f:f,o:o,n:P?(EN?FEN[f]+' '+OEN[o]+' Planet':f+o+'星'):ITEM[id].n}}
 function planetBirth(res,x,y,nm){made.push(nm);hud();var sp=new THREE.Sprite(new THREE.SpriteMaterial({map:ptex(nm).t,transparent:true,depthWrite:false}));sp.position.set(x,y,0);sp.scale.setScalar(.001);scene.add(sp);
  var a=Math.random()*6.283,rr=7+Math.random()*5,k=Math.min(1,cam.aspect*1.1);
  deps.push({sp:sp,x:x,y:y,t:0,tx:Math.cos(a)*rr*k,ty:Math.sin(a)*rr*.85+4,tz:-48,S:SIZE[5]*SPR*1.5})}
@@ -596,28 +644,67 @@ function step(h){var n=bodies.length,i,b;
 
 /* ---------- screens ---------- */
 var scrEl=document.getElementById('scr'),btEl=document.getElementById('bt');
-function dexHtml(){return '<h3>ずかん '+dex.length+' / '+RESULTS.length+'</h3><div class="dex">'+RESULTS.map(function(id){var k=dex.indexOf(id)>=0;return '<span class="'+(k?'':'no')+'">'+img(id)+(k?ITEM[id].n:'？')+'</span>'}).join('')+'</div>'}
-function title(){state='title';scrEl.style.display='flex';
- scrEl.innerHTML='<h1 class="f">なんでも衛星</h1><p>なんでも打ち上げて、人工衛星にしよう。</p>'+
- '<ol><li>1回目の<b>長押し</b>で高さを決めて、<b>離して</b>打ち上げ</li><li>頂上で2回目の<b>長押し</b>、離して横に噴射して軌道へ</li><li>重いものほど、しっかり溜めないと上がらない</li><li>軌道に乗せられないと残機が減る(3機)</li><li><b>光っている衛星</b>にぶつけると合体!</li><li>上昇中のロケットを当てると<b>直撃</b>!</li><li>合体を重ねて<b>惑星</b>を作ろう</li><li>相性の悪いもの同士は弾き合う</li></ol>'+
- '<button class="btn" id="pl" type="button">スタート</button><p class="f" style="opacity:.75">BEST '+best+'</p>';
- document.getElementById('pl').addEventListener('click',start);
+function dexHtml(){return '<h3>'+J('ずかん','Collection')+' '+dex.length+' / '+RESULTS.length+'</h3><div class="dex">'+RESULTS.map(function(id){var k=dex.indexOf(id)>=0;return '<span class="'+(k?'':'no')+'">'+img(id)+(k?ITEM[id].n:'？')+'</span>'}).join('')+'</div>'}
+/* ads: the shared AdMax page in an iframe (?s=title / ?s=over), same as the other game */
+var ADS={title:{sp:[300,250],pc:[300,250]},over:{sp:[320,50],pc:[728,90]}};
+function adSlot(where){var sp=/iPhone|iPod|Android.+Mobile|Windows Phone/i.test(navigator.userAgent),sz=ADS[where][sp?'sp':'pc'];
+ var w=document.createElement('div');w.className='adw';w.innerHTML='<small>'+J('広告','Advertisement')+'</small>';
+ var f=document.createElement('iframe');f.src='../nandemo-eisei/ad.html?s='+where;f.title=J('広告','Advertisement');f.setAttribute('scrolling','no');
+ f.style.maxWidth=(sp?Math.max(sz[0],360):sz[0])+'px';f.style.height=sz[1]+'px';w.appendChild(f);
+ var n=0;function fitAd(){try{var d=f.contentDocument;if(d&&d.body){var h=Math.max(d.body.scrollHeight,d.documentElement.scrollHeight);if(h>10)f.style.height=h+'px'}}catch(e){}
+  if(++n<12&&f.isConnected)setTimeout(fitAd,500)}f.addEventListener('load',function(){setTimeout(fitAd,300)});return w}
+function adOff(){Array.prototype.forEach.call(document.querySelectorAll('#scr .adw iframe'),function(f){try{f.src='about:blank'}catch(e){}})}
+var paEl=document.getElementById('pa'),pzEl=document.getElementById('pz'),paused=false;
+function title(){state='title';scrEl.style.display='flex';paEl.style.display='none';
+ scrEl.innerHTML='<h1 class="f">'+J('なんでも衛星','Anything Satellite')+'</h1><p>'+J('なんでも打ち上げて、人工衛星にしよう。','Launch anything and make it a satellite.')+'</p>'+
+ '<ol>'+J('<li>1回目の<b>長押し</b>で高さを決めて、<b>離して</b>打ち上げ</li><li>頂上で2回目の<b>長押し</b>、離して横に噴射して軌道へ</li><li>重いものほど、しっかり溜めないと上がらない</li><li>軌道に乗せられないと残機が減る(3機)</li><li><b>光っている衛星</b>にぶつけると合体!</li><li>上昇中のロケットを当てると<b>直撃</b>!</li><li>合体を重ねて<b>惑星</b>を作ろう</li>',
+  '<li><b>Hold</b> to set the height, <b>release</b> to launch</li><li>At the top, <b>hold</b> again and release to burn sideways into orbit</li><li>Heavy things need a longer hold</li><li>Miss the orbit and you lose a life (3 lives)</li><li>Hit a <b>glowing satellite</b> to merge!</li><li>Hit it with the rising rocket for a <b>direct hit</b>!</li><li>Keep merging to make <b>planets</b></li>')+'</ol>'+
+ '<button class="btn" id="pl" type="button">'+J('スタート','START')+'</button><button class="b2 bt" id="tset" type="button">⚙ '+J('設定','Settings')+'</button><p class="f" style="opacity:.75">BEST '+best+'</p>';
+ document.getElementById('pl').addEventListener('click',start);document.getElementById('tset').addEventListener('click',function(e){e.stopPropagation();showSettings()});
+ scrEl.appendChild(adSlot('title'));
  clearAll();for(var i=0;i<6;i++){var r=2+i*.95,a=Math.random()*6.283,v=Math.sqrt(MU/r),t=BASE[Math.random()*BASE.length|0];mkBody(t,r*Math.cos(a),r*Math.sin(a),Math.sin(a)*v,-Math.cos(a)*v)}
  btEl.style.visibility='hidden';nxEl.innerHTML='';lives=3;score=0;hud()}
-function start(e){if(e)e.stopPropagation();au();clearAll();clearSky();scrEl.style.display='none';state='play';lives=3;score=0;combo=0;comboT=0;launches=0;merges=0;
- btEl.style.visibility='visible';queue=[pickNext(),pickNext()];if(pad.sp){scene.remove(pad.sp);pad.sp=null}loadPad();hud()}
-function gameOver(){state='over';cancel();pad.ready=false;if(pad.sp){scene.remove(pad.sp);pad.sp=null}hints();slow(.2,.9);SFX.over();msg('GAME OVER','#ff6b7d');
+function start(e){if(e)e.stopPropagation();au();adOff();clearAll();clearSky();scrEl.style.display='none';state='play';lives=3;score=0;combo=0;comboT=0;launches=0;merges=0;focus=null;
+ btEl.style.visibility='visible';paEl.style.display='block';queue=[pickNext(),pickNext()];if(pad.sp){scene.remove(pad.sp);pad.sp=null}loadPad();hud()}
+function gameOver(){state='over';cancel();paEl.style.display='none';pad.ready=false;if(pad.sp){scene.remove(pad.sp);pad.sp=null}hints();slow(.2,.9);SFX.over();msg('GAME OVER','#ff6b7d');
  var nb=score>best;if(nb){best=score;ss('ne_best',best)}
  setTimeout(function(){scrEl.style.display='flex';btEl.style.visibility='hidden';
   scrEl.innerHTML='<h1 class="f">GAME OVER</h1><p class="f sc2">SCORE '+score+'</p><p class="f">'+(nb?'<span style="color:#ffe27a">NEW RECORD!</span>':'BEST '+best)+'</p>'+
-  '<p>つくった星 <b>'+made.length+'</b> 個</p>'+(made.length?'<div class="mk">'+made.map(function(m){return '<span>'+pimg(m)+m.n+'</span>'}).join('')+'</div>':'')+'<p>打ち上げ '+launches+'回 ／ 合体 '+merges+'回</p>'+dexHtml()+
-  '<button class="btn" id="rt" type="button">もう一度</button><a class="b2" href="../">ほかのゲーム</a>';
-  document.getElementById('rt').addEventListener('click',start)},1500)}
+  '<p>'+J('つくった星 <b>'+made.length+'</b> 個','Planets made: <b>'+made.length+'</b>')+'</p>'+(made.length?'<div class="mk">'+made.map(function(m){return '<span>'+pimg(m)+m.n+'</span>'}).join('')+'</div>':'')+
+  '<p>'+J('打ち上げ '+launches+'回 ／ 合体 '+merges+'回','Launches '+launches+' / Merges '+merges)+'</p>'+dexHtml()+
+  '<button class="btn" id="rt" type="button">'+J('もう一度','RETRY')+'</button><a class="b2" href="../">'+J('ほかのゲーム','More games')+'</a>';
+  document.getElementById('rt').addEventListener('click',start);scrEl.appendChild(adSlot('over'))},1500)}
+/* pause + settings */
+function pauseOn(){if(state!=='play'||paused)return;paused=true;cancel();showPause()}
+function pauseOff(){paused=false;pzEl.style.display='none';last=performance.now()}
+function showPause(){pzEl.style.display='flex';
+ pzEl.innerHTML='<h2 class="f">PAUSE</h2><button class="btn" id="pzr" type="button">'+J('つづける','RESUME')+'</button><button class="b2 bt" id="pzs" type="button">⚙ '+J('設定','Settings')+'</button><button class="b2 bt" id="pzt" type="button">'+J('タイトルへ','Back to title')+'</button>';
+ document.getElementById('pzr').onclick=function(e){e.stopPropagation();pauseOff()};document.getElementById('pzs').onclick=function(e){e.stopPropagation();showSettings()};
+ document.getElementById('pzt').onclick=function(e){e.stopPropagation();toTitle()}}
+function toTitle(){pauseOff();cancel();clearSky();pad.ready=false;if(pad.sp){scene.remove(pad.sp);pad.sp=null}predLine.visible=false;tgtLine.visible=false;focus=null;title()}
+function optRow(label,k,vals,cur){return '<div class="op"><span>'+label+'</span><div>'+vals.map(function(v){return '<button type="button" class="ob'+(v[0]===cur?' on':'')+'" data-k="'+k+'" data-v="'+v[0]+'">'+v[1]+'</button>'}).join('')+'</div></div>'}
+function showSettings(){pzEl.style.display='flex';
+ pzEl.innerHTML='<h2 class="f">'+J('設定','SETTINGS')+'</h2>'+
+  optRow(J('言語','Language'),'lang',[['auto',J('自動','Auto')],['ja','日本語'],['en','English']],OPT.lang||'auto')+
+  optRow(J('効果音','Sound'),'se',[['on','ON'],['off','OFF']],muted?'off':'on')+
+  optRow(J('画面のゆれ','Screen shake'),'shake',[['on','ON'],['off','OFF']],SHK?'on':'off')+
+  optRow(J('画質','Graphics'),'gfx',[['hi',J('高','High')],['lo',J('低','Low')]],LO?'lo':'hi')+
+  '<p style="font-size:12px;opacity:.6;margin:0">'+J('言語を変えると、ページを読み込み直します','Changing the language reloads the page')+'</p>'+
+  '<button class="btn" id="stc" type="button">'+J('閉じる','CLOSE')+'</button>';
+ Array.prototype.forEach.call(pzEl.querySelectorAll('.ob'),function(b){b.onclick=function(e){e.stopPropagation();var k=b.getAttribute('data-k'),v=b.getAttribute('data-v');
+  if(k==='lang'){if(v==='auto')delete OPT.lang;else OPT.lang=v;saveOpt();location.href=location.pathname;return}
+  if(k==='se')setMute(v==='off');
+  if(k==='shake'){OPT.shake=v==='on';SHK=v==='on'?1:0;saveOpt()}
+  if(k==='gfx'){OPT.gfx=v;LO=v==='lo';saveOpt();ren.setPixelRatio(Math.min(window.devicePixelRatio||1,LO?1:2));fit()}
+  showSettings()}});
+ document.getElementById('stc').onclick=function(e){e.stopPropagation();if(paused)showPause();else pzEl.style.display='none'}}
+paEl.addEventListener('click',function(e){e.stopPropagation();pauseOn()});
+document.addEventListener('visibilitychange',function(){if(document.hidden)pauseOn()});
 
 /* ---------- main loop ---------- */
 var last=performance.now(),T=0,acc=0,camT=new THREE.Vector3(),camP=new THREE.Vector3();
 function easeBack(t){var c=1.9;return 1+(c+1)*Math.pow(t-1,3)+c*Math.pow(t-1,2)}
-function loop(now){requestAnimationFrame(loop);var dt=Math.min(.05,Math.max(0,(now-last)/1000));last=now;T+=dt;
+function loop(now){requestAnimationFrame(loop);var dt=Math.min(.05,Math.max(0,(now-last)/1000));last=now;if(paused){ren.render(scene,cam);return}T+=dt;
  var base=1;if(state==='play'&&flight&&flight.alive){if(flight.ph===2&&(flight.wait||charging===2))base=.06*Math.pow(Math.min(1,Math.hypot(flight.x,flight.y)/5),1.5)}  /* lower tops fall faster, so slow down more there */  /* climb runs at normal speed so timing stays true; slow only at the top */
  if(slowT>0){slowT-=dt;ts+=(slowLow-ts)*Math.min(1,dt*25)}else ts+=(base-ts)*Math.min(1,dt*(base<ts?8:3));
  var gdt=dt*ts;if(hitStop>0){hitStop-=dt;gdt=0}
@@ -629,7 +716,7 @@ function loop(now){requestAnimationFrame(loop);var dt=Math.min(.05,Math.max(0,(n
   else if(pad.sp){pad.t+=dt;var f=Math.min(1,pad.t*4),ps=SIZE[ITEM[pad.type].t],sc=ps*SPR*(f<1?easeBack(f):1),sq=charging===1?.24*g:0,jt=charging===1?g*.012:0;
    pad.sp.scale.set(sc*(1+sq),sc*(1-sq),1);pad.sp.position.set((Math.random()-.5)*jt,rStart(ps)+padOff-sc*sq*.35+(Math.random()-.5)*jt,0)}
   syncGauge();
-  if(flight&&flight.wait&&charging!==2){waitT+=dt;if(waitT>3){flight.wait=false;label(flight.x,flight.y,'まにあわなかった…','bad',1.6,-20);gMode=-1}}
+  if(flight&&flight.wait&&charging!==2){waitT+=dt;if(waitT>3){flight.wait=false;label(flight.x,flight.y,J('まにあわなかった…','Too late…'),'bad',1.6,-20);gMode=-1}}
   if(charging){g+=dt/FILL;var gg=Math.min(g,1);giEl.style.left=(gg*100)+'%';chgSet(gg);
    if(charging===1){var rt=apexOf(gg,ITEM[pad.type].w),rv=Math.min(rt,RFAR),c1=rt>=RFAR?0xff5a6e:rt>RMAX?0xffb347:0x8fdcff,cp=[];
     setLine(predLine,[0,rStart(SIZE[ITEM[pad.type].t]),0,rv]);predLine.material.color.set(c1);
@@ -647,7 +734,7 @@ function loop(now){requestAnimationFrame(loop);var dt=Math.min(.05,Math.max(0,(n
  bodies.forEach(function(b){b.sp.position.set(b.x,b.y,0);
   if(b.ph){if(b.ph===1)b.rot=0;else if(b.ph===2)b.rot+=(-Math.PI/2-b.rot)*Math.min(1,gdt*2.5);else b.rot=Math.atan2(b.dy,b.dx)-Math.PI/2;
    if(gdt>0&&b.thr){var bx=b.x-b.dx*b.s*.8,by=b.y-b.dy*b.s*.8,pw=1+b.pw;
-    for(var k=0;k<3;k++)emit(FX,bx,by,-b.dx*(1.2+Math.random())*pw+(Math.random()-.5)*.5,-b.dy*(1.2+Math.random())*pw+(Math.random()-.5)*.5,.22+Math.random()*.15,.07+Math.random()*.05,k?'#ff8a3a':'#ffe27a');
+    for(var k=0;k<(LO?1:3);k++)emit(FX,bx,by,-b.dx*(1.2+Math.random())*pw+(Math.random()-.5)*.5,-b.dy*(1.2+Math.random())*pw+(Math.random()-.5)*.5,.22+Math.random()*.15,.07+Math.random()*.05,k?'#ff8a3a':'#ffe27a');
     if(Math.random()<.6)emit(SM,bx,by,-b.dx*.5+(Math.random()-.5)*.2,-b.dy*.5+(Math.random()-.5)*.2,1+Math.random()*.6,.05,'#aab2c0',2.4,.4,.55)}}
   else b.rot+=b.spin*gdt;
   b.sp.material.rotation=b.rot;
@@ -672,12 +759,11 @@ function loop(now){requestAnimationFrame(loop);var dt=Math.min(.05,Math.max(0,(n
  else if(state==='play'&&tb){tx=tb.x*.6;ty=R+(tb.y-R)*.6;tD=dFor(Math.max(2.7,.62*Math.hypot(tb.x,tb.y-R)+1.6))}
  if(focus){focus.t-=dt;if(focus.t<=0||state!=='play')focus=null}
  var cr=Math.min(1,dt*(focus&&!charging?5:tD<camD?3.2:1.6));camX+=(tx-camX)*cr;camY+=(ty-camY)*cr;camD+=(tD-camD)*cr;
- shk*=Math.pow(.02,dt);var sa=shk*camD*.09;camT.set(camX,camY,0);
+ shk*=Math.pow(.02,dt);var sa=shk*camD*.09*SHK;camT.set(camX,camY,0);
  cam.position.set(camX+camDir.x*camD+(Math.random()-.5)*sa,camY+camDir.y*camD+(Math.random()-.5)*sa,camDir.z*camD+(Math.random()-.5)*sa);cam.lookAt(camT);
  ren.render(scene,cam)}
 
 fit();camX=0;camY=ovY;camD=ovD;title();hud();document.getElementById('ld').style.display='none';
-window.__ne={get state(){return state},get bodies(){return bodies},get lives(){return lives},get score(){return score}};
 requestAnimationFrame(loop);
 })();
 </script>
