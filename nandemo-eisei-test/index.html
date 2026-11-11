@@ -58,7 +58,7 @@ html,body{height:100%;margin:0;background:#05070f;color:#fff;overflow:hidden;tou
 #scr .sc2{font-size:30px}
 #scr h3{margin:6px 0 0;font-size:15px;opacity:.9}
 .dex{display:grid;grid-template-columns:repeat(6,1fr);gap:8px 4px;width:min(100%,380px);padding:10px 6px;background:rgba(255,255,255,.06);border-radius:10px}
-.dex span{display:flex;flex-direction:column;align-items:center;font-size:9px;line-height:1.3;opacity:.9;white-space:nowrap;overflow:hidden}
+.dex span{display:flex;flex-direction:column;align-items:center;font-size:9px;line-height:1.25;opacity:.9;text-align:center;word-break:break-all}
 .dex img{width:32px;height:32px}
 .mk{display:flex;flex-wrap:wrap;justify-content:center;gap:2px;max-width:340px}.mk img{width:34px;height:34px}
 .dex .no img{filter:brightness(0) invert(.25)}.dex .no{opacity:.6}
@@ -112,11 +112,11 @@ var DEF=[
  ['gorilla','🦍','うちゅうゴリラ',3],['donut','🍩','ドーナツ',3],['alien','👽','うちゅうじん',3],['sandw','🥪','サンドイッチ',3],
  ['parfait','🍨','パフェ',4],
  /* lumps: what two things of the same group become when they have no recipe of their own (small / medium / large) */
- ['lfood1','🍽\uFE0F','ごちそう',2],['lfood2','🥘','おおなべ',3],['lfood3','🏪','コンビニ',4],
+ ['lfood1','🍽\uFE0F','ごちそう',2],['lfood2','🥘','おおなべ',3],['lfood3','','レストラン',4],
  ['lsweet1','🍬','キャンディ',2],['lsweet2','🧁','カップケーキ',3],['lsweet3','🎂','ケーキ',4],
- ['llife1','🐇','うさぎ',2],['llife2','🦁','ライオン',3],['llife3','🐘','ゾウ',4],
+ ['llife1','','どうぶつのむれ',2],['llife2','','どうぶつえん',3],['llife3','','せいたいけい',4],
  ['lnat1','🌱','めばえ',2],['lnat2','🌳','たいぼく',3],['lnat3','⛰\uFE0F','やま',4],
- ['lspace1','🛰\uFE0F','じんこうえいせい',2],['lspace2','🌠','ながれぼし',3],['lspace3','🌌','ぎんが',4],
+ ['lspace1','🛰\uFE0F','じんこうえいせい',2],['lspace2','🌠','ながれぼし',3],['lspace3','🌑','しょうわくせい',4],
  /* planets: the end of every chain (6th value = planet) */
  ['earth','','ちきゅう',5,0,1],['mars','','かせい',5,0,1],['saturn','','どせい',5,0,1],['neptune','','かいおうせい',5,0,1],
  ['gourmet','','グルメ星',5,0,1],['sweets','','スイーツ星',5,0,1],['animal','','どうぶつ星',5,0,1],['ufostar','','UFO星',5,0,1]];
@@ -166,6 +166,8 @@ function icon(id){if(ICON[id])return ICON[id];var d=ITEM[id],c=document.createEl
  x.shadowColor='rgba(255,255,255,.6)';x.shadowBlur=9;
  if(d.pl){drawPlanet(x,id);return ICON[id]=c}
  if(SPACE[id]){drawSpace(x,d.e);return ICON[id]=c}
+ if(id==='lfood3'){drawRestaurant(x);return ICON[id]=c}
+ if(id==='llife1'||id==='llife2'||id==='llife3'){drawLife(x,id);return ICON[id]=c}
  if(d.e){x.font='92px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(d.e,64,70)}
  else{x.fillStyle='#17271c';rrect(x,22,26,84,76,9);x.fill();x.shadowBlur=0;x.strokeStyle='rgba(130,180,130,.35)';x.lineWidth=2;
   for(var i=0;i<5;i++){x.beginPath();x.moveTo(28,38+i*13);x.lineTo(100,35+i*13+(i%2?4:-1));x.stroke()}}
@@ -197,6 +199,29 @@ function drawSpace(x,e){x.save();x.shadowColor='rgba(170,140,255,.95)';x.shadowB
  x.fillStyle='#ffd166';x.beginPath();x.arc(64,103,3.5,0,6.283);x.fill();
  function st(cx,cy,r,col){x.fillStyle=col;x.beginPath();x.moveTo(cx,cy-r);x.quadraticCurveTo(cx,cy,cx+r,cy);x.quadraticCurveTo(cx,cy,cx,cy+r);x.quadraticCurveTo(cx,cy,cx-r,cy);x.quadraticCurveTo(cx,cy,cx,cy-r);x.fill()}
  st(13,20,10,'#fff6b0');st(115,26,7,'#ffffff');st(113,92,8,'#d4c4ff');st(14,96,6,'#ffffff')}
+/* restaurant: drawn (no good emoji) — building, red/white awning, windows, door, fork & knife sign */
+function drawRestaurant(x){x.save();x.shadowColor='rgba(255,255,255,.6)';x.shadowBlur=10;x.fillStyle='#f3e6cf';x.fillRect(24,46,80,62);x.restore();
+ x.fillStyle='#8b5a2b';x.fillRect(19,38,90,10);
+ for(var i=0;i<8;i++){x.fillStyle=i%2?'#ffffff':'#e8433b';x.fillRect(20+i*11,48,11,12);x.beginPath();x.arc(25.5+i*11,60,5.5,0,Math.PI);x.fill()}
+ x.fillStyle='#9fd6ff';x.fillRect(31,72,18,16);x.fillRect(79,72,18,16);x.strokeStyle='#ffffff';x.lineWidth=2;x.strokeRect(31,72,18,16);x.strokeRect(79,72,18,16);
+ x.fillStyle='#7a4a24';x.fillRect(55,76,18,32);x.fillStyle='#ffd166';x.beginPath();x.arc(69,93,2,0,6.283);x.fill();
+ x.fillStyle='#ffffff';x.strokeStyle='#e8433b';x.lineWidth=3;x.beginPath();x.arc(64,22,15,0,6.283);x.fill();x.stroke();
+ x.font='18px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('🍴',64,23)}
+/* life group lumps, drawn: a herd -> a zoo -> an ecosystem */
+var EMF='"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+function emo(x,e,px,cx,cy){x.font=px+'px '+EMF;x.textAlign='center';x.textBaseline='middle';x.fillText(e,cx,cy)}
+function drawLife(x,id){x.save();x.shadowColor='rgba(255,255,255,.6)';x.shadowBlur=9;
+ if(id==='llife1'){emo(x,'🦒',50,40,48);emo(x,'🐘',52,86,58);emo(x,'🦓',48,52,88)}
+ else if(id==='llife2'){x.fillStyle='#8b5a2b';x.fillRect(18,40,12,72);x.fillRect(98,40,12,72);x.restore();
+  x.fillStyle='#5aa83a';x.beginPath();x.moveTo(12,44);x.quadraticCurveTo(64,4,116,44);x.lineTo(116,54);x.quadraticCurveTo(64,16,12,54);x.closePath();x.fill();
+  x.fillStyle='#fff6d8';x.strokeStyle='#8b5a2b';x.lineWidth=3;x.fillRect(40,26,48,20);x.strokeRect(40,26,48,20);
+  x.fillStyle='#d2462e';x.font='bold 16px sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('ZOO',64,37);
+  emo(x,'🦒',46,64,86);x.strokeStyle='rgba(120,80,40,.85)';x.lineWidth=3;for(var i=0;i<5;i++){x.beginPath();x.moveTo(36+i*14,62);x.lineTo(36+i*14,112);x.stroke()}return}
+ else{x.strokeStyle='#6fd36a';x.lineWidth=6;x.beginPath();x.arc(64,64,40,0,6.283);x.stroke();x.restore();
+  x.fillStyle='#6fd36a';[0,1,2,3].forEach(function(k){var a=k*Math.PI/2+Math.PI/4,cx=64+40*Math.cos(a),cy=64+40*Math.sin(a),t=a+Math.PI/2;
+   x.beginPath();x.moveTo(cx+8*Math.cos(t),cy+8*Math.sin(t));x.lineTo(cx+7*Math.cos(t+2.4),cy+7*Math.sin(t+2.4));x.lineTo(cx+7*Math.cos(t-2.4),cy+7*Math.sin(t-2.4));x.closePath();x.fill()});
+  emo(x,'🌳',34,64,24);emo(x,'🐦',30,104,64);emo(x,'🐟',30,64,104);emo(x,'🐞',28,24,64);emo(x,'🌍',30,64,64);return}
+ x.restore()}
 function tex(id){return TEX[id]||(TEX[id]=new THREE.CanvasTexture(icon(id)))}
 /* trail colour per item: read the icon's own colour and make it vivid (falls back to a colour picked from the name) */
 var COL={};
