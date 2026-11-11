@@ -42,6 +42,10 @@ html,body{height:100%;margin:0;background:#05070f;color:#fff;overflow:hidden;tou
 #msg.go{animation:mp 1.1s ease-out forwards}
 @keyframes mp{0%{opacity:0;transform:scale(.5)}12%{opacity:1;transform:scale(1.12)}22%{transform:scale(1)}75%{opacity:1}100%{opacity:0;transform:translateY(-20px)}}
 #fx{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.off{position:absolute;left:0;top:0;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:rgba(10,16,34,.75);box-shadow:0 0 0 1.5px rgba(255,255,255,.55);display:flex;align-items:center;justify-content:center;will-change:transform}
+.off img{width:24px;height:24px}
+.off i{position:absolute;left:50%;top:50%;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:9px solid rgba(255,255,255,.9)}
+.off.h{box-shadow:0 0 0 2px #ffe27a,0 0 12px #ffe27a}.off.h i{border-bottom-color:#ffe27a}
 .fl{position:absolute;left:0;top:0;white-space:nowrap;font-weight:900;font-size:17px;text-shadow:0 0 6px #000,0 0 3px #000;will-change:transform}
 .fl img{width:30px;height:30px;vertical-align:middle;margin-right:2px}
 .fl.big{font-size:22px}.fl.new{color:#ffe27a}.fl.bad{color:#ff6b7d}.fl.pt{color:#9fe8ff;font-size:15px}
@@ -89,7 +93,7 @@ if(!window.THREE){window.__ldFail(false);return}
 if(!window.__glok){window.__ldFail(true);return}
 
 /* ---------- world constants (planet radius = 1; orbit plane = world XY, facing the camera) ---------- */
-var R=1,RMAX=8.5,MU=70,HS=1/250,FXS=2.66;
+var R=1,RMAX=8.5,RFAR=16,MU=70,HS=1/250,FXS=2.66; /* RMAX = edge of the overview screen; satellites may go past it and come back, they only leave for good past RFAR or when moving faster than escape speed */
 var RT=4.5,A1=4*MU,TK=.35,NK=88,KD=1.5;  /* rocket: 1 boost straight up just enough to coast to RT, 2 coast to the top, 3 sideways kick (TK seconds) */
 var DVLO=1.2,DVHI=7.6,FILL=2.4;          /* the hold sets the sideways kick: DVLO..DVHI, divided by the item's weight */
 var SIZE=[0,0.23,0.28,0.33,0.38,0.5],SPR=2.7;
@@ -193,8 +197,6 @@ atm.scale.setScalar(2.5*R);scene.add(atm);
  p[i*3]=300*s*Math.cos(a);p[i*3+1]=300*u;p[i*3+2]=300*s*Math.sin(a);c[i*3]=b;c[i*3+1]=b;c[i*3+2]=b*(.9+Math.random()*.1)}
  var g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3));g.setAttribute('color',new THREE.BufferAttribute(c,3));
  scene.add(new THREE.Points(g,new THREE.PointsMaterial({size:1.6*Math.min(window.devicePixelRatio||1,2),sizeAttenuation:false,vertexColors:true})))})();
-(function(){var pts=[];for(var i=0;i<=128;i++){var a=i/128*6.283;pts.push(new THREE.Vector3(RMAX*Math.cos(a),RMAX*Math.sin(a),0))}
- var l=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineDashedMaterial({color:0xff5a6e,dashSize:.08,gapSize:.08,transparent:true,opacity:.3}));l.computeLineDistances();scene.add(l)})();
 /* launch pad on top of the planet + gantry tower */
 var padMesh=new THREE.Mesh(new THREE.CylinderGeometry(.22,.27,.06,24),new THREE.MeshPhongMaterial({color:0x5a6b85,shininess:30}));padMesh.position.y=R+.03;scene.add(padMesh);
 var towerM=new THREE.MeshPhongMaterial({color:0xb8c0cc,shininess:40});
@@ -231,7 +233,7 @@ function orbit(x,y,vx,vy,s){var r=Math.hypot(x,y),v2=vx*vx+vy*vy,h=x*vy-y*vx,rv=
  ex=((v2-MU/r)*x-rv*vx)/MU,ey=((v2-MU/r)*y-rv*vy)/MU,e=Math.hypot(ex,ey),p=h*h/MU,w=Math.atan2(ey,ex),t0=Math.atan2(y,x),sg=h>=0?1:-1,
  rc=R+s*.6,pts=[],crash=false,esc=false,N=160;
  for(var i=0;i<=N;i++){var th=t0+sg*6.2832*i/N,den=1+e*Math.cos(th-w),rr=den>1e-6?p/den:Infinity;
-  if(rr<rc){crash=true;rr=rc}else if(rr>RMAX){esc=true;rr=RMAX}
+  if(rr<rc){crash=true;rr=rc}else if(rr>RFAR){esc=true;rr=RFAR}
   pts.push(rr*Math.cos(th),rr*Math.sin(th));if(crash||esc)break}
  return {pts:pts,crash:crash,esc:esc,e:e}}
 function predict(g,type,pts){var d=ITEM[type],s=SIZE[d.t],o={x:0,y:rStart(s),vx:0,vy:0,ph:1,kt:0,AK:dvOf(g,d.w)/TK};if(pts)pts.push(o.x,o.y);
@@ -322,7 +324,7 @@ function mkBody(type,x,y,vx,vy,m){var d=ITEM[type],s=SIZE[d.t];
   alive:true,leaving:0,rot:0,spin:(Math.random()-.5)*1.2,pop:1,lf:0,str:0,cool:{},hint:false,ph:0,kt:0,fs:0,AK:0,dx:0,dy:1,thr:0};
  bodies.push(b);reorbit(b);return b}
 function reorbit(b){setLine(b.ln,orbit(b.x,b.y,b.vx,b.vy,b.s).pts)}
-function kill(b){b.alive=false;[b.sp,b.hs,b.ln,b.tl].forEach(function(o){scene.remove(o);if(o.isLine)o.geometry.dispose();o.material.dispose()})}
+function kill(b){b.alive=false;if(b.off){b.off.remove();b.off=null}[b.sp,b.hs,b.ln,b.tl].forEach(function(o){scene.remove(o);if(o.isLine)o.geometry.dispose();o.material.dispose()})}
 function clearAll(){bodies.forEach(function(b){if(b.alive)kill(b)});bodies=[];flight=null}
 
 function pickNext(){return BASE[Math.random()*BASE.length|0]}  /* fully random */
@@ -394,6 +396,16 @@ function merge(a,c,res){var M=a.m+c.m,x=(a.x*a.m+c.x*c.m)/M,y=(a.y*a.m+c.y*c.m)/
  label(x,y,img(res)+ITEM[res].n+'!','big'+(isNew?' new':''),1.7,-30);
  label(x,y,(isNew?'NEW! ':'')+'+'+pts+(combo>1?'　×'+combo+' COMBO':''),'pt',1.6,6);
  hints()}
+/* satellites outside the screen: an icon with an arrow at the screen edge (gold when it can merge with the next item) */
+function edges(){return {l:36,r:W-36,t:Math.min(.22*H,92)+30,b:H-Math.min(.28*H,128)-30}}
+function offUpd(){var E=edges(),cx=(E.l+E.r)/2,cy=(E.t+E.b)/2;
+ bodies.forEach(function(b){var px=0,py=0,ang=0,show=false;
+  if(state==='play'&&b.alive&&!b.leaving){v3.set(b.x,b.y,0).project(cam);var sx=(v3.x+1)/2*W,sy=(1-v3.y)/2*H;
+   if(sx<E.l||sx>E.r||sy<E.t||sy>E.b){show=true;var dx=sx-cx,dy=sy-cy,k=Math.min(Math.abs((E.r-cx)/(dx||1e-6)),Math.abs((E.b-cy)/(dy||1e-6)));px=cx+dx*k;py=cy+dy*k;ang=Math.atan2(dx,-dy)}}
+  if(show){if(!b.off){b.off=document.createElement('div');b.off.className='off';b.off.innerHTML=img(b.type)+'<i></i>';fxEl.appendChild(b.off)}
+   b.off.style.display='';b.off.style.transform='translate('+px.toFixed(1)+'px,'+py.toFixed(1)+'px)';b.off.classList.toggle('h',b.hint);
+   b.off.lastChild.style.transform='translate(-50%,-50%) rotate('+ang.toFixed(3)+'rad) translate(0,-24px)'}
+  else if(b.off)b.off.style.display='none'})}
 /* a finished planet pops up big, then flies off into deep space and stays there as part of the sky */
 var made=[],deps=[],skyPl=[];
 function planetBirth(res,x,y){made.push(res);hud();var sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex(res),transparent:true,depthWrite:false}));sp.position.set(x,y,0);sp.scale.setScalar(.001);scene.add(sp);
@@ -420,7 +432,7 @@ function step(h){var n=bodies.length,i,b;
   else{r=Math.hypot(b.x,b.y);var k=-MU/(r*r*r);b.vx+=k*b.x*h;b.vy+=k*b.y*h;b.x+=b.vx*h;b.y+=b.vy*h}
   if(b.leaving)continue;r=Math.hypot(b.x,b.y);
   if(r<R+b.s*.6&&!(b.ph&&b.fs<24)){crash(b);continue}
-  if(r>RMAX)escape(b)}
+  if(r>RFAR||(r>RMAX&&(b.vx*b.vx+b.vy*b.vy)/2-MU/r>=0&&b.x*b.vx+b.y*b.vy>0))escape(b)}
  for(i=0;i<n;i++){var a=bodies[i];if(!a.alive||a.leaving)continue;
   for(var j=i+1;j<n;j++){var c=bodies[j];if(!c.alive||c.leaving)continue;var dx=c.x-a.x,dy=c.y-a.y,d=Math.hypot(dx,dy);
    if(d<a.s+c.s&&d>1e-6){var res=state==='play'?RECIPE[key(a.type,c.type)]:null;
@@ -484,9 +496,9 @@ function loop(now){requestAnimationFrame(loop);var dt=Math.min(.05,Math.max(0,(n
   drawTrail(b,1);
   b.hs.visible=b.hint;if(b.hint){b.hs.position.copy(b.sp.position);b.hs.scale.setScalar(b.s*4.4*(1+.12*Math.sin(T*7)));b.hs.material.opacity=.65+.35*Math.sin(T*7)}
   if(b.lf>0)b.lf-=dt*.8;b.ln.material.opacity=.16+(b.hint?.3:0)+Math.max(0,b.lf)*.7});
- updDeps(dt*ts);updPool(FX,gdt);updPool(SM,gdt);
+ offUpd();updDeps(dt*ts);updPool(FX,gdt);updPool(SM,gdt);
  rings.forEach(function(r){if(r.t>=1){r.m.visible=false;return}r.t+=dt/r.d;var q=Math.min(1,r.t);r.m.scale.setScalar(.15+r.max*(1-Math.pow(1-q,3)));r.m.material.opacity=(1-q)*.9});
- labels=labels.filter(function(L){L.t+=dt;if(L.t>=L.d){L.el.remove();return false}var s=scr(L.x,L.y),q=L.t/L.d;
+ labels=labels.filter(function(L){L.t+=dt;if(L.t>=L.d){L.el.remove();return false}var s=scr(L.x,L.y),q=L.t/L.d,E=edges();s[0]=Math.max(70,Math.min(W-70,s[0]));s[1]=Math.max(E.t+14,Math.min(E.b-10,s[1]));
   L.el.style.transform='translate('+(s[0])+'px,'+(s[1]+L.dy-q*44)+'px) translate(-50%,-50%) scale('+(q<.1?.6+q*4:1)+')';L.el.style.opacity=String(1-Math.pow(q,3));return true});
  if(flash>0){flash=Math.max(0,flash-dt*1.6);flEl.style.opacity=String(flash)}
  planet.rotation.y+=dt*.05;clouds.rotation.y+=dt*.07;beacon.material.opacity=.4+.6*(Math.sin(T*5)>0?1:0);
