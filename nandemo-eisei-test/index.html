@@ -111,6 +111,12 @@ var DEF=[
  ['volcano','🌋','かざん',3],['bento','🍱','おべんとう',3],['burger','🍔','ハンバーガー',3],['pudding','🍮','プリン',3],['cloud','☁️','くも',3],
  ['gorilla','🦍','うちゅうゴリラ',3],['donut','🍩','ドーナツ',3],['alien','👽','うちゅうじん',3],['sandw','🥪','サンドイッチ',3],
  ['parfait','🍨','パフェ',4],
+ /* lumps: what two things of the same group become when they have no recipe of their own (small / medium / large) */
+ ['lfood1','🍽\uFE0F','ごちそう',2],['lfood2','🥘','おおなべ',3],['lfood3','🏪','コンビニ',4],
+ ['lsweet1','🍬','キャンディ',2],['lsweet2','🧁','カップケーキ',3],['lsweet3','🎂','ケーキ',4],
+ ['llife1','🐇','うさぎ',2],['llife2','🦁','ライオン',3],['llife3','🐘','ゾウ',4],
+ ['lnat1','🌱','めばえ',2],['lnat2','🌳','たいぼく',3],['lnat3','⛰\uFE0F','やま',4],
+ ['lspace1','🛰\uFE0F','じんこうえいせい',2],['lspace2','🌠','ながれぼし',3],['lspace3','🌌','ぎんが',4],
  /* planets: the end of every chain (6th value = planet) */
  ['earth','','ちきゅう',5,0,1],['mars','','かせい',5,0,1],['saturn','','どせい',5,0,1],['neptune','','かいおうせい',5,0,1],
  ['gourmet','','グルメ星',5,0,1],['sweets','','スイーツ星',5,0,1],['animal','','どうぶつ星',5,0,1],['ufostar','','UFO星',5,0,1]];
@@ -134,6 +140,17 @@ var ITEM={},BASE=[],RECIPE={},PART={},RESULTS=[];
 DEF.forEach(function(d){ITEM[d[0]]={id:d[0],e:d[1],n:d[2],t:d[3],w:d[4]||1,pl:!!d[5]};if(d[3]===1)BASE.push(d[0])});
 function key(a,b){return a<b?a+'+'+b:b+'+'+a}
 REC.forEach(function(r){RECIPE[key(r[0],r[1])]=r[2];(PART[r[0]]=PART[r[0]]||[]).push(r[1]);(PART[r[1]]=PART[r[1]]||[]).push(r[0]);if(RESULTS.indexOf(r[2])<0)RESULTS.push(r[2])});
+/* groups: two things of the same group always merge (their own recipe first, otherwise the group's lump one size up; a large lump makes the group's planet).
+   different groups merge only with a recipe, otherwise they bounce */
+var GROUPS={
+ food:{pl:'gourmet',l:['lfood1','lfood2','lfood3'],m:'rice nori bread egg onigiri sushi curry senbei meat fegg baguette fry bento burger sandw'},
+ sweet:{pl:'sweets',l:['lsweet1','lsweet2','lsweet3'],m:'banana milk pancake pudding donut parfait'},
+ life:{pl:'animal',l:['llife1','llife2','llife3'],m:'fish cow whale monkey chick dolphin jungle gorilla'},
+ nat:{pl:'earth',l:['lnat1','lnat2','lnat3'],m:'water fire onsen sea rain volcano cloud paddy'},
+ space:{pl:'ufostar',l:['lspace1','lspace2','lspace3'],m:'rocket ufo comet alien'}},CAT={};
+Object.keys(GROUPS).forEach(function(k){var G=GROUPS[k];G.m.split(' ').concat(G.l).forEach(function(id){CAT[id]=k});G.l.forEach(function(id){if(RESULTS.indexOf(id)<0)RESULTS.push(id)})});
+RESULTS.sort(function(a,b){return ITEM[a].t-ITEM[b].t});
+function mergeResult(a,b){var r=RECIPE[key(a,b)];if(r)return r;var ca=CAT[a];if(!ca||ca!==CAT[b])return null;var t=Math.max(ITEM[a].t,ITEM[b].t),G=GROUPS[ca];return t>=4?G.pl:G.l[t-1]}
 RESULTS.sort(function(a,b){return ITEM[a].t-ITEM[b].t});
 
 /* ---------- storage ---------- */
@@ -364,7 +381,7 @@ function loadPad(){pad.type=queue.shift();queue.push(pickNext());
  nxEl.innerHTML='NEXT '+img(queue[0])+img(queue[1]);hints()}
 function wTag(id){var w=ITEM[id].w;return w>=1.1?'<b style="color:#ff9f6b">（おもい）</b>':w<=.9?'<b style="color:#9fe8ff">（かるい）</b>':''}
 function curType(){return flight&&flight.ph===2&&flight.wait?flight.type:(!flight&&pad.ready?pad.type:null)}
-function hints(){var t=curType(),any=false;bodies.forEach(function(b){b.hint=!!(t&&b!==flight&&b.alive&&!b.leaving&&RECIPE[key(t,b.type)]);if(b.hint)any=true});
+function hints(){var t=curType(),any=false;bodies.forEach(function(b){b.hint=!!(t&&b!==flight&&b.alive&&!b.leaving&&mergeResult(t,b.type));if(b.hint)any=true});
  pnEl.innerHTML=t?img(t)+ITEM[t].n+wTag(t)+(any?'<small>　光っている衛星と合体できる!</small>':''):''}
 /* gauge: 1st hold = height (blue: on screen / orange: past the screen edge / red: too high, gone), 2nd hold = sideways kick (green = orbit) */
 function gauge1(type){var w=ITEM[type].w,gS=Math.min(1,(RMAX-RLO)/RSPAN*w)*100,gF=Math.min(1,(RFAR-RLO)/RSPAN*w)*100;
@@ -477,7 +494,7 @@ function step(h){var n=bodies.length,i,b;
   if(r>RFAR||(r>RMAX&&(b.vx*b.vx+b.vy*b.vy)/2-MU/r>=0&&b.x*b.vx+b.y*b.vy>0))escape(b)}
  for(i=0;i<n;i++){var a=bodies[i];if(!a.alive||a.leaving)continue;
   for(var j=i+1;j<n;j++){var c=bodies[j];if(!c.alive||c.leaving)continue;var dx=c.x-a.x,dy=c.y-a.y,d=Math.hypot(dx,dy);
-   var res=state==='play'?RECIPE[key(a.type,c.type)]:null;
+   var res=state==='play'?mergeResult(a.type,c.type):null;
    if(res&&d<(a.s+c.s)*MRG){merge(a,c,res);break}                      /* merging reaches further than bouncing */
    if(!res&&d<a.s+c.s&&d>1e-6&&!(a.cool[c.id]>0))bounce(a,c,dx,dy,d)}}}
 
