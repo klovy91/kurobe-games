@@ -359,15 +359,18 @@ function launch(){var d=ITEM[pad.type],s=SIZE[d.t],b=mkBody(pad.type,0,rStart(s)
  SFX.thump(g);SFX.roar();
  for(var i=0;i<34;i++){var side=i%2?1:-1,v=.5+Math.random()*(1.2+g);emit(SM,side*.22,R+.08,side*v,Math.random()*.25,1+Math.random()*.8,.09+Math.random()*.06,Math.random()<.5?'#c9ced8':'#8e96a5',2.6,.18,.85)}
  burst(0,R+.08,18,['#ffe27a','#ff8a3a','#ffffff'],1.4,.4,.08);hints()}
-function kick(b){if(state==='title')return;SFX.kick();shk=Math.max(shk,.03+.05*b.pw);burst(b.x,b.y,16,['#ffe27a','#ff8a3a','#ffffff'],1.4,.4,.07)}
-function burnout(b){b.ph=0;b.ln.visible=true;reorbit(b);if(flight===b){flight=null;camBody=b;followT=.9}
- if(state!=='play'||!b.launched)return;
- var o=orbit(b.x,b.y,b.vx,b.vy,b.s);
+/* at the top: judge right away (finish the sideways kick ahead of time on a copy), freeze a moment, then the 2nd stage fires */
+function kick(b){if(state==='title')return;
+ if(state==='play'&&b.launched){var o={x:b.x,y:b.y,vx:b.vx,vy:b.vy,ph:3,kt:b.kt,AK:b.AK};while(o.ph<4)fstep(o,HS);judge(b,orbit(o.x,o.y,o.vx,o.vy,b.s))}
+ hitStop=Math.max(hitStop,.09);SFX.kick();shk=Math.max(shk,.05+.06*b.pw);flash=Math.max(flash,.12);flEl.style.background='#fff';
+ burst(b.x,b.y,26,['#ffe27a','#ff8a3a','#ffffff'],1.8,.5,.08);ring(b.x,b.y,0xffb347,.7,.4)}
+function judge(b,o){
  if(o.crash){label(b.x,b.y,'パワー不足…','bad',1.4,-20)}
  else if(o.esc){label(b.x,b.y,'パワー過多!','bad',1.4,-20)}
  else{var gr=o.e<.06?['PERFECT ORBIT!','#ffe27a',300]:o.e<.16?['GREAT ORBIT!','#7dffb0',150]:['ORBIT IN','#9fd0ff',50];
   msg(gr[0],gr[1]);addScore(gr[2]);label(b.x,b.y,'+'+gr[2],'pt',1.1,-26);b.lf=1;
   ring(b.x,b.y,gr[1],gr[2]===300?1.1:.7,.6);if(gr[2]===300){SFX.perfect();slow(.3,.45);burst(b.x,b.y,30,['#ffe27a','#fff','#ffb347'],1.6,.8,.07)}else SFX.good()}}
+function burnout(b){b.ph=0;b.ln.visible=true;reorbit(b);if(flight===b){flight=null;camBody=b;followT=.9}}
 
 /* ---------- physics ---------- */
 function crash(b){kill(b);if(flight===b)flight=null;SFX.boom();shk=Math.max(shk,.14);flash=.35;flEl.style.background='#ff5a3a';
