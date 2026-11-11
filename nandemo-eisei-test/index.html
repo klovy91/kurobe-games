@@ -91,7 +91,7 @@ if(!window.__glok){window.__ldFail(true);return}
 var R=1,RMAX=8.5,MU=70,HS=1/250,FXS=2.66;
 var RT=4.5,A1=4*MU,TK=.35,NK=88,KD=1.5;  /* rocket: 1 boost straight up just enough to coast to RT, 2 coast to the top, 3 sideways kick (TK seconds) */
 var DVLO=1.2,DVHI=7.6,FILL=2.4;          /* the hold sets the sideways kick: DVLO..DVHI, divided by the item's weight */
-var SIZE=[0,0.38,0.46,0.53,0.66],SPR=2.7;
+var SIZE=[0,0.23,0.28,0.33,0.4],SPR=2.7;
 var TCOL=[0,0x8fb7ff,0x7dffb0,0xffd36b,0xff8af0];
 
 /* ---------- items & recipes (5th value = weight; heavy things need a longer hold) ---------- */
@@ -164,7 +164,7 @@ atm.scale.setScalar(2.5*R);scene.add(atm);
 (function(){var pts=[];for(var i=0;i<=128;i++){var a=i/128*6.283;pts.push(new THREE.Vector3(RMAX*Math.cos(a),RMAX*Math.sin(a),0))}
  var l=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineDashedMaterial({color:0xff5a6e,dashSize:.08,gapSize:.08,transparent:true,opacity:.3}));l.computeLineDistances();scene.add(l)})();
 /* launch pad on top of the planet + gantry tower */
-var padMesh=new THREE.Mesh(new THREE.CylinderGeometry(.3,.36,.07,24),new THREE.MeshPhongMaterial({color:0x5a6b85,shininess:30}));padMesh.position.y=R+.03;scene.add(padMesh);
+var padMesh=new THREE.Mesh(new THREE.CylinderGeometry(.22,.27,.06,24),new THREE.MeshPhongMaterial({color:0x5a6b85,shininess:30}));padMesh.position.y=R+.03;scene.add(padMesh);
 var towerM=new THREE.MeshPhongMaterial({color:0xb8c0cc,shininess:40});
 (function(){var t=new THREE.Mesh(new THREE.BoxGeometry(.08,.95,.08),towerM);t.position.set(-.48,R+.42,0);scene.add(t);
  for(var i=0;i<3;i++){var a=new THREE.Mesh(new THREE.BoxGeometry(.22,.035,.035),towerM);a.position.set(-.38,R+.2+i*.27,0);scene.add(a)}})();
@@ -190,7 +190,8 @@ function rStart(s){return R+.07+s*.9}
 function dvOf(g,w){return (DVLO+(DVHI-DVLO)*g)/w}
 /* one step of a launched rocket (shared by the game and the dotted guide line, so they match exactly) */
 function fstep(o,h){var r=Math.hypot(o.x,o.y),rx=o.x/r,ry=o.y/r,vr=o.vx*rx+o.vy*ry,k=-MU/(r*r*r),ax=k*o.x,ay=k*o.y;o.thr=0;
- if(o.ph===1){if(1/r-vr*vr/(2*MU)<=1/RT)o.ph=2;else{ax+=A1*rx;ay+=A1*ry;o.dx=rx;o.dy=ry;o.thr=1}}
+ if(o.ph===1){var need=Math.sqrt(Math.max(0,2*MU*(1/r-1/RT))),gr=MU/(r*r),a1=A1;    /* last boost step: only what is needed to coast exactly to RT */
+  if(vr+(A1-gr)*h>=need){a1=Math.max(0,(need-vr)/h+gr);o.ph=2}ax+=a1*rx;ay+=a1*ry;o.dx=rx;o.dy=ry;o.thr=1}
  if(o.ph===2&&vr<=0)o.ph=3;
  if(o.ph===3){var gx=ry-KD*vr*rx,gy=-rx-KD*vr*ry,gl=Math.hypot(gx,gy);gx/=gl;gy/=gl;ax+=o.AK*gx;ay+=o.AK*gy;o.dx=gx;o.dy=gy;o.thr=2;if(++o.kt>=NK)o.ph=4}
  o.vx+=ax*h;o.vy+=ay*h;o.x+=o.vx*h;o.y+=o.vy*h}
