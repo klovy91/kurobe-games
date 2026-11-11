@@ -109,7 +109,7 @@ var DEF=[
  ['sea','🌊','うみ',2],['whale','🐋','くじら',2],['rain','🌧️','あめ',2],['comet','☄️','すいせい',2],['baguette','🥖','フランスパン',2],
  ['monkey','🐒','うちゅうザル',2],['fry','🍤','フライ',2],['chick','🐣','うちゅうひよこ',2],['dolphin','🐬','うちゅうイルカ',2],['jungle','🌴','ジャングル',2],
  ['volcano','🌋','かざん',3],['bento','🍱','おべんとう',3],['burger','🍔','ハンバーガー',3],['pudding','🍮','プリン',3],['cloud','☁️','くも',3],
- ['gorilla','🦍','ゴリラ',3],['donut','🍩','ドーナツ',3],['alien','👽','うちゅうじん',3],['sandw','🥪','サンドイッチ',3],
+ ['gorilla','🦍','うちゅうゴリラ',3],['donut','🍩','ドーナツ',3],['alien','👽','うちゅうじん',3],['sandw','🥪','サンドイッチ',3],
  ['parfait','🍨','パフェ',4],
  /* planets: the end of every chain (6th value = planet) */
  ['earth','','ちきゅう',5,0,1],['mars','','かせい',5,0,1],['saturn','','どせい',5,0,1],['neptune','','かいおうせい',5,0,1],
@@ -144,6 +144,7 @@ var ICON={},TEX={},URL_={};
 function icon(id){if(ICON[id])return ICON[id];var d=ITEM[id],c=document.createElement('canvas');c.width=c.height=128;var x=c.getContext('2d');
  x.shadowColor='rgba(255,255,255,.6)';x.shadowBlur=9;
  if(d.pl){drawPlanet(x,id);return ICON[id]=c}
+ if(SPACE[id]){drawSpace(x,d.e);return ICON[id]=c}
  if(d.e){x.font='92px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(d.e,64,70)}
  else{x.fillStyle='#17271c';rrect(x,22,26,84,76,9);x.fill();x.shadowBlur=0;x.strokeStyle='rgba(130,180,130,.35)';x.lineWidth=2;
   for(var i=0;i<5;i++){x.beginPath();x.moveTo(28,38+i*13);x.lineTo(100,35+i*13+(i%2?4:-1));x.stroke()}}
@@ -164,6 +165,17 @@ function drawPlanet(x,id){var P=PLD[id],cx=64,cy=64,r=38,rg=P[3]==='ring';x.shad
  var sh=x.createRadialGradient(cx-12,cy-14,r*.2,cx,cy,r*1.05);sh.addColorStop(0,'rgba(255,255,255,.22)');sh.addColorStop(.55,'rgba(0,0,0,0)');sh.addColorStop(1,'rgba(0,0,40,.5)');
  x.fillStyle=sh;x.fillRect(0,0,128,128);x.restore();
  if(rg){x.strokeStyle='rgba(245,232,190,.95)';x.lineWidth=7;x.beginPath();x.ellipse(cx,cy,60,15,-.35,0,Math.PI);x.stroke()}}
+/* space animals: glass helmet + metal collar + sparkles + purple glow */
+var SPACE={monkey:1,chick:1,dolphin:1,gorilla:1};
+function drawSpace(x,e){x.save();x.shadowColor='rgba(170,140,255,.95)';x.shadowBlur=16;
+ var g=x.createRadialGradient(52,46,6,64,60,46);g.addColorStop(0,'rgba(210,235,255,.22)');g.addColorStop(1,'rgba(120,165,255,.4)');x.fillStyle=g;x.beginPath();x.arc(64,58,45,0,6.283);x.fill();x.restore();
+ x.font='60px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(e,64,63);
+ x.strokeStyle='rgba(230,245,255,.95)';x.lineWidth=4;x.beginPath();x.arc(64,58,45,0,6.283);x.stroke();
+ x.strokeStyle='rgba(255,255,255,.8)';x.lineWidth=5;x.lineCap='round';x.beginPath();x.arc(64,58,35,3.55,4.45);x.stroke();
+ var cg=x.createLinearGradient(0,96,0,114);cg.addColorStop(0,'#eef1f7');cg.addColorStop(1,'#7c8698');x.fillStyle=cg;x.beginPath();x.ellipse(64,103,33,9,0,0,6.283);x.fill();
+ x.fillStyle='#ffd166';x.beginPath();x.arc(64,103,3.5,0,6.283);x.fill();
+ function st(cx,cy,r,col){x.fillStyle=col;x.beginPath();x.moveTo(cx,cy-r);x.quadraticCurveTo(cx,cy,cx+r,cy);x.quadraticCurveTo(cx,cy,cx,cy+r);x.quadraticCurveTo(cx,cy,cx-r,cy);x.quadraticCurveTo(cx,cy,cx,cy-r);x.fill()}
+ st(13,20,10,'#fff6b0');st(115,26,7,'#ffffff');st(113,92,8,'#d4c4ff');st(14,96,6,'#ffffff')}
 function tex(id){return TEX[id]||(TEX[id]=new THREE.CanvasTexture(icon(id)))}
 /* trail colour per item: read the icon's own colour and make it vivid (falls back to a colour picked from the name) */
 var COL={};
