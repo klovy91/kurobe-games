@@ -88,10 +88,10 @@ if(!window.THREE){window.__ldFail(false);return}
 if(!window.__glok){window.__ldFail(true);return}
 
 /* ---------- world constants (planet radius = 1; orbit plane = world XY, facing the camera) ---------- */
-var R=1,RMAX=3.0,MU=2.21,HS=1/250;
-var TB=1.0,NB=250,A0=0.45,KD=2;          /* burn time, vertical part, autopilot strength (kills upward speed while turning) */
-var DVLO=1.2,DVHI=5.6,FILL=1.5;          /* hold gauge 0..1 -> push DVLO..DVHI, divided by the item's weight */
-var SIZE=[0,0.14,0.17,0.2,0.25],SPR=2.7;
+var R=1,RMAX=4.2,MU=11,HS=1/250,FXS=1.4;
+var TB=1.1,NB=275,A0=0.35,KD=1.5,AV=1.05*MU; /* burn time, climb part, autopilot strength (kills upward speed while turning), climb thrust */
+var DVLO=1.5,DVHI=9,FILL=1.5;            /* 1st stage climbs the same height every time; the hold sets the 2nd stage push (sideways), divided by the item's weight */
+var SIZE=[0,0.2,0.24,0.28,0.35],SPR=2.7;
 var TCOL=[0,0x8fb7ff,0x7dffb0,0xffd36b,0xff8af0];
 
 /* ---------- items & recipes (5th value = weight; heavy things need a longer hold) ---------- */
@@ -164,12 +164,12 @@ atm.scale.setScalar(2.5*R);scene.add(atm);
 (function(){var pts=[];for(var i=0;i<=128;i++){var a=i/128*6.283;pts.push(new THREE.Vector3(RMAX*Math.cos(a),RMAX*Math.sin(a),0))}
  var l=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineDashedMaterial({color:0xff5a6e,dashSize:.08,gapSize:.08,transparent:true,opacity:.3}));l.computeLineDistances();scene.add(l)})();
 /* launch pad on top of the planet + gantry tower */
-var padMesh=new THREE.Mesh(new THREE.CylinderGeometry(.1,.12,.03,24),new THREE.MeshPhongMaterial({color:0x5a6b85,shininess:30}));padMesh.position.y=R+.01;scene.add(padMesh);
+var padMesh=new THREE.Mesh(new THREE.CylinderGeometry(.14,.17,.04,24),new THREE.MeshPhongMaterial({color:0x5a6b85,shininess:30}));padMesh.position.y=R+.014;scene.add(padMesh);
 var towerM=new THREE.MeshPhongMaterial({color:0xb8c0cc,shininess:40});
-(function(){var t=new THREE.Mesh(new THREE.BoxGeometry(.03,.36,.03),towerM);t.position.set(-.15,R+.16,0);scene.add(t);
- for(var i=0;i<3;i++){var a=new THREE.Mesh(new THREE.BoxGeometry(.07,.012,.012),towerM);a.position.set(-.115,R+.08+i*.1,0);scene.add(a)}})();
+(function(){var t=new THREE.Mesh(new THREE.BoxGeometry(.042,.5,.042),towerM);t.position.set(-.21,R+.22,0);scene.add(t);
+ for(var i=0;i<3;i++){var a=new THREE.Mesh(new THREE.BoxGeometry(.1,.017,.017),towerM);a.position.set(-.16,R+.11+i*.14,0);scene.add(a)}})();
 var beacon=new THREE.Sprite(new THREE.SpriteMaterial({map:radial([[0,'rgba(255,90,90,1)'],[.3,'rgba(255,60,60,.6)'],[1,'rgba(255,0,0,0)']],64),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));
-beacon.position.set(-.15,R+.35,0.02);beacon.scale.setScalar(.12);scene.add(beacon);
+beacon.position.set(-.21,R+.48,0.03);beacon.scale.setScalar(.17);scene.add(beacon);
 
 /* ---------- camera fit: whole play area visible, HUD on top, gauge at bottom (slightly from above-right for depth) ---------- */
 var W=1,H=1,v3=new THREE.Vector3(),camBase=new THREE.Vector3(),camLook=new THREE.Vector3(),camDir=new THREE.Vector3();
@@ -184,11 +184,12 @@ function fit(){W=innerWidth;H=innerHeight;ren.setSize(W,H,false);cam.aspect=W/H;
 addEventListener('resize',fit);
 
 /* ---------- flight math ---------- */
-function rStart(s){return R+.035+s*.9}
+function rStart(s){return R+.045+s*.9}
 function dvOf(g,w){return (DVLO+(DVHI-DVLO)*g)/w}
 /* thrust direction: straight up first, then tips over to the right while cancelling upward speed (gravity turn autopilot) */
 function tdir(x,y,vx,vy,bt){var r=Math.hypot(x,y),rx=x/r,ry=y/r,tx=ry,ty=-rx,vr=vx*rx+vy*ry,u=Math.max(0,Math.min(1,(bt/TB-A0)/.2));u=u*u*(3-2*u);
- var gx=tx-KD*vr*rx,gy=ty-KD*vr*ry,gl=Math.hypot(gx,gy);gx/=gl;gy/=gl;var dx=(1-u)*rx+u*gx,dy=(1-u)*ry+u*gy,dl=Math.hypot(dx,dy);return [dx/dl,dy/dl]}
+ var gx=tx-KD*vr*rx,gy=ty-KD*vr*ry,gl=Math.hypot(gx,gy);gx/=gl;gy/=gl;var dx=(1-u)*rx+u*gx,dy=(1-u)*ry+u*gy,dl=Math.hypot(dx,dy);return [dx/dl,dy/dl,u]}
+function thrust(A,q){return (1-q[2])*AV+q[2]*A}
 function orbit(x,y,vx,vy,s){var r=Math.hypot(x,y),v2=vx*vx+vy*vy,h=x*vy-y*vx,rv=x*vx+y*vy,
  ex=((v2-MU/r)*x-rv*vx)/MU,ey=((v2-MU/r)*y-rv*vy)/MU,e=Math.hypot(ex,ey),p=h*h/MU,w=Math.atan2(ey,ex),t0=Math.atan2(y,x),sg=h>=0?1:-1,
  rc=R+s*.6,pts=[],crash=false,esc=false,N=160;
@@ -198,7 +199,7 @@ function orbit(x,y,vx,vy,s){var r=Math.hypot(x,y),v2=vx*vx+vy*vy,h=x*vy-y*vx,rv=
  return {pts:pts,crash:crash,esc:esc,e:e}}
 /* same steps as the game physics, so the dotted line matches the real flight */
 function predict(g,type,pts){var d=ITEM[type],s=SIZE[d.t],x=0,y=rStart(s),vx=0,vy=0,A=dvOf(g,d.w)/TB;if(pts)pts.push(x,y);
- for(var i=0;i<NB;i++){var r=Math.hypot(x,y),k=-MU/(r*r*r),q=tdir(x,y,vx,vy,i*HS);vx+=(k*x+A*q[0])*HS;vy+=(k*y+A*q[1])*HS;x+=vx*HS;y+=vy*HS;
+ for(var i=0;i<NB;i++){var r=Math.hypot(x,y),k=-MU/(r*r*r),q=tdir(x,y,vx,vy,i*HS),F=thrust(A,q);vx+=(k*x+F*q[0])*HS;vy+=(k*y+F*q[1])*HS;x+=vx*HS;y+=vy*HS;
   if(pts&&i%6===5)pts.push(x,y);if(i>=24&&Math.hypot(x,y)<R+s*.6){return {ok:false,crash:true,e:9}}}
  var o=orbit(x,y,vx,vy,s);if(pts)for(i=0;i<o.pts.length;i++)pts.push(o.pts[i]);return {ok:!o.crash&&!o.esc,crash:o.crash,esc:o.esc,e:o.e}}
 var LN=230;
@@ -224,7 +225,7 @@ function mkPool(n,add){var a=[];for(var i=0;i<n;i++){var sp=new THREE.Sprite(new
  sp.visible=false;scene.add(sp);a.push({s:sp,l:0})}a.i=0;return a}
 var FX=mkPool(300,true),SM=mkPool(160,false);
 function emit(P,x,y,vx,vy,life,size,col,grow,drag,op){var p=P[P.i=(P.i+1)%P.length];p.s.visible=true;p.s.position.set(x,y,(Math.random()-.5)*.06);
- p.vx=vx;p.vy=vy;p.vz=(Math.random()-.5)*.3;p.l=p.L=life;p.z=size;p.gr=grow||0;p.dr=drag==null?.25:drag;p.op=op==null?1:op;p.s.material.color.set(col);p.s.material.opacity=p.op}
+ p.vx=vx*FXS;p.vy=vy*FXS;p.vz=(Math.random()-.5)*.3*FXS;p.l=p.L=life;p.z=size*FXS;p.gr=grow||0;p.dr=drag==null?.25:drag;p.op=op==null?1:op;p.s.material.color.set(col);p.s.material.opacity=p.op}
 function burst(x,y,n,cols,spd,life,size){for(var i=0;i<n;i++){var a=Math.random()*6.283,v=spd*(.3+Math.random()*.7);emit(FX,x,y,v*Math.cos(a),v*Math.sin(a),life*(.5+Math.random()*.5),size*(.6+Math.random()*.6),cols[i%cols.length])}}
 function chips(x,y,n,spd){for(var i=0;i<n;i++){var a=Math.random()*6.283,v=spd*(.4+Math.random()*.6);emit(SM,x,y,v*Math.cos(a),v*Math.sin(a),.5+Math.random()*.5,.035+Math.random()*.03,Math.random()<.5?'#d8dde6':'#8d96a6',0,.6,1)}}
 function updPool(P,gdt){for(var i=0;i<P.length;i++){var p=P[i];if(p.l<=0)continue;p.l-=gdt;if(p.l<=0){p.s.visible=false;continue}
@@ -232,7 +233,7 @@ function updPool(P,gdt){for(var i=0;i<P.length;i++){var p=P[i];if(p.l<=0)continu
  p.s.scale.setScalar(p.z*(p.gr?1+p.gr*(1-q):.4+q*.6));p.s.material.opacity=p.op*(p.gr?Math.min(1,q*1.6):q)}}
 var rings=[],ri=0,ringG=new THREE.RingGeometry(.9,1,64);
 for(var i=0;i<10;i++){var rm=new THREE.Mesh(ringG,new THREE.MeshBasicMaterial({transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide}));rm.visible=false;scene.add(rm);rings.push({m:rm,t:1})}
-function ring(x,y,col,max,dur){var r=rings[ri=(ri+1)%rings.length];r.m.visible=true;r.m.position.set(x,y,.01);r.m.material.color.set(col);r.t=0;r.max=max;r.d=dur}
+function ring(x,y,col,max,dur){var r=rings[ri=(ri+1)%rings.length];r.m.visible=true;r.m.position.set(x,y,.01);r.m.material.color.set(col);r.t=0;r.max=max*FXS;r.d=dur}
 var hintT=radial([[0,'rgba(255,226,122,0)'],[.55,'rgba(255,226,122,0)'],[.72,'rgba(255,226,122,.95)'],[.8,'rgba(255,200,80,.4)'],[1,'rgba(255,200,80,0)']],128);
 var fxEl=document.getElementById('fx'),labels=[],flEl=document.getElementById('fl'),flash=0,shk=0;
 function scr(x,y){v3.set(x,y+.12,0).project(cam);return [(v3.x+1)/2*W,(1-v3.y)/2*H]}
@@ -320,8 +321,8 @@ function launch(){var d=ITEM[pad.type],s=SIZE[d.t],b=mkBody(pad.type,0,rStart(s)
  scene.remove(pad.sp);pad.sp.material.dispose();pad.sp=null;pad.ready=false;pad.t=0;launches++;giEl.style.left='0%';
  hitStop=.06+.06*g;shk=.03+.09*g;flash=.12+.1*g;flEl.style.background='#fff';padV=.5+1.1*g;
  SFX.thump(g);SFX.roar();
- for(var i=0;i<34;i++){var side=i%2?1:-1,v=.5+Math.random()*(1.2+g);emit(SM,side*.06,R+.03,side*v,Math.random()*.25,1+Math.random()*.8,.09+Math.random()*.06,Math.random()<.5?'#c9ced8':'#8e96a5',2.6,.18,.85)}
- burst(0,R+.03,18,['#ffe27a','#ff8a3a','#ffffff'],1.4,.4,.08);hints()}
+ for(var i=0;i<34;i++){var side=i%2?1:-1,v=.5+Math.random()*(1.2+g);emit(SM,side*.08,R+.04,side*v,Math.random()*.25,1+Math.random()*.8,.09+Math.random()*.06,Math.random()<.5?'#c9ced8':'#8e96a5',2.6,.18,.85)}
+ burst(0,R+.04,18,['#ffe27a','#ff8a3a','#ffffff'],1.4,.4,.08);hints()}
 function burnout(b){b.burn=false;b.ln.visible=true;reorbit(b);if(flight===b)flight=null;
  if(state!=='play'||!b.launched)return;
  var o=orbit(b.x,b.y,b.vx,b.vy,b.s);
@@ -359,7 +360,7 @@ function bounce(a,c,dx,dy,d){var nx=dx/d,ny=dy/d,rvx=c.vx-a.vx,rvy=c.vy-a.vy,vn=
   burst(px,py,6+Math.round(I*22),['#ffffff','#ffe9a8','#aac4ff'],.8+I*1.6,.35,.05);chips(px,py,2+Math.round(I*10),.6+I*1.4);shk=Math.max(shk,I*.05*Math.min(2,M/.04))}}
 function step(h){var n=bodies.length,i,b;
  for(i=0;i<n;i++){b=bodies[i];if(!b.alive)continue;var r=Math.hypot(b.x,b.y),k=-MU/(r*r*r),ax=k*b.x,ay=k*b.y;
-  if(b.burn){var q=tdir(b.x,b.y,b.vx,b.vy,b.bs*HS);ax+=b.A*q[0];ay+=b.A*q[1];b.dir=q}
+  if(b.burn){var q=tdir(b.x,b.y,b.vx,b.vy,b.bs*HS),F=thrust(b.A,q);ax+=F*q[0];ay+=F*q[1];b.dir=q}
   b.vx+=ax*h;b.vy+=ay*h;b.x+=b.vx*h;b.y+=b.vy*h;
   if(b.burn&&++b.bs>=NB)burnout(b);
   if(b.leaving)continue;r=Math.hypot(b.x,b.y);
@@ -378,7 +379,7 @@ function title(){state='title';scrEl.style.display='flex';
  '<ol><li><b>長押し</b>でパワーを溜めて、<b>離して</b>発射</li><li>重いものほど、しっかり溜めないと上がらない</li><li>軌道に乗せられないと残機が減る(3機)</li><li><b>光っている衛星</b>にぶつけると合体!</li><li>相性の悪いもの同士は弾き合う</li></ol>'+
  '<button class="btn" id="pl" type="button">スタート</button><p class="f" style="opacity:.75">BEST '+best+'</p>';
  document.getElementById('pl').addEventListener('click',start);
- clearAll();for(var i=0;i<6;i++){var r=1.45+i*.27,a=Math.random()*6.283,v=Math.sqrt(MU/r),t=BASE[Math.random()*BASE.length|0];mkBody(t,r*Math.cos(a),r*Math.sin(a),Math.sin(a)*v,-Math.cos(a)*v)}
+ clearAll();for(var i=0;i<6;i++){var r=1.8+i*.42,a=Math.random()*6.283,v=Math.sqrt(MU/r),t=BASE[Math.random()*BASE.length|0];mkBody(t,r*Math.cos(a),r*Math.sin(a),Math.sin(a)*v,-Math.cos(a)*v)}
  btEl.style.visibility='hidden';nxEl.innerHTML='';lives=3;score=0;hud()}
 function start(e){if(e)e.stopPropagation();au();clearAll();scrEl.style.display='none';state='play';lives=3;score=0;combo=0;comboT=0;launches=0;merges=0;
  btEl.style.visibility='visible';queue=[pickNext(),pickNext()];if(pad.sp){scene.remove(pad.sp);pad.sp=null}loadPad();hud()}
@@ -398,7 +399,7 @@ function loop(now){requestAnimationFrame(loop);var dt=Math.min(.05,Math.max(0,(n
  var gdt=dt*ts;if(hitStop>0){hitStop-=dt;gdt=0}
  /* pad: sinks while charging, springs back after launch */
  if(charging)padOff=-.035*g;else{padV+=(-260*padOff-11*padV)*dt;padOff+=padV*dt}
- padMesh.position.y=R+.01+padOff;
+ padMesh.position.y=R+.014+padOff;
  if(state==='play'){
   if(!pad.ready){pad.t+=dt;if(pad.t>.6&&hitStop<=0)loadPad()}
   else if(pad.sp){pad.t+=dt;var f=Math.min(1,pad.t*4),ps=SIZE[ITEM[pad.type].t],sc=ps*SPR*(f<1?easeBack(f):1),sq=charging?.24*g:0,jt=charging?g*.012:0;
@@ -406,7 +407,7 @@ function loop(now){requestAnimationFrame(loop);var dt=Math.min(.05,Math.max(0,(n
   if(charging){g+=dt/FILL;var pts=[],o=predict(Math.min(g,1),pad.type,pts);setLine(predLine,pts);
    predLine.material.color.set(!o.ok?0xff5a6e:o.e<.06?0xffe27a:0x7dffb0);giEl.style.left=(Math.min(g,1)*100)+'%';chgSet(Math.min(g,1));
    shk=Math.max(shk,.004+.022*g);if(Math.random()<dt*(1.5+g*12))SFX.creak(g);
-   if(Math.random()<dt*g*30){var sd=Math.random()<.5?1:-1;emit(SM,sd*.09,R+.02,sd*(.2+Math.random()*.4),.1+Math.random()*.2,.6,.05,'#c9ced8',2,.3,.5)}
+   if(Math.random()<dt*g*30){var sd=Math.random()<.5?1:-1;emit(SM,sd*.13,R+.03,sd*(.2+Math.random()*.4),.1+Math.random()*.2,.6,.05,'#c9ced8',2,.3,.5)}
    if(g>=1){g=1;up()}}
   gtEl.style.opacity=charging?'0':''}
  if(!charging&&predLine.visible){if(!flight)predFade-=dt*3;predLine.material.opacity=.9*Math.max(0,predFade);if(predFade<=0)predLine.visible=false}
@@ -437,7 +438,7 @@ function loop(now){requestAnimationFrame(loop);var dt=Math.min(.05,Math.max(0,(n
  /* camera: leans in toward the pad while charging, shakes with the power */
  zoom+=((charging?g:0)-zoom)*Math.min(1,dt*(charging?4:2.5));
  camT.copy(camLook);camT.y+=zoom*.35;camP.copy(camBase).sub(camLook).multiplyScalar(1-.09*zoom).add(camT);
- shk*=Math.pow(.02,dt);cam.position.set(camP.x+(Math.random()-.5)*shk,camP.y+(Math.random()-.5)*shk,camP.z+(Math.random()-.5)*shk);cam.lookAt(camT);
+ shk*=Math.pow(.02,dt);cam.position.set(camP.x+(Math.random()-.5)*shk*FXS,camP.y+(Math.random()-.5)*shk*FXS,camP.z+(Math.random()-.5)*shk*FXS);cam.lookAt(camT);
  ren.render(scene,cam)}
 
 fit();title();hud();document.getElementById('ld').style.display='none';
