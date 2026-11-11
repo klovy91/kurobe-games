@@ -216,7 +216,7 @@ function fit(){W=innerWidth;H=innerHeight;ren.setSize(W,H,false);cam.aspect=W/H;
    var ok=true;for(var j=0;j<ring.length&&ok;j++){v3.set(ring[j][0],ring[j][1],0).project(cam);if(v3.x<-.96||v3.x>.96||v3.y>top||v3.y<bot)ok=false}
    if(ok){ovY=ty;ovD=d;return}}}
  ovY=0;ovD=d}
-var ovY=0,ovD=20,camX=0,camY=0,camD=20,followT=0,camBody=null;
+var ovY=0,ovD=20,camX=0,camY=0,camD=20,followT=0,camBody=null,focus=null;  /* focus: close-up on a merge */
 function dFor(E){var t=Math.tan(cam.fov*Math.PI/360);return E/(t*Math.min(cam.aspect*.95,.72))}
 addEventListener('resize',fit);
 
@@ -402,11 +402,12 @@ function merge(a,c,res){var M=a.m+c.m,x=(a.x*a.m+c.x*c.m)/M,y=(a.y*a.m+c.y*c.m)/
  merges++;combo=comboT>0?combo+1:1;comboT=4;var pts=(P?8000:[0,0,500,1200,3000][t])*combo,isNew=dex.indexOf(res)<0;
  if(isNew){dex.push(res);ss('ne_dex',dex);pts+=P?3000:1000}
  addScore(pts);flEl.style.background='#fff';
- if(P){planetBirth(res,x,y);SFX.planet();slow(.15,1.1);flash=.6;shk=Math.max(shk,.1);
-  burst(x,y,90,['#ffe27a','#ffffff','#8fb7ff','#ff8af0','#7dffb0'],2.8,1.5,.14);ring(x,y,0xffffff,2.4,1);ring(x,y,0xffe27a,1.6,.8);ring(x,y,0x8fb7ff,3.4,1.4);
+ focus={x:x,y:y,t:P?1.8:1.1,E:P?2.6:1.5};
+ if(P){planetBirth(res,x,y);SFX.planet();slow(.15,1.6);flash=.6;shk=Math.max(shk,.1);
+  burst(x,y,90,['#ffe27a','#ffffff','#8fb7ff','#ff8af0','#7dffb0'],2.8,1.5,.14);ring(x,y,0xffffff,1,1);ring(x,y,0xffe27a,.7,.8);ring(x,y,0x8fb7ff,1.5,1.4);
   msg(ITEM[res].n+' たんじょう!','#ffe27a')}
- else{SFX.merge(combo);slow(.25,.55);flash=.3;shk=Math.max(shk,.04);
-  burst(x,y,44,['#ffe27a','#7dffb0','#8fb7ff','#ff8af0','#ffffff'],1.8,1,.09);ring(x,y,TCOL[t],1.2,.7);ring(x,y,0xffffff,.6,.45);if(isNew)msg('NEW!','#ffe27a')}
+ else{SFX.merge(combo);slow(.2,1);flash=.3;shk=Math.max(shk,.04);
+  burst(x,y,44,['#ffe27a','#7dffb0','#8fb7ff','#ff8af0','#ffffff'],1.8,1,.09);ring(x,y,TCOL[t],.5,.7);ring(x,y,0xffffff,.28,.45);if(isNew)msg('NEW!','#ffe27a')}
  label(x,y,img(res)+ITEM[res].n+'!','big'+(isNew?' new':''),1.7,-30);
  label(x,y,(isNew?'NEW! ':'')+'+'+pts+(combo>1?'　×'+combo+' COMBO':''),'pt',1.6,6);
  hints()}
@@ -528,8 +529,10 @@ function loop(now){requestAnimationFrame(loop);var dt=Math.min(.05,Math.max(0,(n
  if(followT>0)followT-=dt;var tb=flight||(followT>0&&camBody&&camBody.alive?camBody:null),tx=0,ty=ovY,tD=ovD;
  if(state==='play'&&charging===1){var rv2=Math.min(apexOf(Math.min(g,1),ITEM[pad.type].w),RFAR),u2=Math.min(1,(rv2-RLO)/(RMAX-RLO));ty=(R+.9)*(1-u2)+ovY*u2;tD=Math.max(dFor(2.7),dFor(rv2*1.12))}
  else if(state==='play'&&flight&&flight.ph===2&&(flight.wait||charging===2)){ty=ovY;tD=Math.max(ovD,dFor(Math.hypot(flight.x,flight.y)*1.15))}
+ else if(state==='play'&&focus&&!charging){tx=focus.x;ty=focus.y;tD=dFor(focus.E)}
  else if(state==='play'&&tb){tx=tb.x*.6;ty=R+(tb.y-R)*.6;tD=dFor(Math.max(2.7,.62*Math.hypot(tb.x,tb.y-R)+1.6))}
- var cr=Math.min(1,dt*(tD<camD?3.2:1.6));camX+=(tx-camX)*cr;camY+=(ty-camY)*cr;camD+=(tD-camD)*cr;
+ if(focus){focus.t-=dt;if(focus.t<=0||state!=='play')focus=null}
+ var cr=Math.min(1,dt*(focus&&!charging?5:tD<camD?3.2:1.6));camX+=(tx-camX)*cr;camY+=(ty-camY)*cr;camD+=(tD-camD)*cr;
  shk*=Math.pow(.02,dt);var sa=shk*camD*.09;camT.set(camX,camY,0);
  cam.position.set(camX+camDir.x*camD+(Math.random()-.5)*sa,camY+camDir.y*camD+(Math.random()-.5)*sa,camDir.z*camD+(Math.random()-.5)*sa);cam.lookAt(camT);
  ren.render(scene,cam)}
