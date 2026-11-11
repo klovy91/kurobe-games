@@ -74,6 +74,9 @@ html,body{height:100%;margin:0;background:#05070f;color:#fff;overflow:hidden;tou
 .dex{display:grid;grid-template-columns:repeat(6,1fr);gap:8px 4px;width:min(100%,380px);padding:10px 6px;background:rgba(255,255,255,.06);border-radius:10px}
 .dex span{display:flex;flex-direction:column;align-items:center;font-size:9px;line-height:1.25;opacity:.9;text-align:center;word-break:break-all}
 .dex img{width:32px;height:32px}
+#shp{display:block;width:min(100%,360px);border-radius:10px;box-shadow:0 0 0 1px rgba(255,255,255,.25)}
+a.btn{display:inline-flex;justify-content:center;box-sizing:border-box;text-decoration:none}
+.btn.sh{background:#000;border:1.5px solid rgba(255,255,255,.75);box-shadow:none;font-size:18px}
 .mk{display:flex;flex-direction:column;align-items:flex-start;gap:2px;max-width:340px;font-size:14px}.mk span{display:flex;align-items:center;gap:6px}.mk img{width:30px;height:30px}
 #msg small{display:block;font-size:.62em;letter-spacing:.02em}
 .dex .no img{filter:brightness(0) invert(.25)}.dex .no{opacity:.6}
@@ -240,7 +243,7 @@ function drawPlanet(x,id,v){var P=PLD[id],cx=64,cy=64,r=38,F=v&&FEEL[v.f],N=v&&N
  x.save();x.shadowColor='rgba(255,255,255,.6)';x.shadowBlur=12;var g=x.createRadialGradient(cx-13,cy-15,4,cx,cy,r);g.addColorStop(0,c0);g.addColorStop(1,c1);
  x.fillStyle=g;x.beginPath();x.arc(cx,cy,r,0,6.283);x.fill();x.restore();
  x.save();x.beginPath();x.arc(cx,cy,r,0,6.283);x.clip();
- if(P[2]){x.translate(cx,cy);x.rotate(-.35);for(var i=0;i<7;i++){x.fillStyle=P[2][i%2];x.fillRect(-r-6,-r+i*12+2,2*r+12,6)}x.setTransform(1,0,0,1,0,0)}
+ if(P[2]){x.save();x.translate(cx,cy);x.rotate(-.35);for(var i=0;i<7;i++){x.fillStyle=P[2][i%2];x.fillRect(-r-6,-r+i*12+2,2*r+12,6)}x.restore()}
  if(P[3]==='land'){x.fillStyle='#55b04f';[[-13,-9,15,10,.5],[13,9,13,8,.2],[-6,20,9,5,0],[17,-17,7,5,.6]].forEach(function(b){x.beginPath();x.ellipse(cx+b[0],cy+b[1],b[2],b[3],b[4],0,6.283);x.fill()});
   x.fillStyle='rgba(255,255,255,.85)';x.beginPath();x.ellipse(cx,cy-r+3,16,5,0,0,6.283);x.fill()}
  if(F)drawPattern(x,F,cx,cy,r,rnd,true);
@@ -671,9 +674,38 @@ function gameOver(){state='over';cancel();paEl.style.display='none';pad.ready=fa
  setTimeout(function(){scrEl.style.display='flex';btEl.style.visibility='hidden';
   scrEl.innerHTML='<h1 class="f">GAME OVER</h1><p class="f sc2">SCORE '+score+'</p><p class="f">'+(nb?'<span style="color:#ffe27a">NEW RECORD!</span>':'BEST '+best)+'</p>'+
   '<p>'+J('つくった星 <b>'+made.length+'</b> 個','Planets made: <b>'+made.length+'</b>')+'</p>'+(made.length?'<div class="mk">'+made.map(function(m){return '<span>'+pimg(m)+m.n+'</span>'}).join('')+'</div>':'')+
-  '<p>'+J('打ち上げ '+launches+'回 ／ 合体 '+merges+'回','Launches '+launches+' / Merges '+merges)+'</p>'+dexHtml()+
-  '<button class="btn" id="rt" type="button">'+J('もう一度','RETRY')+'</button><a class="b2" href="../">'+J('ほかのゲーム','More games')+'</a>';
-  document.getElementById('rt').addEventListener('click',start);scrEl.appendChild(adSlot('over'))},1500)}
+  '<p>'+J('打ち上げ '+launches+'回 ／ 合体 '+merges+'回','Launches '+launches+' / Merges '+merges)+'</p>'+
+  '<button class="btn" id="rt" type="button">'+J('もう一度','RETRY')+'</button>'+
+  '<img id="shp" alt="">'+
+  '<a class="btn sh" id="sh" target="_blank" rel="noopener" href="https://x.com/intent/post?text='+encodeURIComponent(shTxt())+'&amp;url='+encodeURIComponent(shUrl())+'">'+(MOB?J('結果をシェア','Share result'):J('𝕏 でシェア','Share on 𝕏'))+'</a>'+
+  '<button class="b2 bt" id="sv" type="button">'+J('画像を保存','Save image')+'</button><a class="b2" href="../">'+J('ほかのゲーム','More games')+'</a>'+dexHtml();
+  document.getElementById('rt').addEventListener('click',start);scrEl.appendChild(adSlot('over'));shareSetup()},1500)}
+/* ---------- share: text + link, and an image of the planets made this game ---------- */
+var MOB=/iPhone|iPod|iPad|Android|Windows Phone/i.test(navigator.userAgent),shFile=null,shCanvas=null;
+function shTxt(){var n=made.length,f=n?made[0].n:'',sc=score.toLocaleString();
+ return EN?'Anything Satellite — score '+sc+', '+n+' planet'+(n===1?'':'s')+' made'+(n?' ('+f+(n>1?' and more':'')+')':'')+'.\nLaunch it, smash it, make planets!\n#AnythingSatellite'
+  :'「なんでも衛星」スコア '+sc+'点、つくった星 '+n+'個'+(n?'('+f+(n>1?' ほか':'')+')':'')+'。\n打ち上げて、ぶつけて、惑星をつくろう。\n#なんでも衛星'}
+function shUrl(){var u=new URL(location.href);u.hash='';u.search='';u.pathname=u.pathname.replace('/nandemo-eisei-test/','/nandemo-eisei/').replace(/index\.html$/,'');if(EN)u.searchParams.set('lang','en');return u.href}
+function planetCanvas(m,px){var c=document.createElement('canvas');c.width=c.height=px;var x=c.getContext('2d');x.scale(px/128,px/128);drawPlanet(x,m.id,m);return c}
+function shareImg(){var W2=1200,H2=630,c=document.createElement('canvas');c.width=W2;c.height=H2;var x=c.getContext('2d'),i,
+ F='"DotGothic16","Hiragino Sans","Noto Sans JP",sans-serif',g=x.createRadialGradient(380,260,40,600,315,820);g.addColorStop(0,'#1a2a5c');g.addColorStop(1,'#05070f');x.fillStyle=g;x.fillRect(0,0,W2,H2);
+ for(i=0;i<180;i++){x.fillStyle='rgba(255,255,255,'+(.2+Math.random()*.6)+')';x.beginPath();x.arc(Math.random()*W2,Math.random()*H2,Math.random()*1.6+.3,0,6.283);x.fill()}
+ x.textBaseline='alphabetic';x.fillStyle='#cfe0ff';x.font='26px Iceberg,'+F;x.fillText('ANYTHING SATELLITE',48,60);
+ x.fillStyle='#fff';x.font='62px '+F;x.fillText(J('なんでも衛星','Anything Satellite'),44,128);
+ x.textAlign='right';x.fillStyle='#ffe27a';x.font='26px Iceberg,'+F;x.fillText('SCORE',W2-48,60);x.fillStyle='#fff';x.font='62px '+F;x.fillText(score.toLocaleString(),W2-48,128);
+ x.textAlign='left';x.fillStyle='#ffe27a';x.font='28px '+F;x.fillText(J('つくった星 '+made.length+'個','Planets made: '+made.length),48,186);
+ var list=made.slice(0,8),n=list.length;
+ if(n){var rows=n>4?2:1,cols=Math.min(4,n),cw=270,size=rows>1?128:196,ch=rows>1?192:0,x0=(W2-cols*cw)/2+cw/2,y0=rows>1?208:222;
+  list.forEach(function(m,k){var cx=x0+(k%4)*cw,cy=y0+(k/4|0)*ch;x.drawImage(planetCanvas(m,256),cx-size/2,cy,size,size);
+   x.fillStyle='#fff';x.font=(rows>1?20:24)+'px '+F;x.textAlign='center';x.fillText(m.n,cx,cy+size+(rows>1?20:30),cw-16)});
+  x.textAlign='right';if(made.length>8){x.fillStyle='#cfe0ff';x.font='22px '+F;x.fillText(J('ほか '+(made.length-8)+'個','+'+(made.length-8)+' more'),W2-48,H2-32)}}
+ else{x.drawImage(planetCanvas({id:'earth'},256),W2/2-105,215,210,210);x.fillStyle='#cfe0ff';x.font='26px '+F;x.textAlign='center';x.fillText(J('こんどこそ惑星をつくろう!','Next time, make a planet!'),W2/2,470)}
+ x.textAlign='left';x.fillStyle='rgba(255,255,255,.6)';x.font='22px '+F;x.fillText('kurobe-games.com/nandemo-eisei',48,H2-32);return c}
+function shareSetup(){shFile=null;shCanvas=null;var pv=document.getElementById('shp'),sh=document.getElementById('sh'),sv=document.getElementById('sv');
+ function prep(){shCanvas=shareImg();pv.src=shCanvas.toDataURL('image/png');try{shCanvas.toBlob(function(bl){try{if(bl)shFile=new File([bl],'nandemo-eisei.png',{type:'image/png'})}catch(e){}},'image/png')}catch(e){}}
+ var fl=document.fonts&&document.fonts.load?Promise.all([document.fonts.load('40px DotGothic16'),document.fonts.load('20px Iceberg')]):Promise.resolve();fl.then(prep,prep);
+ sh.addEventListener('click',function(e){e.stopPropagation();try{if(MOB&&shFile&&navigator.canShare&&navigator.canShare({files:[shFile]})){e.preventDefault();navigator.share({files:[shFile],text:shTxt()+'\n'+shUrl()}).catch(function(){})}}catch(err){}});
+ sv.addEventListener('click',function(e){e.stopPropagation();if(!shCanvas)return;var a=document.createElement('a');a.href=shCanvas.toDataURL('image/png');a.download='nandemo-eisei.png';document.body.appendChild(a);a.click();a.remove()})}
 /* pause + settings */
 function pauseOn(){if(state!=='play'||paused)return;paused=true;cancel();showPause()}
 function pauseOff(){paused=false;pzEl.style.display='none';last=performance.now()}
