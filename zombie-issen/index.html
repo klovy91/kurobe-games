@@ -1777,9 +1777,9 @@ function howTo(){if($('ht'))return;const d=document.createElement('div');d.id='h
  '<button type="button" class="b2 cl" id="htc">閉じる</button></div>';
  document.body.appendChild(d);['pointerdown','pointerup','click'].forEach(n=>d.addEventListener(n,ev=>ev.stopPropagation()));
  $('htc').addEventListener('click',()=>d.remove())}
-function title(){{const l=$('ld');if(l)l.remove()}$('scr').innerHTML=EN?'<h1>ZOMBIE ISSEN</h1><p>Bored in class, I started to daydream.<br>What if zombies burst into the classroom?</p><p>Best WAVE '+best+'<br>Best score '+fmtN(bestS)+'</p><div class="tb"><button id="pl" type="button">Play</button><button id="hw" class="b2" type="button">How to Play</button><button id="op" class="b2" type="button">Settings</button></div>'
- :'<h1>ゾンビ一閃</h1><p>退屈な授業中、ふと妄想した。<br>教室にゾンビが雪崩れ込んできたら。</p><p>ベスト WAVE '+best+'<br>ベストスコア '+fmtN(bestS)+' 点</p><div class="tb"><button id="pl" type="button">プレイ</button><button id="hw" class="b2" type="button">遊び方</button><button id="op" class="b2" type="button">設定</button></div>';
- ['pl','hw','op'].forEach(i=>noProp($(i)));$('op').addEventListener('click',()=>{A();optUI()});$('pl').addEventListener('click',()=>{A();start();strTap()});$('hw').addEventListener('click',()=>{A();howTo()});
+function title(){{const l=$('ld');if(l)l.remove()}$('scr').innerHTML=EN?'<h1>ZOMBIE ISSEN</h1><p>Bored in class, I started to daydream.<br>What if zombies burst into the classroom?</p><p>Best WAVE '+best+'<br>Best score '+fmtN(bestS)+'</p><div class="tb"><button id="pl" type="button">Play</button><button id="hw" class="b2" type="button">How to Play</button><button id="op" class="b2" type="button">Settings</button><a id="ph" class="b2" href="../">Back to home</a></div>'
+ :'<h1>ゾンビ一閃</h1><p>退屈な授業中、ふと妄想した。<br>教室にゾンビが雪崩れ込んできたら。</p><p>ベスト WAVE '+best+'<br>ベストスコア '+fmtN(bestS)+' 点</p><div class="tb"><button id="pl" type="button">プレイ</button><button id="hw" class="b2" type="button">遊び方</button><button id="op" class="b2" type="button">設定</button><a id="ph" class="b2" href="../">ホームへ戻る</a></div>';
+ ['pl','hw','op','ph'].forEach(i=>noProp($(i)));$('op').addEventListener('click',()=>{A();optUI()});$('pl').addEventListener('click',()=>{A();start();strTap()});$('hw').addEventListener('click',()=>{A();howTo()});
  $('scr').appendChild(adSlot('title'))}
 /* ---- pause ---- */
 const canPause=()=>st==='ready'||st==='cut'||st==='after'||st==='cine'||st==='intro';
@@ -1788,8 +1788,8 @@ function pauseGame(){if(PAUSED||!canPause())return;PAUSED=true;PZT=performance.n
  if(AC&&AC.state==='running')AC.suspend();for(const k in STRM)STRM[k].el.pause();
  if(REC.mr&&REC.mr.state==='recording'){try{REC.mr.pause()}catch(e){}}
  const d=document.createElement('div');d.id='pz';
- d.innerHTML=EN?'<h2>Paused</h2><button id="pzr" type="button">Resume</button><div class="bt"><button id="pzs" class="b2" type="button">Restart</button><button id="pzo" class="b2" type="button">Settings</button></div>'
- :'<h2>一時停止</h2><button id="pzr" type="button">再開</button><div class="bt"><button id="pzs" class="b2" type="button">最初からやり直す</button><button id="pzo" class="b2" type="button">設定</button></div>';
+ d.innerHTML=EN?'<h2>Paused</h2><button id="pzr" type="button">Resume</button><div class="bt"><button id="pzs" class="b2" type="button">Restart</button><button id="pzo" class="b2" type="button">Settings</button><a id="pzh" class="b2" href="../">Back to home</a></div>'
+ :'<h2>一時停止</h2><button id="pzr" type="button">再開</button><div class="bt"><button id="pzs" class="b2" type="button">最初からやり直す</button><button id="pzo" class="b2" type="button">設定</button><a id="pzh" class="b2" href="../">ホームへ戻る</a></div>';
  document.body.appendChild(d);['pointerdown','pointerup','click'].forEach(n=>d.addEventListener(n,ev=>ev.stopPropagation()));
  $('pzr').addEventListener('click',resumeGame);$('pzs').addEventListener('click',()=>{resumeGame();start();strTap()});$('pzo').addEventListener('click',()=>optUI())}
 function resumeGame(){if(!PAUSED)return;PAUSED=false;const d=performance.now()-PZT;if(NOZT)NOZT+=d;REC.t0+=d;if(RP)RP.t0+=d;
