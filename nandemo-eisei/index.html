@@ -546,7 +546,7 @@ function launch(){var d=ITEM[pad.type],s=SIZE[d.t],b=mkBody(pad.type,0,rStart(s)
  for(var i=0;i<34;i++){var side=i%2?1:-1,v=.5+Math.random()*(1.2+g);emit(SM,side*.22,R+.08,side*v,Math.random()*.25,1+Math.random()*.8,.09+Math.random()*.06,Math.random()<.5?'#c9ced8':'#8e96a5',2.6,.18,.85)}
  burst(0,R+.08,18,['#ffe27a','#ff8a3a','#ffffff'],1.4,.4,.08);hints()}
 /* at the top: judge right away (finish the sideways kick ahead of time on a copy), freeze a moment, then the 2nd stage fires */
-function enterWait(b){b.wait=true;b.waited=true;waitT=0;msg(J('今! 長押し!','NOW! Hold!'),'#ffe27a');SFX.ping();ring(b.x,b.y,0xffe27a,.9,.6)}
+function enterWait(b){b.wait=true;b.waited=true;waitT=0;msg(J('長押しで噴射!','Hold to burn!'),'#ffe27a');SFX.ping();ring(b.x,b.y,0xffe27a,.9,.6)}
 function kickGo(b){if(!b||!b.alive||b.ph!==2)return;b.wait=false;b.ph=3;b.kt=0;b.pw=g;b.AK=kickAK(g,b.d.w,Math.hypot(b.x,b.y));
  if(state==='play'&&b.launched)judge(b,kickPredict(b,g,null));
  hitStop=Math.max(hitStop,.09);SFX.kick();shk=Math.max(shk,.05+.06*g);flash=Math.max(flash,.12);flEl.style.background='#fff';
