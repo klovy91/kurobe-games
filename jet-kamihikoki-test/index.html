@@ -110,11 +110,11 @@ var LV=24, LANG=20;
 LANG=LANG*Math.PI/180;
 var NP=-0.035;                     /* neutral point: the build is stable while the centre of mass sits ahead of this */
 var IW=0.09, IE=-0.22;             /* the folded paper holds the wings slightly nose-up and the tail edge turned up, so it trims nose-up instead of just falling */
-function pnrm(i){return new V3(-Math.sin(i),Math.cos(i),0)}
+var QFLEX=900;                     /* fast air flattens those folds again, so the faster it goes the less it wants to climb */
 var PANELS=[
- {r:new V3(-0.010,0,-0.055), n:pnrm(IW),      A:0.012},   /* left wing */
- {r:new V3(-0.010,0, 0.055), n:pnrm(IW),      A:0.012},   /* right wing */
- {r:new V3(-0.135,0, 0),     n:pnrm(IE),      A:0.006},   /* turned-up tail edge */
+ {r:new V3(-0.010,0,-0.055), inc:IW,          A:0.012},   /* left wing */
+ {r:new V3(-0.010,0, 0.055), inc:IW,          A:0.012},   /* right wing */
+ {r:new V3(-0.135,0, 0),     inc:IE,          A:0.006},   /* turned-up tail edge */
  {r:new V3(-0.100,-0.02,0),  n:new V3(0,0,1), A:0.006}    /* keel */
 ];
 
@@ -230,9 +230,9 @@ function massProps(){
 var POS=new V3(), VEL=new V3(), Q=new THREE.Quaternion(), W=new V3();
 var heat=0, scorch=0, burn=false, far=0, ft=0, mode='title', best=0, alive=true;
 try{best=Math.max(0,parseFloat(localStorage.getItem('jk_best'))||0)}catch(e){}
-var t1=new V3(),t2=new V3(),t3=new V3(),t4=new V3(),vb=new V3(),rr=new V3(),vp=new V3(),uu=new V3(),ld=new V3(),ff=new V3(),fb=new V3(),tb=new V3(),wd=new V3();
+var t1=new V3(),t2=new V3(),t3=new V3(),t4=new V3(),vb=new V3(),rr=new V3(),vp=new V3(),uu=new V3(),ld=new V3(),ff=new V3(),fb=new V3(),tb=new V3(),wd=new V3(),pnv=new V3();
 var qc=new THREE.Quaternion(),qw=new THREE.Quaternion(),qd=new THREE.Quaternion();
-var lastA=0,lastB=0;
+var lastA=0,lastB=0,flex=1;
 
 function startFlight(){
  massProps();
@@ -251,15 +251,18 @@ function step(dt){
  ft+=dt;
  qc.set(-Q.x,-Q.y,-Q.z,Q.w);
  vb.copy(VEL).applyQuaternion(qc);
+ flex=1/(1+0.5*RHO*vb.lengthSq()/QFLEX);
  fb.set(0,0,0);tb.set(0,0,0);
- var i,p,V2,Vm,sa,ca,aa,cl,cd,qq,l;
+ var i,p,V2,Vm,sa,ca,aa,cl,cd,qq,l,pn,ii;
  for(i=0;i<PANELS.length;i++){
   p=PANELS[i];
+  pn=p.n;
+  if(!pn){ii=p.inc*flex;pnv.set(-Math.sin(ii),Math.cos(ii),0);pn=pnv}
   rr.copy(p.r).sub(CM);
   vp.copy(vb).add(t1.crossVectors(W,rr));
   V2=vp.lengthSq();if(V2<0.02)continue;
   Vm=Math.sqrt(V2);uu.copy(vp).multiplyScalar(1/Vm);
-  sa=clamp(-uu.dot(p.n),-1,1);
+  sa=clamp(-uu.dot(pn),-1,1);
   ca=Math.sqrt(Math.max(0,1-sa*sa));
   aa=Math.abs(Math.asin(sa));
   cl=CLA*sa*ca;
@@ -270,7 +273,7 @@ function step(dt){
   cl*=(1-0.35*scorch);
   cd=CD0*(1+0.8*scorch)+2*sa*sa;
   qq=0.5*RHO*V2*p.A;
-  ld.copy(p.n).addScaledVector(uu,-p.n.dot(uu));
+  ld.copy(pn).addScaledVector(uu,-pn.dot(uu));
   l=ld.length();if(l>1e-6)ld.multiplyScalar(1/l);else ld.set(0,0,0);
   ff.copy(ld).multiplyScalar(qq*cl).addScaledVector(uu,-qq*cd);
   fb.add(ff);tb.add(t2.crossVectors(rr,ff));
@@ -447,7 +450,7 @@ function drawHud(){
  elD.innerHTML=Math.floor(far)+'<small>BEST '+Math.floor(best)+'</small>';
  var sp=VEL.length();
  var tx=J('高度','ALT')+' '+Math.round(POS.y)+'m<br>'+J('速さ','SPD')+' '+Math.round(sp*3.6)+'km/h';
- if(DBG)tx+='<br>a '+(lastA*57.3).toFixed(1)+'&deg; b '+(lastB*57.3).toFixed(1)+'&deg;<br>w '+W.length().toFixed(1);
+ if(DBG)tx+='<br>a '+(lastA*57.3).toFixed(1)+'&deg; b '+(lastB*57.3).toFixed(1)+'&deg;<br>w '+W.length().toFixed(1)+' flex '+flex.toFixed(2);
  elT.innerHTML=tx;
  var tot=ENG.length*EFUEL,rem=0;
  for(var i=0;i<ENG.length;i++)rem+=ENG[i].fuel;
