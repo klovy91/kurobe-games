@@ -101,7 +101,9 @@ var PAD=50;                        /* launch pad height. ?pad= overrides it on t
    same turn rates. Raising the launch speed on its own would just make it loop. */
 var MP=0.210, PCM=new V3(0.02,0,0);          /* paper: mass and its own centre of mass */
 var IPX=6.99e-4, IPY=2.073e-3, IPZ=1.371e-3; /* paper inertia about PCM (roll, yaw, pitch) */
-var ME=0.090, TH=4.8, EFUEL=2.0, EMAX=4;     /* one engine: mass, thrust, fuel seconds, how many fit */
+var ME=0.090, TH=2.0, EFUEL=3.0, EMAX=4;     /* one engine: mass, thrust, fuel seconds, how many fit.
+   thrust is about 0.7x the weight of a one-engine build, so it climbs instead of looping. Adding engines
+   raises that ratio, so a four-engine build will loop unless they are burnt a few at a time. */
 var CLA=3.2, ASTALL=0.28, CD0=0.015, ADAMP=0.0045;
 /* launch: always the same, so only the build differs. ?v= and ?a= override it on the test version */
 var LV=24, LANG=20;
