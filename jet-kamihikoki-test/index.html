@@ -38,6 +38,7 @@ html,body{height:100%;margin:0;background:#0a1120;color:#fff;overflow:hidden;tou
 .jb{position:absolute;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;border:2px solid #fff;background:rgba(255,120,40,.18);color:#fff;font-size:15px;padding:0;display:flex;align-items:center;justify-content:center;touch-action:none;-webkit-tap-highlight-color:transparent}
 .jb.on{background:rgba(255,130,50,.62);box-shadow:0 0 24px rgba(255,150,60,.8)}
 .jb.no{opacity:.26}
+#flash{position:fixed;inset:0;background:#ffb46a;opacity:0;pointer-events:none}
 #warn{position:fixed;left:0;right:0;top:32%;text-align:center;font-size:32px;color:#ff6a4a;text-shadow:0 0 12px #000;pointer-events:none;opacity:0}
 #build{position:fixed;left:0;right:0;bottom:0;display:none;flex-direction:column;align-items:center;gap:10px;padding:14px 16px calc(env(safe-area-inset-bottom,0px) + 16px);background:linear-gradient(to top,rgba(6,10,22,.88),rgba(6,10,22,0));text-align:center}
 #bstat{font-size:14px;line-height:1.7;opacity:.9}
@@ -67,6 +68,7 @@ html,body{height:100%;margin:0;background:#0a1120;color:#fff;overflow:hidden;tou
   <div class="bar" id="he"><span></span><div class="bo"><div class="bi"></div></div></div>
 </div>
 <div id="jets" class="f"></div>
+<div id="flash"></div>
 <div id="warn" class="f"></div>
 <div id="btip" class="f"></div>
 <div id="build" class="f"><div id="bstat"></div><div id="brow"></div></div>
@@ -285,7 +287,7 @@ function startFlight(){
  W.set(0,0,0);heat=0;scorch=0;fuel=TANK;far=0;ft=0;alive=true;
  for(var i=0;i<ENG.length;i++){ENG[i].on=false;ENG[i].flame.visible=false}
  buildJetButtons();
- craft.position.copy(POS);craft.quaternion.copy(Q);
+ craft.position.copy(POS);craft.quaternion.copy(Q);craft.visible=true;
  cmBall.visible=false;mountDots.visible=false;window.__pole.visible=true;
  mode='fly';ovHide();bbox.style.display='none';btip.style.display='none';
  hud.style.display='flex';bars.style.display='block';jets.style.display='block';
@@ -360,17 +362,104 @@ function step(dt){
 
 function land(){
  if(mode!=='fly')return;
- mode='over';alive=false;
+ mode='boom';
  for(var i=0;i<ENG.length;i++){ENG[i].on=false;ENG[i].flame.visible=false}
- jets.style.display='none';
- bars.style.display='none';
+ jets.style.display='none';bars.style.display='none';
+ craft.visible=false;
+ explode(POS,VEL);
+}
+function showResult(){
+ mode='over';alive=false;
  var m=Math.floor(far),isNew=m>Math.floor(best);
  if(isNew){best=m;try{localStorage.setItem('jk_best',String(m))}catch(e){}}
- ovShow('<p style="opacity:.8">'+J('ちゃくち','LANDED')+'</p><div id="rec" class="f">'+m+'<small>m</small></div>'+
+ ovShow('<p style="opacity:.8">'+J('ついらく','CRASHED')+'</p><div id="rec" class="f">'+m+'<small>m</small></div>'+
   (isNew?'<div id="new">'+J('ベスト記録！','NEW BEST!')+'</div>':'<p style="opacity:.7">BEST '+Math.floor(best)+'m</p>')+
   '<div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">'+
   '<button class="btn go" id="again" type="button">'+J('同じ配置でもう一度','Same build again')+'</button>'+
   '<button class="btn" id="redo" type="button">'+J('置き直す','Rebuild')+'</button></div>');
+}
+
+/* ---------- the crash ---------- */
+var BOOM={on:false,t:0,g:null,fire:[],smoke:[],deb:[],ring:null,flash:null};
+var elFlash=document.getElementById('flash');
+function makeBoom(){
+ var g=new THREE.Group();g.visible=false;scene.add(g);
+ var i,m;
+ BOOM.flash=new THREE.Mesh(new THREE.SphereGeometry(1,12,10),
+  new THREE.MeshBasicMaterial({color:0xfff6d8,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
+ BOOM.flash.renderOrder=3;g.add(BOOM.flash);
+ for(i=0;i<10;i++){
+  m=new THREE.Mesh(new THREE.SphereGeometry(1,16,12),
+   new THREE.MeshBasicMaterial({color:i%2?0xff5a0f:0xffb524,transparent:true,depthWrite:false}));
+  m.renderOrder=2;m.userData={v:new V3()};g.add(m);BOOM.fire.push(m);
+ }
+ for(i=0;i<12;i++){
+  m=new THREE.Mesh(new THREE.SphereGeometry(1,14,10),
+   new THREE.MeshBasicMaterial({color:0x5b5955,transparent:true,depthWrite:false}));
+  m.renderOrder=1;m.userData={v:new V3()};g.add(m);BOOM.smoke.push(m);
+ }
+ var tg=new THREE.BufferGeometry();
+ tg.setAttribute('position',new THREE.Float32BufferAttribute([0,0,0, 0.10,0,0.03, 0.02,0,0.10],3));
+ tg.computeVertexNormals();
+ for(i=0;i<18;i++){
+  m=new THREE.Mesh(tg,new THREE.MeshLambertMaterial({color:0xf2f4f8,side:THREE.DoubleSide}));
+  m.userData={v:new V3(),w:new V3()};g.add(m);BOOM.deb.push(m);
+ }
+ BOOM.ring=new THREE.Mesh(new THREE.RingGeometry(0.62,1,30),
+  new THREE.MeshBasicMaterial({color:0xffd9a0,transparent:true,side:THREE.DoubleSide,depthWrite:false}));
+ BOOM.ring.rotation.x=-Math.PI/2;BOOM.ring.position.y=0.05;BOOM.ring.renderOrder=0;g.add(BOOM.ring);
+ BOOM.g=g;
+}
+function rdir(up){return new V3(Math.random()-0.5,Math.random()*up+0.12,Math.random()-0.5).normalize()}
+function explode(p,v){
+ if(!BOOM.g)makeBoom();
+ BOOM.on=true;BOOM.t=0;
+ BOOM.g.position.set(p.x,0,p.z);BOOM.g.visible=true;
+ var i,m;
+ BOOM.flash.scale.setScalar(0.6);BOOM.flash.material.opacity=1;
+ for(i=0;i<BOOM.fire.length;i++){m=BOOM.fire[i];
+  m.userData.v.copy(rdir(0.8)).multiplyScalar(4+Math.random()*8);
+  m.position.set(0,0.4,0);m.scale.setScalar(0.25+Math.random()*0.45);m.material.opacity=1}
+ for(i=0;i<BOOM.smoke.length;i++){m=BOOM.smoke[i];
+  m.userData.v.copy(rdir(0.7)).multiplyScalar(2+Math.random()*4);
+  m.position.set(0,0.3,0);m.scale.setScalar(0.35+Math.random()*0.6);m.material.opacity=0.7}
+ for(i=0;i<BOOM.deb.length;i++){m=BOOM.deb[i];
+  m.userData.v.copy(rdir(0.9)).multiplyScalar(7+Math.random()*11).addScaledVector(v,0.10);
+  m.userData.w.set(Math.random()*16-8,Math.random()*16-8,Math.random()*16-8);
+  m.position.set(0,0.3,0);m.rotation.set(Math.random()*6,Math.random()*6,Math.random()*6);
+  m.scale.setScalar(0.7+Math.random()*0.9)}
+ BOOM.ring.scale.setScalar(0.4);BOOM.ring.material.opacity=0.9;
+ elFlash.style.opacity='0.45';
+}
+function updateBoom(dt){
+ BOOM.t+=dt;var t=BOOM.t,i,m,u;
+ BOOM.flash.scale.setScalar(0.6+t*13);
+ BOOM.flash.material.opacity=Math.max(0,1-t*7);
+ for(i=0;i<BOOM.fire.length;i++){m=BOOM.fire[i];u=m.userData;
+  u.v.y-=9*dt;u.v.multiplyScalar(Math.max(0,1-2.2*dt));
+  m.position.addScaledVector(u.v,dt);if(m.position.y<0.2)m.position.y=0.2;
+  m.scale.setScalar(m.scale.x+dt*2.1);
+  m.material.opacity=Math.max(0,1-t*1.4)}
+ for(i=0;i<BOOM.smoke.length;i++){m=BOOM.smoke[i];u=m.userData;
+  u.v.y+=1.6*dt;u.v.multiplyScalar(Math.max(0,1-1.2*dt));
+  m.position.addScaledVector(u.v,dt);
+  m.scale.setScalar(m.scale.x+dt*1.25);
+  m.material.opacity=Math.max(0,0.7-t*0.38)}
+ for(i=0;i<BOOM.deb.length;i++){m=BOOM.deb[i];u=m.userData;
+  u.v.y-=9.8*dt;u.v.multiplyScalar(Math.max(0,1-0.5*dt));
+  m.position.addScaledVector(u.v,dt);
+  m.rotation.x+=u.w.x*dt;m.rotation.y+=u.w.y*dt;m.rotation.z+=u.w.z*dt;
+  if(m.position.y<0.03){m.position.y=0.03;u.v.set(0,0,0);u.w.set(0,0,0)}}
+ BOOM.ring.scale.setScalar(0.4+t*10);
+ BOOM.ring.material.opacity=Math.max(0,0.9-t*1.0);
+ elFlash.style.opacity=String(Math.max(0,0.45-t*3.0));
+ if(t>1.8){BOOM.on=false;BOOM.g.visible=false;showResult()}
+}
+function boomCam(dt){
+ t1.copy(BOOM.g.position);t1.y+=4.5;t1.addScaledVector(camDir,-15);
+ camPos.lerp(t1,1-Math.exp(-1.7*dt));
+ cam.position.copy(camPos);cam.up.set(0,1,0);
+ look.copy(BOOM.g.position);look.y+=1.8;cam.lookAt(look);
 }
 
 /* ---------- build mode: orbit the plane, tap a surface to mount ---------- */
@@ -382,7 +471,7 @@ function buildCam(){
 }
 function enterBuild(){
  mode='build';
- craft.position.set(0,PAD,0);craft.quaternion.identity();
+ craft.position.set(0,PAD,0);craft.quaternion.identity();craft.visible=true;
  cmBall.visible=true;mountDots.visible=true;window.__pole.visible=false;
  hud.style.display='none';bars.style.display='none';jets.style.display='none';
  bbox.style.display='flex';btip.style.display='block';
@@ -582,6 +671,9 @@ function frame(now){
   craft.rotation.set(0,0,0);
   if(mode==='title'){orbA+=dt*0.25}
   buildCam();
+ }else if(mode==='boom'||mode==='over'){
+  if(BOOM.on)updateBoom(dt);
+  boomCam(dt);
  }else{
   if(mode==='fly'){
    acc+=dt;var n=0;
