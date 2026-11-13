@@ -66,7 +66,7 @@
       radial-gradient(1.8px 1.8px at 180px 340px,#fff,transparent);
     background-size:380px 400px;opacity:.6;animation:drift 50s linear infinite;}
   @keyframes drift{from{transform:translateY(0)}to{transform:translateY(200px)}}
-  @media (prefers-reduced-motion:reduce){.sky::before,.sky::after{animation:none}}
+  @media (prefers-reduced-motion:reduce){.sky::before,.sky::after,h1,h1::after{animation:none}}
 
   h1{
     font-family:Iceberg,sans-serif;font-weight:400;
@@ -74,10 +74,20 @@
     letter-spacing:.12em;
     margin:0 0 10px;
     text-align:center;
-    background:linear-gradient(90deg,#9fd0ff,#ffffff 45%,#ffb0c8);
+    position:relative;
+    /* 1st layer = the moving glint, 2nd = the base colours */
+    background:linear-gradient(110deg,transparent 40%,rgba(255,255,255,.35) 45%,#ffffff 50%,rgba(255,255,255,.35) 55%,transparent 60%) no-repeat,linear-gradient(90deg,#7fb4f0,#d4dcf2 45%,#f09ab6);
+    background-size:250% 100%,100% 100%;
+    background-position:100% 0,0 0;
     -webkit-background-clip:text;background-clip:text;color:transparent;
     filter:drop-shadow(0 0 14px rgba(120,170,255,.55));
+    animation:shine 6s ease-in-out infinite;
   }
+  /* a little star that twinkles right after the glint passes */
+  h1::after{content:"✦";position:absolute;right:-.32em;top:-.18em;font-size:.42em;color:#fff;-webkit-text-fill-color:#fff;
+    text-shadow:0 0 8px #fff,0 0 18px #9fd0ff;opacity:0;transform:scale(0);animation:twinkle 6s ease-in-out infinite;}
+  @keyframes shine{0%,70%{background-position:100% 0,0 0;filter:drop-shadow(0 0 14px rgba(120,170,255,.55))}79%{filter:drop-shadow(0 0 22px rgba(190,215,255,.95))}88%,100%{background-position:0% 0,0 0;filter:drop-shadow(0 0 14px rgba(120,170,255,.55))}}
+  @keyframes twinkle{0%,82%{opacity:0;transform:scale(0) rotate(0deg)}89%{opacity:1;transform:scale(1.25) rotate(90deg)}100%{opacity:0;transform:scale(0) rotate(180deg)}}
   .sub{
     font-family:"DotGothic16",sans-serif;
     color:#b9c4dd;
