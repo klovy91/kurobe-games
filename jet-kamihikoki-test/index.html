@@ -15,7 +15,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ジェット紙飛行機（テスト版）</title>
-<meta name="description" content="紙飛行機にジェットエンジンをつけて、どこまで飛ばせるか。なぞって機首を操り、噴射で加速する無料のブラウザゲーム。">
+<meta name="description" content="紙飛行機のどこにジェットエンジンをつけるかで、飛び方が変わる。どこまで飛ばせるかを競う無料のブラウザゲーム。">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#0a1120">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,32 +24,33 @@
 html,body{height:100%;margin:0;background:#0a1120;color:#fff;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif}
 #gl{position:fixed;inset:0;width:100%;height:100%;display:block}
 .f{font-family:Iceberg,DotGothic16,system-ui,sans-serif}
-#hud{position:fixed;left:14px;right:14px;top:calc(env(safe-area-inset-top,0px) + 10px);display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;text-shadow:0 0 6px #000,0 0 2px #000}
+#hud{position:fixed;left:14px;right:14px;top:calc(env(safe-area-inset-top,0px) + 10px);display:none;justify-content:space-between;align-items:flex-start;pointer-events:none;text-shadow:0 0 6px #000,0 0 2px #000}
 #dist{font-size:30px;line-height:1.05}
 #dist small{display:block;font-size:14px;opacity:.75}
 #tele{text-align:right;font-size:16px;line-height:1.5;opacity:.92}
-#bars{position:fixed;left:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);width:40vw;max-width:220px;pointer-events:none;text-shadow:0 0 4px #000}
+#bars{position:fixed;left:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);width:40vw;max-width:220px;display:none;pointer-events:none;text-shadow:0 0 4px #000}
 .bar{margin-top:7px;font-size:12px;letter-spacing:.06em}
 .bo{height:9px;border:1px solid rgba(255,255,255,.55);border-radius:5px;overflow:hidden;background:rgba(0,0,0,.35);margin-top:2px}
-.bi{height:100%;width:0;transition:width .06s linear}
+.bi{height:100%;width:0}
 #fu .bi{background:linear-gradient(90deg,#6ff0ff,#2f8dff)}
 #he .bi{background:linear-gradient(90deg,#ffd36b,#ff5a2f)}
 #jet{position:fixed;right:calc(env(safe-area-inset-right,0px) + 20px);bottom:calc(env(safe-area-inset-bottom,0px) + 20px);width:104px;height:104px;border-radius:50%;border:2px solid rgba(255,255,255,.75);background:rgba(255,120,40,.22);color:#fff;font-size:17px;letter-spacing:.08em;display:none;align-items:center;justify-content:center;touch-action:none;-webkit-tap-highlight-color:transparent}
 #jet.on{background:rgba(255,120,40,.6);box-shadow:0 0 26px rgba(255,140,50,.75)}
-#jet.no{opacity:.3}
-#warn{position:fixed;left:0;right:0;top:34%;text-align:center;font-size:34px;color:#ff6a4a;text-shadow:0 0 12px #000;pointer-events:none;opacity:0;transition:opacity .1s}
+#warn{position:fixed;left:0;right:0;top:32%;text-align:center;font-size:32px;color:#ff6a4a;text-shadow:0 0 12px #000;pointer-events:none;opacity:0}
+#build{position:fixed;left:0;right:0;bottom:0;display:none;flex-direction:column;align-items:center;gap:10px;padding:14px 16px calc(env(safe-area-inset-bottom,0px) + 16px);background:linear-gradient(to top,rgba(6,10,22,.88),rgba(6,10,22,0));text-align:center}
+#bstat{font-size:14px;line-height:1.7;opacity:.9}
+#bstat b{font-size:17px}
+.ok{color:#7dffb0}.ng{color:#ff8a6a}
+#brow{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+#btip{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 14px);display:none;text-align:center;font-size:14px;opacity:.8;text-shadow:0 0 6px #000;pointer-events:none;line-height:1.7;padding:0 16px}
 #ov{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:22px;box-sizing:border-box;background:rgba(6,10,22,.74);text-align:center}
 #ov.off{display:none}
 #ov h1{font-size:min(10vw,42px);margin:0;letter-spacing:.04em}
-#ov p{margin:0;font-size:15px;opacity:.85;line-height:1.7;max-width:30em}
-.cards{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
-.card{width:150px;padding:14px 12px;border:1px solid rgba(255,255,255,.4);border-radius:12px;background:rgba(255,255,255,.07);cursor:pointer;-webkit-tap-highlight-color:transparent}
-.card:active{background:rgba(255,255,255,.2)}
-.card b{display:block;font-size:19px;margin-bottom:6px}
-.card span{display:block;font-size:12px;opacity:.8;line-height:1.5}
-.card i{display:block;margin-top:8px;font-size:11px;opacity:.6;font-style:normal}
+#ov p{margin:0;font-size:15px;opacity:.85;line-height:1.8;max-width:30em}
 .btn{padding:12px 26px;border:1px solid rgba(255,255,255,.6);border-radius:999px;background:rgba(255,255,255,.1);color:#fff;font-size:17px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .btn:active{background:rgba(255,255,255,.26)}
+.btn.sm{padding:9px 18px;font-size:15px}
+.btn.go{background:rgba(255,120,40,.3);border-color:rgba(255,160,90,.9)}
 #rec{font-size:min(16vw,78px);line-height:1}
 #rec small{font-size:.38em;opacity:.8}
 #new{color:#ffd36b;font-size:17px}
@@ -65,6 +66,8 @@ html,body{height:100%;margin:0;background:#0a1120;color:#fff;overflow:hidden;tou
 </div>
 <button id="jet" class="f" type="button"></button>
 <div id="warn" class="f"></div>
+<div id="btip" class="f"></div>
+<div id="build" class="f"><div id="bstat"></div><div id="brow"></div></div>
 <div id="ov" class="f"></div>
 <div id="ld">読み込み中…</div>
 <script>
@@ -72,356 +75,416 @@ html,body{height:100%;margin:0;background:#0a1120;color:#fff;overflow:hidden;tou
  var q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1],L=q;if(!L){try{var o=JSON.parse(localStorage.getItem('jk_opt')||'{}');if(o.lang==='ja'||o.lang==='en')L=o.lang}catch(e){}}
  if(!L)L=/^ja\b/i.test(navigator.language||'ja')?'ja':'en';window.__EN=L==='en';
  if(window.__EN){document.documentElement.lang='en';document.title='Jet Paper Plane (test)';var ld=document.getElementById('ld');if(ld)ld.textContent='Loading…'}
- var c=document.createElement('canvas');try{window.__cvok=!!(c.getContext&&c.getContext('2d'))}catch(e){window.__cvok=false}
- window.__ldFail=function(cv){var l=document.getElementById('ld');if(!l)return;l.style.display='flex';
-  l.innerHTML=window.__EN?(cv?'This browser cannot draw on a canvas, so the game cannot run.<br>Please try another browser or device.':'The game failed to load.<br>Check your connection and reload the page.'):(cv?'お使いのブラウザでは描画（canvas）が使えないため、遊べません。<br>別のブラウザや端末でお試しください。':'ゲームの読み込みに失敗しました。<br>通信環境を確かめて、ページを読み込み直してください。')};
- addEventListener('error',function(e){if(e.filename&&e.filename.split('#')[0]===location.href.split('#')[0])window.__ldFail(!window.__cvok)});})();
+ var c=document.createElement('canvas');try{window.__glok=!!(window.WebGLRenderingContext&&(c.getContext('webgl')||c.getContext('experimental-webgl')))}catch(e){window.__glok=false}
+ window.__ldFail=function(gl){var l=document.getElementById('ld');if(!l)return;l.style.display='flex';
+  l.innerHTML=window.__EN?(gl?'This device or browser cannot show 3D (WebGL), so the game cannot run.<br>Please try another browser or device.':'The game failed to load.<br>Check your connection and reload the page.'):(gl?'お使いの端末・ブラウザでは3D表示（WebGL）が使えないため、遊べません。<br>別のブラウザや端末でお試しください。':'ゲームの読み込みに失敗しました。<br>通信環境を確かめて、ページを読み込み直してください。')};
+ addEventListener('error',function(e){if(e.filename&&e.filename.split('#')[0]===location.href.split('#')[0])window.__ldFail(!window.__glok)});})();
 </script>
+<!-- three.js r128 (MIT): served from this site, not a CDN -->
+<script src="../jet-kamihikoki/lib/three.min.js"></script>
 <script>
 (function(){
 'use strict';
-if(!window.__cvok){window.__ldFail(true);return}
+if(!window.THREE){window.__ldFail(false);return}
+if(!window.__glok){window.__ldFail(true);return}
 var EN=!!window.__EN;function J(ja,en){return EN?en:ja}
 var DBG=/[?&]dbg\b/.test(location.search);
+var V3=THREE.Vector3;
 
-/* ---------- world constants (metres, seconds; y = altitude, 0 = ground) ---------- */
-var G=9.8, HS=1/200, H0=18, AS=0.26;   /* gravity, fixed step, launch pad height, stall angle of attack (~15deg) */
-var A_LO=8, A_HI=52;                   /* launch angle sweep, degrees */
-var PITCH_PX=0.006, PITCH_KEY=2.2;     /* drag: radians per pixel / keyboard: radians per second */
-var TH_MAX=1.55;
-
-/* kq = wing area, cl = max lift, cd0 = base drag, k = induced drag, T = thrust, fuel = seconds,
-   hc = seconds of continuous burn before the paper scorches, stab = how strongly the nose follows the path,
-   trim = the slight nose-up the folded paper keeps, so a hands-off throw still glides */
-var TYPES=[
- {id:'glide', nm:['滑空型','Glider'], ds:['よく浮いて、遠くまで粘る','Floats well, glides far'],
-  kq:0.070, cl:1.00, cd0:0.040, k:0.060, T:10.5, fuel:2.2, hc:2.0, stab:2.4, trim:0.13, v0:15},
- {id:'dart',  nm:['速度型','Dart'],   ds:['速いけれど、沈むのも速い','Fast, but sinks fast'],
-  kq:0.038, cl:0.70, cd0:0.050, k:0.095, T:12.5, fuel:2.4, hc:2.2, stab:3.0, trim:0.08, v0:20},
- {id:'tough', nm:['頑丈型','Tough'],  ds:['熱に強く、長く噴射できる','Takes the heat, burns longer'],
-  kq:0.055, cl:0.85, cd0:0.050, k:0.080, T:11.0, fuel:2.9, hc:3.4, stab:2.6, trim:0.11, v0:17}
+/* ---------- constants. body frame: +X nose, +Y up, +Z right. metres, kg, seconds ---------- */
+var G=9.8, RHO=1.225, HS=1/300;
+var PAD=18;                        /* launch pad height */
+var LV=14, LANG=20*Math.PI/180;    /* launch speed and angle (always the same, so only the build differs) */
+var MP=0.070, PCM=new V3(0.02,0,0);          /* paper: mass and its own centre of mass */
+var IPX=2.33e-4, IPY=6.91e-4, IPZ=4.57e-4;   /* paper inertia about PCM (roll, yaw, pitch) */
+var ME=0.030, TH=1.6, EFUEL=2.0, EMAX=4;     /* one engine: mass, thrust, fuel seconds, how many fit */
+var CLA=3.2, ASTALL=0.28, CD0=0.015, ADAMP=0.0015;
+var NP=-0.035;                     /* neutral point: the build is stable while the centre of mass sits ahead of this */
+var IW=0.09, IE=-0.22;             /* the folded paper holds the wings slightly nose-up and the tail edge turned up, so it trims nose-up instead of just falling */
+function pnrm(i){return new V3(-Math.sin(i),Math.cos(i),0)}
+var PANELS=[
+ {r:new V3(-0.010,0,-0.055), n:pnrm(IW),      A:0.012},   /* left wing */
+ {r:new V3(-0.010,0, 0.055), n:pnrm(IW),      A:0.012},   /* right wing */
+ {r:new V3(-0.135,0, 0),     n:pnrm(IE),      A:0.006},   /* turned-up tail edge */
+ {r:new V3(-0.100,-0.02,0),  n:new V3(0,0,1), A:0.006}    /* keel */
 ];
 
-/* ---------- helpers ---------- */
 function clamp(v,a,b){return v<a?a:v>b?b:v}
-function wrap(a){while(a>Math.PI)a-=Math.PI*2;while(a<-Math.PI)a+=Math.PI*2;return a}
 function rnd(s){s=Math.sin(s*12.9898)*43758.5453;return s-Math.floor(s)}
 
-var cv=document.getElementById('gl'),cx=cv.getContext('2d'),W=0,H=0,DPR=1;
-function resize(){DPR=Math.min(2,window.devicePixelRatio||1);W=cv.clientWidth;H=cv.clientHeight;
- cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);cx.setTransform(DPR,0,0,DPR,0,0)}
+/* ---------- 3x3 matrices as flat arrays (row major) ---------- */
+function m3zero(){return [0,0,0,0,0,0,0,0,0]}
+function m3point(M,m,rx,ry,rz){var d2=rx*rx+ry*ry+rz*rz;
+ M[0]+=m*(d2-rx*rx);M[1]+=m*(-rx*ry);M[2]+=m*(-rx*rz);
+ M[3]+=m*(-ry*rx);M[4]+=m*(d2-ry*ry);M[5]+=m*(-ry*rz);
+ M[6]+=m*(-rz*rx);M[7]+=m*(-rz*ry);M[8]+=m*(d2-rz*rz);}
+function m3inv(m){var a=m[0],b=m[1],c=m[2],d=m[3],e=m[4],f=m[5],g=m[6],h=m[7],i=m[8];
+ var A=e*i-f*h,B=f*g-d*i,C=d*h-e*g,det=a*A+b*B+c*C;
+ if(Math.abs(det)<1e-14)det=det<0?-1e-14:1e-14;var k=1/det;
+ return [A*k,(c*h-b*i)*k,(b*f-c*e)*k, B*k,(a*i-c*g)*k,(c*d-a*f)*k, C*k,(b*g-a*h)*k,(a*e-b*d)*k]}
+function m3mul(m,v,o){return o.set(m[0]*v.x+m[1]*v.y+m[2]*v.z, m[3]*v.x+m[4]*v.y+m[5]*v.z, m[6]*v.x+m[7]*v.y+m[8]*v.z)}
+
+/* ---------- scene ---------- */
+var cvs=document.getElementById('gl');
+var ren=new THREE.WebGLRenderer({canvas:cvs,antialias:true});
+ren.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
+var scene=new THREE.Scene();
+var SKY=0x8fc4ea;
+scene.background=new THREE.Color(SKY);
+scene.fog=new THREE.Fog(SKY,70,900);
+var cam=new THREE.PerspectiveCamera(58,1,0.05,2500);
+scene.add(new THREE.HemisphereLight(0xcfe6ff,0x5a7040,0.95));
+var sun=new THREE.DirectionalLight(0xffffff,0.75);sun.position.set(-0.4,1,0.5);scene.add(sun);
+
+function resize(){var w=cvs.clientWidth,h=cvs.clientHeight;ren.setSize(w,h,false);cam.aspect=w/Math.max(1,h);cam.updateProjectionMatrix()}
 addEventListener('resize',resize);
 
-/* ---------- state ---------- */
-var P=TYPES[0], mode='title', best=0, S=null, aimT=0, acc=0, last=0;
+/* ground, 50 m stripes, trees for a sense of speed */
+var grd=new THREE.Mesh(new THREE.PlaneGeometry(6000,1600),new THREE.MeshLambertMaterial({color:0x5d8a44}));
+grd.rotation.x=-Math.PI/2;grd.position.set(1400,0,0);scene.add(grd);
+(function(){
+ var g=new THREE.PlaneGeometry(1.2,110),m=new THREE.MeshLambertMaterial({color:0xe8eedd}),n=56;
+ var im=new THREE.InstancedMesh(g,m,n),d=new THREE.Object3D();
+ for(var i=0;i<n;i++){d.position.set(i*50,0.03,0);d.rotation.set(-Math.PI/2,0,0);d.updateMatrix();im.setMatrixAt(i,d.matrix)}
+ scene.add(im);
+ var tg=new THREE.ConeGeometry(1.1,4,6),tm=new THREE.MeshLambertMaterial({color:0x2f6b35}),tn=420;
+ var ti=new THREE.InstancedMesh(tg,tm,tn);
+ for(var k=0;k<tn;k++){
+  var sx=rnd(k*3.1)*2700, sz=(rnd(k*5.7)-0.5)*160, sc=0.7+rnd(k*7.3)*1.1;
+  if(Math.abs(sz)<16)sz+=sz<0?-16:16;
+  d.position.set(sx,2*sc,sz);d.rotation.set(0,rnd(k)*6.3,0);d.scale.set(sc,sc,sc);d.updateMatrix();ti.setMatrixAt(k,d.matrix)}
+ scene.add(ti);
+ var pole=new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.14,PAD,8),new THREE.MeshLambertMaterial({color:0x8a6a4a}));
+ pole.position.set(0,PAD/2,0);scene.add(pole);window.__pole=pole;
+})();
+
+/* ---------- the paper plane ---------- */
+var NOSE=new V3(0.14,0,0), TAILC=new V3(-0.14,0,0);
+var TL=new V3(-0.14,0.014,-0.10), TR=new V3(-0.14,0.014,0.10), KEEL=new V3(-0.14,-0.045,0);
+var craft=new THREE.Group();scene.add(craft);
+(function(){
+ function tri(a,b,c,out){out.push(a.x,a.y,a.z,b.x,b.y,b.z,c.x,c.y,c.z)}
+ var v=[];tri(NOSE,TAILC,TL,v);tri(NOSE,TR,TAILC,v);tri(NOSE,KEEL,TAILC,v);
+ var g=new THREE.BufferGeometry();
+ g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));g.computeVertexNormals();
+ var body=new THREE.Mesh(g,new THREE.MeshLambertMaterial({color:0xf2f4f8,side:THREE.DoubleSide}));
+ body.name='paper';craft.add(body);
+ var lv=[];[[NOSE,TAILC],[NOSE,TL],[NOSE,TR],[NOSE,KEEL],[TAILC,TL],[TAILC,TR],[TAILC,KEEL]].forEach(function(p){
+  lv.push(p[0].x,p[0].y,p[0].z,p[1].x,p[1].y,p[1].z)});
+ var lg=new THREE.BufferGeometry();lg.setAttribute('position',new THREE.Float32BufferAttribute(lv,3));
+ craft.add(new THREE.LineSegments(lg,new THREE.LineBasicMaterial({color:0x8b96a8})));
+})();
+var paperMesh=craft.getObjectByName('paper');
+
+/* centre of mass marker and the lift-centre ring, shown while building */
+var cmBall=new THREE.Mesh(new THREE.SphereGeometry(0.014,12,10),new THREE.MeshBasicMaterial({color:0xffffff}));
+craft.add(cmBall);
+var acRing=new THREE.Mesh(new THREE.TorusGeometry(0.018,0.004,6,16),new THREE.MeshBasicMaterial({color:0x6fe0ff}));
+acRing.position.set(NP,0,0);acRing.rotation.y=Math.PI/2;craft.add(acRing);
+
+/* ---------- engines ---------- */
+var ENG=[];            /* {pos:V3 body, nrm:V3, grp:Group, fuel:number} */
+var egeo=new THREE.CylinderGeometry(0.013,0.015,0.05,10);
+var ngeo=new THREE.CylinderGeometry(0.011,0.014,0.014,10);
+var emat=new THREE.MeshLambertMaterial({color:0x4a5161});
+var nmat=new THREE.MeshLambertMaterial({color:0xc06a3a});
+var fmat=new THREE.MeshBasicMaterial({color:0xffc24a,transparent:true,opacity:0.9});
+function addEngine(pos,nrm){
+ if(ENG.length>=EMAX)return;
+ var g=new THREE.Group();
+ var b=new THREE.Mesh(egeo,emat);b.rotation.z=Math.PI/2;g.add(b);
+ var n=new THREE.Mesh(ngeo,nmat);n.rotation.z=Math.PI/2;n.position.x=-0.031;g.add(n);
+ var fl=new THREE.Mesh(new THREE.ConeGeometry(0.012,0.07,8),fmat);
+ fl.rotation.z=Math.PI/2;fl.position.x=-0.072;fl.visible=false;g.add(fl);
+ g.position.copy(pos);
+ var e={pos:pos.clone(),nrm:nrm.clone(),grp:g,flame:fl,fuel:EFUEL};
+ ENG.push(e);craft.add(g);buildInfo();
+}
+function removeEngine(i){craft.remove(ENG[i].grp);ENG.splice(i,1);buildInfo()}
+function clearEngines(){while(ENG.length)removeEngine(0)}
+
+/* ---------- mass properties ---------- */
+var MASS=MP, CM=new V3(), IB=m3zero(), IINV=m3zero();
+function massProps(){
+ MASS=MP+ME*ENG.length;
+ CM.copy(PCM).multiplyScalar(MP);
+ for(var i=0;i<ENG.length;i++)CM.addScaledVector(ENG[i].pos,ME);
+ CM.multiplyScalar(1/MASS);
+ IB=m3zero();IB[0]+=IPX;IB[4]+=IPY;IB[8]+=IPZ;
+ m3point(IB,MP,PCM.x-CM.x,PCM.y-CM.y,PCM.z-CM.z);
+ for(i=0;i<ENG.length;i++)m3point(IB,ME,ENG[i].pos.x-CM.x,ENG[i].pos.y-CM.y,ENG[i].pos.z-CM.z);
+ IINV=m3inv(IB);
+ cmBall.position.copy(CM);
+}
+
+/* ---------- flight state ---------- */
+var POS=new V3(), VEL=new V3(), Q=new THREE.Quaternion(), W=new V3();
+var heat=0, scorch=0, burn=false, far=0, ft=0, mode='title', best=0, alive=true;
 try{best=Math.max(0,parseFloat(localStorage.getItem('jk_best'))||0)}catch(e){}
+var t1=new V3(),t2=new V3(),t3=new V3(),t4=new V3(),vb=new V3(),rr=new V3(),vp=new V3(),uu=new V3(),ld=new V3(),ff=new V3(),fb=new V3(),tb=new V3(),wd=new V3();
+var qc=new THREE.Quaternion(),qw=new THREE.Quaternion(),qd=new THREE.Quaternion();
+var lastA=0,lastB=0;
 
-function saveBest(){try{localStorage.setItem('jk_best',String(Math.floor(best)))}catch(e){}}
-
-function reset(){
- S={x:0,y:H0,vx:0,vy:0,th:0,fuel:P.fuel,heat:0,scorch:0,jet:false,far:0,t:0,slide:false,
-    trail:[],smoke:[],stall:0,alpha:0,cl:0,cd:0,over:null};
+function startFlight(){
+ massProps();
+ POS.set(0,PAD,0);
+ VEL.set(Math.cos(LANG)*LV,Math.sin(LANG)*LV,0);
+ Q.setFromAxisAngle(new V3(0,0,1),LANG);
+ W.set(0,0,0);heat=0;scorch=0;burn=false;far=0;ft=0;alive=true;
+ for(var i=0;i<ENG.length;i++){ENG[i].fuel=EFUEL;ENG[i].flame.visible=false}
+ craft.position.copy(POS);craft.quaternion.copy(Q);
+ cmBall.visible=false;acRing.visible=false;window.__pole.visible=true;
+ mode='fly';ovHide();bbox.style.display='none';btip.style.display='none';
+ hud.style.display='flex';bars.style.display='block';jetBtn.style.display='flex';
 }
 
-function launch(deg){
- var a=deg*Math.PI/180;
- S.th=a;S.vx=Math.cos(a)*P.v0;S.vy=Math.sin(a)*P.v0;
- mode='fly';ovHide();jetBtn.style.display='flex';
-}
-
-function land(why){
- mode='over';S.over=why;S.jet=false;jetBtn.style.display='none';jetBtn.className='f';
- var d=Math.floor(S.far),nb=d>Math.floor(best);
- if(nb){best=d;saveBest()}
- ovResult(d,nb,why);
-}
-
-/* ---------- physics ---------- */
 function step(dt){
- S.t+=dt;
- if(S.slide){
-  var sp=Math.max(0,Math.abs(S.vx)-5.5*dt);
-  S.vx=S.vx<0?-sp:sp;S.vy=0;S.y=0;S.x+=S.vx*dt;
-  S.th+=(0-S.th)*Math.min(1,6*dt);
-  if(S.x>S.far)S.far=S.x;
-  if(sp<1.2)land('stop');
-  return;
- }
- var v=Math.hypot(S.vx,S.vy);
- var va=v>0.2?Math.atan2(S.vy,S.vx):S.th;
- /* the nose weathervanes toward the flight path plus the paper's trim; weaker when slow */
- S.th=wrap(S.th+wrap(va+P.trim-S.th)*Math.min(1,P.stab*clamp(v/14,0.15,1.8)*dt));
- if(S.kp)S.th=clamp(S.th+S.kp*PITCH_KEY*dt,-TH_MAX,TH_MAX);
-
- v=Math.hypot(S.vx,S.vy);
- va=v>0.2?Math.atan2(S.vy,S.vx):S.th;
- var a=wrap(S.th-va),ab=Math.abs(a),sg=a<0?-1:1;
- var clmax=P.cl*(1-0.35*S.scorch), cd0=P.cd0*(1+0.8*S.scorch);
- var cl,stall=0;
- if(ab<=AS){cl=clmax*(a/AS)}
- else{var f=Math.max(0.10,1-(ab-AS)/0.40);cl=clmax*sg*f;stall=1-f}
- var cd=cd0+P.k*cl*cl+0.22*stall;
- var q=P.kq*v*v, L=q*cl, D=q*cd;
- var ux=v>0.2?S.vx/v:Math.cos(S.th), uy=v>0.2?S.vy/v:Math.sin(S.th);
- var ax=-D*ux-L*uy, ay=-D*uy+L*ux-G;
- if(S.jet&&S.fuel>0){ax+=P.T*Math.cos(S.th);ay+=P.T*Math.sin(S.th)}
- S.alpha=a;S.cl=cl;S.cd=cd;S.stall=stall;
-
- S.vx+=ax*dt;S.vy+=ay*dt;
- S.x+=S.vx*dt;S.y+=S.vy*dt;
- if(S.x>S.far)S.far=S.x;
-
- /* fuel burns, heat builds while burning and cools while gliding; a scorch never heals */
- if(S.jet&&S.fuel>0){
-  S.fuel=Math.max(0,S.fuel-dt);S.heat+=dt/P.hc;
-  if(S.fuel<=0)S.jet=false;
-  if(S.t-(S.smT||0)>0.035){S.smT=S.t;S.smoke.push({x:S.x,y:S.y,t:0})}
- }else{S.heat=Math.max(0,S.heat-dt*0.3)}
- S.scorch=clamp(Math.max(S.scorch,S.heat-1),0,1);
-
- /* trail of the flight path */
- if(S.t-(S.trT||0)>0.05){S.trT=S.t;S.trail.push({x:S.x,y:S.y});if(S.trail.length>420)S.trail.shift()}
- for(var i=S.smoke.length-1;i>=0;i--){S.smoke[i].t+=dt;if(S.smoke[i].t>1.4)S.smoke.splice(i,1)}
-
- if(S.y<=0){
-  S.y=0;
-  if(S.vy<-7||Math.abs(wrap(S.th))>0.9){S.vx*=0.2;land('crash')}
-  else{S.vy=0;S.slide=true;S.jet=false}
- }
- if(S.t>90)land('stop');
-}
-
-/* ---------- drawing ---------- */
-function lerp(a,b,t){return a+(b-a)*t}
-function sky(top){
- var hi=clamp(top/420,0,1);
- var g=cx.createLinearGradient(0,0,0,H);
- g.addColorStop(0,'rgb('+Math.round(lerp(126,8,hi))+','+Math.round(lerp(200,18,hi))+','+Math.round(lerp(240,54,hi))+')');
- g.addColorStop(1,'rgb('+Math.round(lerp(207,40,hi))+','+Math.round(lerp(233,80,hi))+','+Math.round(lerp(255,140,hi))+')');
- cx.fillStyle=g;cx.fillRect(0,0,W,H);
-}
-function draw(){
- /* camera: plane sits 32% from the left; zoom out as it climbs */
- var vh=clamp(S.y*1.7+90,90,360), s=H/vh;
- /* the plane sits 40% down the screen, but the green band never takes more than the bottom 12% */
- var camx=S.x-W*0.32/s, camy=Math.max(S.y*s+H*0.40,H*0.88)/s;
- function sx(x){return (x-camx)*s}
- function sy(y){return (camy-y)*s}
-
- sky(camy);
-
- /* clouds: two parallax layers */
- for(var l=0;l<2;l++){
-  var px=l?0.55:1, al=l?0.30:0.5, rs=l?1.7:1;
-  cx.fillStyle='rgba(255,255,255,'+al+')';
-  var x0=camx*px, i0=Math.floor((x0-120)/160), i1=Math.ceil((x0+W/s+120)/160);
-  for(var i=i0;i<=i1;i++){
-   var seed=i*7.13+l*31.7;
-   var cxw=i*160+rnd(seed)*120, cyw=40+rnd(seed+1)*330, r=(13+rnd(seed+2)*16)*rs;
-   var X=(cxw-x0)*s, Y=sy(cyw);
-   if(X<-200||X>W+200||Y<-200||Y>H+200)continue;
-   cx.beginPath();
-   cx.arc(X,Y,r*s,0,6.3);cx.arc(X+r*s*0.9,Y+r*s*0.2,r*s*0.7,0,6.3);cx.arc(X-r*s*0.9,Y+r*s*0.15,r*s*0.65,0,6.3);
-   cx.fill();
+ ft+=dt;
+ qc.set(-Q.x,-Q.y,-Q.z,Q.w);
+ vb.copy(VEL).applyQuaternion(qc);
+ fb.set(0,0,0);tb.set(0,0,0);
+ var i,p,V2,Vm,sa,ca,aa,cl,cd,qq,l;
+ for(i=0;i<PANELS.length;i++){
+  p=PANELS[i];
+  rr.copy(p.r).sub(CM);
+  vp.copy(vb).add(t1.crossVectors(W,rr));
+  V2=vp.lengthSq();if(V2<0.02)continue;
+  Vm=Math.sqrt(V2);uu.copy(vp).multiplyScalar(1/Vm);
+  sa=clamp(-uu.dot(p.n),-1,1);
+  ca=Math.sqrt(Math.max(0,1-sa*sa));
+  aa=Math.abs(Math.asin(sa));
+  cl=CLA*sa*ca;
+  if(aa>ASTALL){
+   var fo=Math.max(0.25,1-(aa-ASTALL)*1.6);
+   cl=CLA*Math.sin(ASTALL)*Math.cos(ASTALL)*fo*(sa<0?-1:1);
   }
+  cl*=(1-0.35*scorch);
+  cd=CD0*(1+0.8*scorch)+2*sa*sa;
+  qq=0.5*RHO*V2*p.A;
+  ld.copy(p.n).addScaledVector(uu,-p.n.dot(uu));
+  l=ld.length();if(l>1e-6)ld.multiplyScalar(1/l);else ld.set(0,0,0);
+  ff.copy(ld).multiplyScalar(qq*cl).addScaledVector(uu,-qq*cd);
+  fb.add(ff);tb.add(t2.crossVectors(rr,ff));
+  if(i===0){lastA=Math.asin(sa)}
+  if(i===3){lastB=Math.asin(sa)}
  }
-
- /* ground */
- var gy=sy(0);
- if(gy<H+2){
-  cx.fillStyle='#4e7a3a';cx.fillRect(0,gy,W,H-gy+2);
-  cx.fillStyle='rgba(0,0,0,.18)';cx.fillRect(0,gy,W,Math.max(2,2*s*0.2)+2);
-  /* distance markers every 50 m */
-  var m0=Math.floor(camx/50)*50, m1=camx+W/s+50;
-  cx.textAlign='center';cx.font='600 12px system-ui,sans-serif';
-  for(var m=m0;m<=m1;m+=50){
-   if(m<0)continue;
-   var X=sx(m);
-   cx.fillStyle='rgba(255,255,255,.75)';cx.fillRect(X-1,gy,2,m%100?7:13);
-   if(m%100===0&&m>0){cx.fillStyle='rgba(255,255,255,.9)';cx.fillText(m+'m',X,gy+27)}
+ var nb=0;
+ if(burn){
+  for(i=0;i<ENG.length;i++){
+   var e=ENG[i];
+   if(e.fuel<=0){e.flame.visible=false;continue}
+   e.fuel=Math.max(0,e.fuel-dt);nb++;
+   rr.copy(e.pos).sub(CM);
+   ff.set(TH,0,0);
+   fb.add(ff);tb.add(t2.crossVectors(rr,ff));
+   e.flame.visible=true;
+   e.flame.scale.set(1,0.75+Math.random()*0.6,1);
   }
- }
+ }else{for(i=0;i<ENG.length;i++)ENG[i].flame.visible=false}
+ if(nb>0)heat+=dt*nb/2.6;else heat=Math.max(0,heat-dt*0.35);
+ scorch=clamp(Math.max(scorch,heat-1),0,1);
 
- /* launch pad */
- var pxp=sx(0);
- if(pxp>-60&&pxp<W+60){
-  cx.fillStyle='#8a6a4a';cx.fillRect(pxp-5*s*0.2-3,sy(H0),6+s*0.4,Math.max(0,gy-sy(H0)));
-  cx.fillStyle='#b9936b';cx.fillRect(pxp-16,sy(H0)-5,34,6);
- }
+ tb.addScaledVector(W,-ADAMP);
 
- /* flight path trail */
- if(S.trail.length>1){
-  cx.strokeStyle='rgba(255,255,255,.35)';cx.lineWidth=2;cx.beginPath();
-  for(var t=0;t<S.trail.length;t++){var p=S.trail[t];t?cx.lineTo(sx(p.x),sy(p.y)):cx.moveTo(sx(p.x),sy(p.y))}
-  cx.stroke();
- }
- /* jet smoke */
- for(var k=0;k<S.smoke.length;k++){
-  var sm=S.smoke[k],a2=(1-sm.t/1.4)*0.5;
-  cx.fillStyle='rgba(225,230,240,'+a2.toFixed(3)+')';
-  cx.beginPath();cx.arc(sx(sm.x),sy(sm.y),4+sm.t*16,0,6.3);cx.fill();
- }
+ t3.copy(fb).applyQuaternion(Q);t3.y-=MASS*G;
+ VEL.addScaledVector(t3,dt/MASS);
+ POS.addScaledVector(VEL,dt);
 
- plane(sx(S.x),sy(S.y),S.th);
- hud();
+ m3mul(IB,W,t1);t2.crossVectors(W,t1);t4.copy(tb).sub(t2);
+ m3mul(IINV,t4,wd);
+ W.addScaledVector(wd,dt);
+ var wl=W.length();if(wl>45)W.multiplyScalar(45/wl);
+
+ qw.set(W.x,W.y,W.z,0);qd.multiplyQuaternions(Q,qw);
+ Q.set(Q.x+0.5*qd.x*dt, Q.y+0.5*qd.y*dt, Q.z+0.5*qd.z*dt, Q.w+0.5*qd.w*dt).normalize();
+
+ var d=Math.sqrt(POS.x*POS.x+POS.z*POS.z);if(d>far)far=d;
+ if(POS.y<=0.02){POS.y=0.02;land()}
+ else if(ft>120)land();
 }
 
-function plane(X,Y,th){
- var v=Math.hypot(S.vx,S.vy);
- cx.save();cx.translate(X,Y);cx.rotate(-th);
- /* speed streak */
- if(v>6&&mode==='fly'){
-  var va=Math.atan2(S.vy,S.vx);
-  cx.save();cx.rotate(th-va);
-  var g=cx.createLinearGradient(-10,0,-10-v*1.5,0);
-  g.addColorStop(0,'rgba(255,255,255,.5)');g.addColorStop(1,'rgba(255,255,255,0)');
-  cx.strokeStyle=g;cx.lineWidth=2.5;cx.beginPath();cx.moveTo(-10,0);cx.lineTo(-10-v*1.5,0);cx.stroke();
-  cx.restore();
- }
- /* jet flame */
- if(S.jet&&S.fuel>0){
-  var fl=16+Math.random()*16;
-  cx.fillStyle='rgba(255,170,60,.9)';
-  cx.beginPath();cx.moveTo(-8,-4);cx.lineTo(-8,4);cx.lineTo(-8-fl,0);cx.closePath();cx.fill();
-  cx.fillStyle='rgba(255,255,220,.95)';
-  cx.beginPath();cx.moveTo(-8,-2);cx.lineTo(-8,2);cx.lineTo(-8-fl*0.5,0);cx.closePath();cx.fill();
- }
- /* paper: upper wing, lower wing, fold line */
- var sc=clamp(1-S.scorch*0.0,1,1);
- var up='rgb('+Math.round(255-S.scorch*90)+','+Math.round(255-S.scorch*120)+','+Math.round(255-S.scorch*150)+')';
- var lo='rgb('+Math.round(223-S.scorch*80)+','+Math.round(230-S.scorch*110)+','+Math.round(242-S.scorch*140)+')';
- cx.beginPath();cx.moveTo(19,0);cx.lineTo(-15,-9);cx.lineTo(-8,0);cx.closePath();cx.fillStyle=up;cx.fill();
- cx.beginPath();cx.moveTo(19,0);cx.lineTo(-15,9);cx.lineTo(-8,0);cx.closePath();cx.fillStyle=lo;cx.fill();
- cx.strokeStyle='rgba(120,135,160,.9)';cx.lineWidth=1;
- cx.beginPath();cx.moveTo(19,0);cx.lineTo(-8,0);cx.stroke();
- /* engine */
- cx.fillStyle='#39414f';cx.fillRect(-7,-2.6,10,5.2);
- cx.fillStyle='#8f9aab';cx.fillRect(1,-2.6,2,5.2);
- cx.restore();
- void sc;
-}
-
-var elD=document.getElementById('dist'),elT=document.getElementById('tele'),elW=document.getElementById('warn');
-var fuB=document.querySelector('#fu .bi'),heB=document.querySelector('#he .bi');
-var fuL=document.querySelector('#fu span'),heL=document.querySelector('#he span');
-fuL.textContent=J('ねんりょう','FUEL');heL.textContent=J('こげ','HEAT');
-function hud(){
- elD.innerHTML=Math.floor(S.far)+'<small>BEST '+Math.floor(best)+'</small>';
- var v=Math.hypot(S.vx,S.vy);
- var tx=J('高度','ALT')+' '+Math.round(S.y)+'m<br>'+J('速さ','SPD')+' '+Math.round(v*3.6)+'km/h';
- if(DBG)tx+='<br>a '+(S.alpha*57.3).toFixed(1)+'&deg; cl '+S.cl.toFixed(2)+' cd '+S.cd.toFixed(3);
- elT.innerHTML=tx;
- fuB.style.width=(S.fuel/P.fuel*100)+'%';
- heB.style.width=clamp(S.heat/1,0,1)*100+'%';
- var st=mode==='fly'&&!S.slide&&S.stall>0.35;
- elW.textContent=st?J('しっそく！','STALL!'):'';
- elW.style.opacity=st?1:0;
-}
-
-/* ---------- overlay screens ---------- */
-var ov=document.getElementById('ov'),jetBtn=document.getElementById('jet');
-jetBtn.textContent=J('ふんしゃ','BURN');
-function ovHide(){ov.className='f off'}
-function ovShow(html){ov.className='f';ov.innerHTML=html}
-
-function ovTitle(){
- mode='title';jetBtn.style.display='none';
- var cards=TYPES.map(function(t,i){
-  return '<div class="card" data-i="'+i+'"><b>'+t.nm[EN?1:0]+'</b><span>'+t.ds[EN?1:0]+'</span>'+
-   '<i>'+J('ねんりょう','fuel')+' '+t.fuel.toFixed(1)+'s / '+J('こげにくさ','heat')+' '+t.hc.toFixed(1)+'s</i></div>';
- }).join('');
- ovShow('<h1>'+J('ジェット紙飛行機','Jet Paper Plane')+'</h1>'+
-  '<p>'+J('なぞって機首を上下。ボタンを押している間だけ噴射。どこまで飛ばせるか。',
-          'Drag to pitch the nose. Hold the button to burn. How far can you go?')+'</p>'+
-  '<p style="opacity:.65">'+J('折り方をえらぶ','Pick a fold')+'</p><div class="cards">'+cards+'</div>'+
-  '<p style="opacity:.6;font-size:13px">BEST '+Math.floor(best)+'m</p>');
-}
-
-function ovResult(d,nb,why){
- var ttl=why==='crash'?J('ついらく','CRASHED'):J('ちゃくち','LANDED');
- ovShow('<p style="opacity:.8">'+ttl+'</p><div id="rec" class="f">'+d+'<small>m</small></div>'+
-  (nb?'<div id="new">'+J('ベスト記録！','NEW BEST!')+'</div>':'<p style="opacity:.7">BEST '+Math.floor(best)+'m</p>')+
+function land(){
+ if(mode!=='fly')return;
+ mode='over';burn=false;alive=false;
+ for(var i=0;i<ENG.length;i++)ENG[i].flame.visible=false;
+ jetBtn.style.display='none';jetBtn.className='f';
+ bars.style.display='none';
+ var m=Math.floor(far),isNew=m>Math.floor(best);
+ if(isNew){best=m;try{localStorage.setItem('jk_best',String(m))}catch(e){}}
+ ovShow('<p style="opacity:.8">'+J('ちゃくち','LANDED')+'</p><div id="rec" class="f">'+m+'<small>m</small></div>'+
+  (isNew?'<div id="new">'+J('ベスト記録！','NEW BEST!')+'</div>':'<p style="opacity:.7">BEST '+Math.floor(best)+'m</p>')+
   '<div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">'+
-  '<button class="btn" id="again" type="button">'+J('もういちど','Again')+'</button>'+
-  '<button class="btn" id="back" type="button">'+J('折り方をかえる','Change fold')+'</button></div>');
+  '<button class="btn go" id="again" type="button">'+J('同じ配置でもう一度','Same build again')+'</button>'+
+  '<button class="btn" id="redo" type="button">'+J('置き直す','Rebuild')+'</button></div>');
 }
 
-ov.addEventListener('click',function(e){
- var c=e.target.closest?e.target.closest('.card'):null;
- if(c){P=TYPES[+c.getAttribute('data-i')];reset();mode='aim';aimT=0;ovHide();return}
- if(e.target.id==='again'){reset();mode='aim';aimT=0;ovHide();return}
- if(e.target.id==='back'){ovTitle();return}
+/* ---------- build mode: orbit the plane, tap a surface to mount ---------- */
+var orbA=-0.9, orbE=0.22, orbR=0.55;
+function buildCam(){
+ var cy=Math.cos(orbE)*orbR;
+ cam.position.set(Math.cos(orbA)*cy, PAD+Math.sin(orbE)*orbR, Math.sin(orbA)*cy);
+ cam.up.set(0,1,0);cam.lookAt(0,PAD,0);
+}
+function enterBuild(){
+ mode='build';
+ craft.position.set(0,PAD,0);craft.quaternion.identity();
+ cmBall.visible=true;acRing.visible=true;window.__pole.visible=false;
+ hud.style.display='none';bars.style.display='none';jetBtn.style.display='none';
+ bbox.style.display='flex';btip.style.display='block';
+ btip.innerHTML=J('ドラッグで回す／機体をタップしてエンジンを付ける<br>エンジンをタップすると外せる',
+                  'Drag to turn it. Tap the plane to mount an engine.<br>Tap an engine to take it off.');
+ ovHide();massProps();buildInfo();
+}
+var bbox=document.getElementById('build'),bstat=document.getElementById('bstat'),brow=document.getElementById('brow'),btip=document.getElementById('btip');
+function buildInfo(){
+ massProps();
+ var stable=CM.x>NP+0.010;
+ var side=0;for(var i=0;i<ENG.length;i++)side+=ENG[i].pos.z;
+ var sym=Math.abs(side)<0.012;
+ bstat.innerHTML='<b>'+J('エンジン','Engines')+' '+ENG.length+' / '+EMAX+'</b>　'+
+  '<span class="'+(stable?'ok':'ng')+'">'+(stable?J('安定','stable'):J('不安定','unstable'))+'</span>　'+
+  '<span class="'+(sym?'ok':'ng')+'">'+(sym?J('左右つりあい','balanced'):(side>0?J('右に寄り','right-heavy'):J('左に寄り','left-heavy')))+'</span>';
+ brow.innerHTML='<button class="btn go" id="golaunch" type="button">'+J('発射','Launch')+'</button>'+
+  (ENG.length?'<button class="btn sm" id="clr" type="button">'+J('全部はずす','Clear')+'</button>':'');
+}
+brow.addEventListener('click',function(e){
+ if(e.target.id==='golaunch'){if(!ENG.length&&!confirmNoEngine())return;startFlight()}
+ else if(e.target.id==='clr')clearEngines();
 });
+function confirmNoEngine(){return true}
+
+var ray=new THREE.Raycaster(),ndc=new THREE.Vector2();
+function pickAt(cx,cy){
+ var r=cvs.getBoundingClientRect();
+ ndc.x=((cx-r.left)/r.width)*2-1;ndc.y=-((cy-r.top)/r.height)*2+1;
+ ray.setFromCamera(ndc,cam);
+ var eg=[];for(var i=0;i<ENG.length;i++)eg.push(ENG[i].grp);
+ var he=ray.intersectObjects(eg,true);
+ if(he.length){
+  var o=he[0].object;while(o&&o.parent!==craft)o=o.parent;
+  for(i=0;i<ENG.length;i++)if(ENG[i].grp===o){removeEngine(i);return}
+ }
+ var hp=ray.intersectObject(paperMesh,false);
+ if(hp.length){
+  var pt=craft.worldToLocal(hp[0].point.clone());
+  var nl=hp[0].face.normal.clone();
+  if(nl.dot(ray.ray.direction)>0)nl.negate();
+  pt.addScaledVector(nl,0.017);
+  addEngine(pt,nl);
+ }
+}
 
 /* ---------- input ---------- */
-var dragY=null;
-function pd(e){
- if(mode==='aim'){launch(aimAngle());e.preventDefault();return}
- if(mode==='fly'){dragY=e.clientY;cv.setPointerCapture&&cv.setPointerCapture(e.pointerId);e.preventDefault()}
+var pdx=0,pdy=0,pmv=0,down=false;
+cvs.addEventListener('pointerdown',function(e){
+ if(mode!=='build')return;
+ down=true;pmv=0;pdx=e.clientX;pdy=e.clientY;
+ cvs.setPointerCapture&&cvs.setPointerCapture(e.pointerId);e.preventDefault();
+});
+cvs.addEventListener('pointermove',function(e){
+ if(mode!=='build'||!down)return;
+ var dx=e.clientX-pdx,dy=e.clientY-pdy;
+ pmv+=Math.abs(dx)+Math.abs(dy);
+ orbA-=dx*0.009;orbE=clamp(orbE+dy*0.007,-1.2,1.2);
+ pdx=e.clientX;pdy=e.clientY;e.preventDefault();
+});
+function pup(e){
+ if(mode==='build'&&down&&pmv<9)pickAt(e.clientX,e.clientY);
+ down=false;
 }
-function pm(e){
- if(mode==='fly'&&dragY!==null&&!S.slide){
-  S.th=clamp(S.th-(e.clientY-dragY)*PITCH_PX,-TH_MAX,TH_MAX);
-  dragY=e.clientY;e.preventDefault();
- }
-}
-function pu(){dragY=null}
-cv.addEventListener('pointerdown',pd);cv.addEventListener('pointermove',pm);
-addEventListener('pointerup',pu);addEventListener('pointercancel',pu);
+addEventListener('pointerup',pup);
+addEventListener('pointercancel',function(){down=false});
 
-function jetOn(e){if(mode==='fly'&&S.fuel>0){S.jet=true;jetBtn.className='f on'}e&&e.preventDefault()}
-function jetOff(e){if(S){S.jet=false}jetBtn.className='f';e&&e.preventDefault()}
+var jetBtn=document.getElementById('jet');jetBtn.textContent=J('ふんしゃ','BURN');
+function jetOn(e){if(mode==='fly'){burn=true;jetBtn.className='f on'}if(e)e.preventDefault()}
+function jetOff(e){burn=false;jetBtn.className='f';if(e)e.preventDefault()}
 jetBtn.addEventListener('pointerdown',jetOn);
 jetBtn.addEventListener('pointerup',jetOff);
 jetBtn.addEventListener('pointerleave',jetOff);
 jetBtn.addEventListener('pointercancel',jetOff);
 jetBtn.addEventListener('contextmenu',function(e){e.preventDefault()});
+addEventListener('keydown',function(e){if(e.code==='Space'){if(mode==='fly')jetOn();else if(mode==='build')startFlight();e.preventDefault()}});
+addEventListener('keyup',function(e){if(e.code==='Space')jetOff()});
+addEventListener('blur',function(){jetOff()});
 
-addEventListener('keydown',function(e){
- if(e.key==='ArrowUp'){S&&(S.kp=1);e.preventDefault()}
- else if(e.key==='ArrowDown'){S&&(S.kp=-1);e.preventDefault()}
- else if(e.code==='Space'){if(mode==='aim')launch(aimAngle());else jetOn();e.preventDefault()}
+/* ---------- overlays ---------- */
+var ov=document.getElementById('ov');
+function ovHide(){ov.className='f off'}
+function ovShow(h){ov.className='f';ov.innerHTML=h}
+function ovTitle(){
+ mode='title';
+ hud.style.display='none';bars.style.display='none';jetBtn.style.display='none';
+ bbox.style.display='none';btip.style.display='none';
+ cmBall.visible=true;acRing.visible=true;window.__pole.visible=false;
+ ovShow('<h1>'+J('ジェット紙飛行機','Jet Paper Plane')+'</h1>'+
+  '<p>'+J('紙飛行機の<b>どこにジェットエンジンを付けるか</b>で、飛び方が変わります。重心より下に付ければ機首が上がり、片側に寄せれば曲がる。どこまで飛ばせるか。',
+          'Where you <b>mount the jets</b> decides how it flies. Below the centre of mass it pitches up; off to one side it turns. How far can you get?')+'</p>'+
+  '<button class="btn go" id="start" type="button">'+J('はじめる','Start')+'</button>'+
+  '<p style="opacity:.6;font-size:13px">BEST '+Math.floor(best)+'m</p>');
+}
+ov.addEventListener('click',function(e){
+ if(e.target.id==='start'){enterBuild()}
+ else if(e.target.id==='again'){startFlight()}
+ else if(e.target.id==='redo'){enterBuild()}
 });
-addEventListener('keyup',function(e){
- if(e.key==='ArrowUp'||e.key==='ArrowDown'){S&&(S.kp=0)}
- else if(e.code==='Space'){jetOff()}
-});
-addEventListener('blur',function(){jetOff();S&&(S.kp=0)});
 
-/* ---------- aim ---------- */
-function aimAngle(){var p=(aimT*0.55)%2;if(p>1)p=2-p;return A_LO+(A_HI-A_LO)*p}
-function drawAim(dt){
- aimT+=dt;
- var vh=clamp(H0*1.7+90,90,360),s=H/vh,camx=-W*0.32/s,camy=Math.max(H0*s+H*0.40,H*0.88)/s;
- S.x=0;S.y=H0;S.vx=0;S.vy=0;S.th=aimAngle()*Math.PI/180;
- draw();
- /* angle gauge */
- var X=(0-camx)*s, Y=(camy-H0)*s, a=aimAngle()*Math.PI/180;
- cx.save();cx.strokeStyle='rgba(255,255,255,.55)';cx.lineWidth=2;cx.setLineDash([5,5]);
- cx.beginPath();cx.moveTo(X,Y);cx.lineTo(X+Math.cos(a)*150,Y-Math.sin(a)*150);cx.stroke();cx.restore();
- cx.save();cx.textAlign='center';cx.font='600 15px system-ui,sans-serif';cx.fillStyle='#fff';
- cx.shadowColor='#000';cx.shadowBlur=6;
- cx.fillText(Math.round(aimAngle())+'°',X+Math.cos(a)*172,Y-Math.sin(a)*172+5);
- cx.fillText(J('タップで発射','Tap to launch'),W/2,H*0.80);
- cx.restore();
+/* ---------- hud ---------- */
+var hud=document.getElementById('hud'),bars=document.getElementById('bars');
+var elD=document.getElementById('dist'),elT=document.getElementById('tele'),elW=document.getElementById('warn');
+var fuB=document.querySelector('#fu .bi'),heB=document.querySelector('#he .bi');
+document.querySelector('#fu span').textContent=J('ねんりょう','FUEL');
+document.querySelector('#he span').textContent=J('こげ','HEAT');
+function drawHud(){
+ elD.innerHTML=Math.floor(far)+'<small>BEST '+Math.floor(best)+'</small>';
+ var sp=VEL.length();
+ var tx=J('高度','ALT')+' '+Math.round(POS.y)+'m<br>'+J('速さ','SPD')+' '+Math.round(sp*3.6)+'km/h';
+ if(DBG)tx+='<br>a '+(lastA*57.3).toFixed(1)+'&deg; b '+(lastB*57.3).toFixed(1)+'&deg;<br>w '+W.length().toFixed(1);
+ elT.innerHTML=tx;
+ var tot=ENG.length*EFUEL,rem=0;
+ for(var i=0;i<ENG.length;i++)rem+=ENG[i].fuel;
+ fuB.style.width=(tot?rem/tot*100:0)+'%';
+ heB.style.width=clamp(heat,0,1)*100+'%';
+ var st=mode==='fly'&&Math.abs(lastA)>ASTALL*1.3;
+ elW.textContent=st?J('しっそく！','STALL!'):'';
+ elW.style.opacity=st?1:0;
+}
+
+/* ---------- camera while flying ---------- */
+var camDir=new V3(1,0,0), camPos=new V3(-2.4,PAD+0.9,0), look=new V3();
+function flyCam(dt){
+ t1.set(VEL.x,0,VEL.z);
+ if(t1.lengthSq()>0.5){t1.normalize();camDir.lerp(t1,1-Math.exp(-3*dt));var cl2=camDir.length();if(cl2>1e-4)camDir.multiplyScalar(1/cl2)}
+ t2.copy(POS).addScaledVector(camDir,-2.4);t2.y+=0.95;
+ if(t2.y<0.9)t2.y=0.9;
+ camPos.lerp(t2,1-Math.exp(-7*dt));
+ cam.position.copy(camPos);cam.up.set(0,1,0);
+ look.copy(POS).addScaledVector(camDir,3);look.y+=0.25;
+ cam.lookAt(look);
 }
 
 /* ---------- loop ---------- */
+var acc=0,last=0;
 function frame(now){
  requestAnimationFrame(frame);
- if(!W||!H)resize();
  var dt=Math.min(0.1,(now-last)/1000||0);last=now;
- if(mode==='title'){sky(120);return}
- if(mode==='aim'){drawAim(dt);hud();return}
- if(mode==='fly'){
-  acc+=dt;var n=0;
-  while(acc>=HS&&n<400){step(HS);acc-=HS;n++;if(mode!=='fly')break}
-  if(acc>HS*400)acc=0;
+ if(mode==='build'||mode==='title'){
+  craft.rotation.set(0,0,0);
+  if(mode==='title'){orbA+=dt*0.25}
+  buildCam();
+ }else{
+  if(mode==='fly'){
+   acc+=dt;var n=0;
+   while(acc>=HS&&n<600){step(HS);acc-=HS;n++;if(mode!=='fly')break}
+   if(acc>HS*600)acc=0;
+  }
+  craft.position.copy(POS);craft.quaternion.copy(Q);
+  flyCam(dt);
+  drawHud();
  }
- draw();
+ ren.render(scene,cam);
 }
 
-resize();reset();ovTitle();
+resize();massProps();ovTitle();
 document.getElementById('ld').style.display='none';
 requestAnimationFrame(frame);
 })();
