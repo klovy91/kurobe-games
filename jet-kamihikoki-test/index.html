@@ -101,7 +101,9 @@ var PAD=50;                        /* launch pad height. ?pad= overrides it on t
    same turn rates. Raising the launch speed on its own would just make it loop. */
 var MP=0.210, PCM=new V3(0.02,0,0);          /* paper: mass and its own centre of mass */
 var IPX=6.99e-4, IPY=2.073e-3, IPZ=1.371e-3; /* paper inertia about PCM (roll, yaw, pitch) */
-var ME=0.0, TH=2.0, EFUEL=3.0, EMAX=4;       /* one engine: mass, thrust, fuel seconds, how many fit.
+var ME=0.0, TH=2.0, TANK=3.0, EMAX=4;        /* one engine: mass and thrust, how many fit, and the shared
+   tank, measured in seconds of one engine. Every build carries the same 3.0, so four engines give four
+   times the thrust for a quarter of the time: you add engines for the choice of where to push, not for power.
    The engines weigh nothing, so every build balances and glides exactly like the bare plane and only the
    thrust and its leverage differ. That also keeps the weight fixed, which is what lets QFLEX below be
    tuned tightly. Adding engines raises thrust without adding weight, so four of them will loop unless
@@ -219,7 +221,7 @@ function addEngine(pos,nrm){
  var fl=new THREE.Mesh(new THREE.ConeGeometry(0.012,0.07,8),fmat);
  fl.rotation.z=Math.PI/2;fl.position.x=-0.072;fl.visible=false;g.add(fl);
  g.position.copy(pos);
- var e={pos:pos.clone(),nrm:nrm.clone(),grp:g,flame:fl,nz:n,fuel:EFUEL,on:false,btn:null};
+ var e={pos:pos.clone(),nrm:nrm.clone(),grp:g,flame:fl,nz:n,on:false,btn:null};
  ENG.push(e);craft.add(g);buildInfo();
 }
 function removeEngine(i){craft.remove(ENG[i].grp);ENG.splice(i,1);buildInfo()}
@@ -242,7 +244,7 @@ function massProps(){
 
 /* ---------- flight state ---------- */
 var POS=new V3(), VEL=new V3(), Q=new THREE.Quaternion(), W=new V3();
-var heat=0, scorch=0, far=0, ft=0, mode='title', best=0, alive=true;
+var heat=0, scorch=0, fuel=0, far=0, ft=0, mode='title', best=0, alive=true;
 try{best=Math.max(0,parseFloat(localStorage.getItem('jk_best'))||0)}catch(e){}
 var t1=new V3(),t2=new V3(),t3=new V3(),t4=new V3(),vb=new V3(),rr=new V3(),vp=new V3(),uu=new V3(),ld=new V3(),ff=new V3(),fb=new V3(),tb=new V3(),wd=new V3(),pnv=new V3();
 var qc=new THREE.Quaternion(),qw=new THREE.Quaternion(),qd=new THREE.Quaternion();
@@ -253,8 +255,8 @@ function startFlight(){
  POS.set(0,PAD,0);
  VEL.set(Math.cos(LANG)*LV,Math.sin(LANG)*LV,0);
  Q.setFromAxisAngle(new V3(0,0,1),LANG);
- W.set(0,0,0);heat=0;scorch=0;far=0;ft=0;alive=true;
- for(var i=0;i<ENG.length;i++){ENG[i].fuel=EFUEL;ENG[i].on=false;ENG[i].flame.visible=false}
+ W.set(0,0,0);heat=0;scorch=0;fuel=TANK;far=0;ft=0;alive=true;
+ for(var i=0;i<ENG.length;i++){ENG[i].on=false;ENG[i].flame.visible=false}
  buildJetButtons();
  craft.position.copy(POS);craft.quaternion.copy(Q);
  cmBall.visible=false;window.__pole.visible=true;
@@ -298,14 +300,15 @@ function step(dt){
  var nb=0;
  for(i=0;i<ENG.length;i++){
   var e=ENG[i];
-  if(!e.on||e.fuel<=0){e.flame.visible=false;continue}
-  e.fuel=Math.max(0,e.fuel-dt);nb++;
+  if(!e.on||fuel<=0){e.flame.visible=false;continue}
+  nb++;
   rr.copy(e.pos).sub(CM);
   ff.set(TH,0,0);
   fb.add(ff);tb.add(t2.crossVectors(rr,ff));
   e.flame.visible=true;
   e.flame.scale.set(1,0.75+Math.random()*0.6,1);
  }
+ if(nb>0)fuel=Math.max(0,fuel-dt*nb);          /* every engine draws from the same tank */
  if(nb>0)heat+=dt*nb/2.6;else heat=Math.max(0,heat-dt*0.35);
  scorch=clamp(Math.max(scorch,heat-1),0,1);
 
@@ -370,7 +373,11 @@ function buildInfo(){
  var vt=up?J('上下つりあい','pitch even'):py<0?J('噴くと機首が上がる','burn pitches up'):J('噴くと機首が下がる','burn pitches down');
  var hz=ctr?J('左右つりあい','yaw even'):pz>0?J('噴くと左に曲がる','burn turns left'):J('噴くと右に曲がる','burn turns right');
  bstat.innerHTML='<b>'+J('エンジン','Engines')+' '+ENG.length+' / '+EMAX+'</b>'+
-  (ENG.length?'　<span class="'+(up?'ok':'')+'">'+vt+'</span>　<span class="'+(ctr?'ok':'')+'">'+hz+'</span>':'');
+  (ENG.length?'　<span class="'+(up?'ok':'')+'">'+vt+'</span>　<span class="'+(ctr?'ok':'')+'">'+hz+'</span>':'')+
+  '<div style="opacity:.72;font-size:13px;margin-top:4px">'+J('燃料','Fuel')+' '+TANK.toFixed(1)+
+  (ENG.length>1?J('秒ぶん（'+ENG.length+'個いっぺんに噴くと'+(TANK/ENG.length).toFixed(1)+'秒）',
+                  's of one engine (' + (TANK/ENG.length).toFixed(1) + 's if all ' + ENG.length + ' burn at once)')
+              :J('秒ぶん','s'))+'</div>';
  brow.innerHTML='<button class="btn go" id="golaunch" type="button">'+J('発射','Launch')+'</button>'+
   (ENG.length?'<button class="btn sm" id="clr" type="button">'+J('全部はずす','Clear')+'</button>':'');
 }
@@ -446,7 +453,7 @@ function mkBtn(e,i,p){
  b.style.left=p.x+'px';b.style.top=p.y+'px';
  b.style.borderColor=ECSS[i%ECSS.length];b.style.color=ECSS[i%ECSS.length];
  b.addEventListener('pointerdown',function(ev){
-  if(mode==='fly'&&e.fuel>0)e.on=true;
+  if(mode==='fly'&&fuel>0)e.on=true;
   if(b.setPointerCapture&&ev.pointerId!=null){try{b.setPointerCapture(ev.pointerId)}catch(x){}}
   ev.preventDefault();
  });
@@ -456,11 +463,11 @@ function mkBtn(e,i,p){
  b.addEventListener('contextmenu',function(ev){ev.preventDefault()});
  e.btn=b;return b;
 }
-function allBurn(on){for(var i=0;i<ENG.length;i++)if(!on||ENG[i].fuel>0)ENG[i].on=on}
+function allBurn(on){for(var i=0;i<ENG.length;i++)if(!on||fuel>0)ENG[i].on=on}
 addEventListener('keydown',function(e){
  if(e.code==='Space'){if(mode==='fly')allBurn(true);else if(mode==='build')startFlight();e.preventDefault();return}
  var n='1234'.indexOf(e.key);
- if(n>=0&&mode==='fly'&&ENG[n]&&ENG[n].fuel>0){ENG[n].on=true;e.preventDefault()}
+ if(n>=0&&mode==='fly'&&ENG[n]&&fuel>0){ENG[n].on=true;e.preventDefault()}
 });
 addEventListener('keyup',function(e){
  if(e.code==='Space'){allBurn(false);return}
@@ -501,13 +508,12 @@ function drawHud(){
  var tx=J('高度','ALT')+' '+Math.round(POS.y)+'m<br>'+J('速さ','SPD')+' '+Math.round(sp*3.6)+'km/h';
  if(DBG)tx+='<br>a '+(lastA*57.3).toFixed(1)+'&deg; b '+(lastB*57.3).toFixed(1)+'&deg;<br>w '+W.length().toFixed(1)+' flex '+flex.toFixed(2);
  elT.innerHTML=tx;
- var tot=ENG.length*EFUEL,rem=0;
- for(var i=0;i<ENG.length;i++)rem+=ENG[i].fuel;
- fuB.style.width=(tot?rem/tot*100:0)+'%';
+ fuB.style.width=(fuel/TANK*100)+'%';
+ var i;
  heB.style.width=clamp(heat,0,1)*100+'%';
  for(i=0;i<ENG.length;i++){var b=ENG[i].btn;if(!b)continue;
-  b.classList.toggle('on',ENG[i].on&&ENG[i].fuel>0);
-  b.classList.toggle('no',ENG[i].fuel<=0)}
+  b.classList.toggle('on',ENG[i].on&&fuel>0);
+  b.classList.toggle('no',fuel<=0)}
  var st=mode==='fly'&&Math.abs(lastA)>ASTALL*1.3;
  elW.textContent=st?J('しっそく！','STALL!'):'';
  elW.style.opacity=st?1:0;
