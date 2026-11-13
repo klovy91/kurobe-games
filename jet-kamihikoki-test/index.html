@@ -100,7 +100,7 @@ var PAD=50;                        /* launch pad height. ?pad= overrides it on t
    That makes every speed 1.73x higher without changing how it handles: same trim, same glide ratio,
    same turn rates. Raising the launch speed on its own would just make it loop. */
 var MP=0.210, PCM=new V3(0.02,0,0);          /* paper: mass and its own centre of mass */
-var IPX=6.99e-4, IPY=2.073e-3, IPZ=1.371e-3; /* paper inertia about PCM (roll, yaw, pitch) */
+var IPX=2.45e-3, IPY=7.26e-3, IPZ=4.80e-3;   /* paper inertia about PCM (roll, yaw, pitch) */
 var ME=0.0, TH=2.0, TANK=3.0, EMAX=4;        /* one engine: mass and thrust, how many fit, and the shared
    tank, measured in seconds of one engine. Every build carries the same 3.0, so four engines give four
    times the thrust for a quarter of the time: you add engines for the choice of where to push, not for power.
@@ -108,7 +108,7 @@ var ME=0.0, TH=2.0, TANK=3.0, EMAX=4;        /* one engine: mass and thrust, how
    thrust and its leverage differ. That also keeps the weight fixed, which is what lets QFLEX below be
    tuned tightly. Adding engines raises thrust without adding weight, so four of them will loop unless
    they are burnt a few at a time. */
-var CLA=3.2, ASTALL=0.28, CD0=0.015, ADAMP=0.0045;
+var CLA=3.2, ASTALL=0.28, CD0=0.015, ADAMP=0.0158;
 /* launch: always the same, so only the build differs. ?v= and ?a= override it on the test version */
 var LV=24, LANG=20;
 (function(){var q=location.search;
@@ -120,11 +120,12 @@ LANG=LANG*Math.PI/180;
 var IW=0.09, IE=-0.22;             /* the folded paper holds the wings slightly nose-up and the tail edge turned up, so it trims nose-up instead of just falling */
 var QFLEX=311;                     /* fast air flattens those folds again, so the faster it goes the less it wants to climb.
    Tuned so that lift levels off only a little above the plane's weight: any higher and a burn turns into a loop instead of distance. */
+var DIH=0.20, DC=Math.cos(DIH), DS=Math.sin(DIH);  /* the wings sit in a shallow V */
 var PANELS=[
- {r:new V3(-0.010,0,-0.055), inc:IW,          A:0.012},   /* left wing */
- {r:new V3(-0.010,0, 0.055), inc:IW,          A:0.012},   /* right wing */
- {r:new V3(-0.135,0, 0),     inc:IE,          A:0.006},   /* turned-up tail edge */
- {r:new V3(-0.100,-0.02,0),  n:new V3(0,0,1), A:0.006}    /* keel */
+ {r:new V3(-0.010,0,-0.055), inc:IW, dc:DC, ds: DS, A:0.012},   /* left wing */
+ {r:new V3(-0.010,0, 0.055), inc:IW, dc:DC, ds:-DS, A:0.012},   /* right wing */
+ {r:new V3(-0.135,0, 0),     inc:IE, dc:1,  ds:0,   A:0.006},   /* turned-up tail edge */
+ {r:new V3(-0.100,-0.02,0),  n:new V3(0,0,1),       A:0.006}    /* keel */
 ];
 
 function clamp(v,a,b){return v<a?a:v>b?b:v}
@@ -178,7 +179,7 @@ grd.rotation.x=-Math.PI/2;grd.position.set(1400,0,0);scene.add(grd);
 
 /* ---------- the paper plane ---------- */
 var NOSE=new V3(0.14,0,0), TAILC=new V3(-0.14,0,0);
-var TL=new V3(-0.14,0.014,-0.10), TR=new V3(-0.14,0.014,0.10), KEEL=new V3(-0.14,-0.045,0);
+var TL=new V3(-0.14,0.020,-0.10), TR=new V3(-0.14,0.020,0.10), KEEL=new V3(-0.14,-0.045,0);
 var craft=new THREE.Group();scene.add(craft);
 (function(){
  function tri(a,b,c,out){out.push(a.x,a.y,a.z,b.x,b.y,b.z,c.x,c.y,c.z)}
@@ -206,7 +207,33 @@ cmBall.renderOrder=10;craft.add(cmBall);
 })();
 
 /* ---------- engines ---------- */
-var ENG=[];            /* {pos:V3 body, nrm:V3, grp:Group, fuel:number, on:boolean} */
+/* Mounting points, mirrored left and right. A tap snaps to the nearest one on the side it hit, so the
+   wing tips can actually be aimed at instead of everything landing near the middle. */
+var MOUNTS=(function(){
+ var a=[], st=[[0.080,[0]],[-0.020,[0,0.035]],[-0.110,[0,0.045,0.085]]];
+ function keelY(x){return -0.045*(0.14-x)/0.28}
+ for(var i=0;i<st.length;i++){
+  var x=st[i][0], zs=st[i][1];
+  for(var j=0;j<zs.length;j++){
+   var zl=zs[j]>0?[zs[j],-zs[j]]:[0];
+   for(var k=0;k<zl.length;k++){
+    var z=zl[k], wing=Math.abs(z)>0.004, ys=wing?0.020*Math.abs(z)/0.10:0;
+    a.push({p:new V3(x,ys+0.016,z),s:1});
+    a.push({p:new V3(x,(wing?ys:keelY(x))-0.016,z),s:-1});
+   }
+  }
+ }
+ return a;
+})();
+var mountDots=new THREE.Group();craft.add(mountDots);
+(function(){
+ var g=new THREE.SphereGeometry(0.0055,8,6);
+ for(var i=0;i<MOUNTS.length;i++){
+  var m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.4,depthTest:false}));
+  m.position.copy(MOUNTS[i].p);m.renderOrder=8;mountDots.add(m);
+ }
+})();
+var ENG=[];            /* {pos:V3 body, nrm:V3, grp:Group, on:boolean} */
 var ECSS=['#ffa24a','#6fe0ff','#9dff7d','#ff8ad6'], EHEX=[0xffa24a,0x6fe0ff,0x9dff7d,0xff8ad6];
 var egeo=new THREE.CylinderGeometry(0.013,0.015,0.05,10);
 var ngeo=new THREE.CylinderGeometry(0.011,0.014,0.014,10);
@@ -259,7 +286,7 @@ function startFlight(){
  for(var i=0;i<ENG.length;i++){ENG[i].on=false;ENG[i].flame.visible=false}
  buildJetButtons();
  craft.position.copy(POS);craft.quaternion.copy(Q);
- cmBall.visible=false;window.__pole.visible=true;
+ cmBall.visible=false;mountDots.visible=false;window.__pole.visible=true;
  mode='fly';ovHide();bbox.style.display='none';btip.style.display='none';
  hud.style.display='flex';bars.style.display='block';jets.style.display='block';
 }
@@ -274,7 +301,7 @@ function step(dt){
  for(i=0;i<PANELS.length;i++){
   p=PANELS[i];
   pn=p.n;
-  if(!pn){ii=p.inc*flex;pnv.set(-Math.sin(ii),Math.cos(ii),0);pn=pnv}
+  if(!pn){ii=p.inc*flex;var ci=Math.cos(ii);pnv.set(-Math.sin(ii),ci*p.dc,ci*p.ds);pn=pnv}
   rr.copy(p.r).sub(CM);
   vp.copy(vb).add(t1.crossVectors(W,rr));
   V2=vp.lengthSq();if(V2<0.02)continue;
@@ -356,7 +383,7 @@ function buildCam(){
 function enterBuild(){
  mode='build';
  craft.position.set(0,PAD,0);craft.quaternion.identity();
- cmBall.visible=true;window.__pole.visible=false;
+ cmBall.visible=true;mountDots.visible=true;window.__pole.visible=false;
  hud.style.display='none';bars.style.display='none';jets.style.display='none';
  bbox.style.display='flex';btip.style.display='block';
  btip.innerHTML=J('ドラッグで回す／機体をタップしてエンジンを付ける<br>エンジンをタップすると外せる',
@@ -367,6 +394,11 @@ var bbox=document.getElementById('build'),bstat=document.getElementById('bstat')
 function buildInfo(){
  massProps();
  engineColours();
+ for(var d=0;d<MOUNTS.length;d++){
+  var taken=false;
+  for(var q=0;q<ENG.length;q++)if(ENG[q].pos.distanceTo(MOUNTS[d].p)<0.001){taken=true;break}
+  mountDots.children[d].material.opacity=taken?0.07:0.4;
+ }
  var py=0,pz=0;
  for(var i=0;i<ENG.length;i++){py+=ENG[i].pos.y-CM.y;pz+=ENG[i].pos.z-CM.z}
  var up=Math.abs(py)<=0.008, ctr=Math.abs(pz)<=0.012;
@@ -403,8 +435,17 @@ function pickAt(cx,cy){
   var pt=craft.worldToLocal(hp[0].point.clone());
   var nl=hp[0].face.normal.clone();
   if(nl.dot(ray.ray.direction)>0)nl.negate();
-  pt.addScaledVector(nl,0.017);
-  addEngine(pt,nl);
+  /* the keel stands on edge, so its normal says nothing about top or bottom: use where it was hit */
+  var side=Math.abs(nl.y)<0.3?(pt.y<-0.005?-1:1):(nl.y>=0?1:-1);
+  var bi=-1,bd=1e9;
+  for(var k=0;k<MOUNTS.length;k++){
+   if(MOUNTS[k].s!==side)continue;
+   var d=MOUNTS[k].p.distanceTo(pt);
+   if(d<bd){bd=d;bi=k}
+  }
+  if(bi<0)return;
+  for(var q=0;q<ENG.length;q++)if(ENG[q].pos.distanceTo(MOUNTS[bi].p)<0.001)return;
+  addEngine(MOUNTS[bi].p,new V3(0,side,0));
  }
 }
 
@@ -483,7 +524,7 @@ function ovTitle(){
  mode='title';
  hud.style.display='none';bars.style.display='none';jets.style.display='none';
  bbox.style.display='none';btip.style.display='none';
- cmBall.visible=true;window.__pole.visible=false;
+ cmBall.visible=true;mountDots.visible=true;window.__pole.visible=false;
  ovShow('<h1>'+J('ジェット紙飛行機','Jet Paper Plane')+'</h1>'+
   '<p>'+J('紙飛行機の<b>どこにジェットエンジンを付けるか</b>で、飛び方が変わります。重心より下に付ければ機首が上がり、片側に寄せれば曲がる。どこまで飛ばせるか。',
           'Where you <b>mount the jets</b> decides how it flies. Below the centre of mass it pitches up; off to one side it turns. How far can you get?')+'</p>'+
