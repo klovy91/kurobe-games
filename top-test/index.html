@@ -68,6 +68,39 @@
   @keyframes drift{from{transform:translateY(0)}to{transform:translateY(200px)}}
   @media (prefers-reduced-motion:reduce){.sky::before,.sky::after,h1,h1::after{animation:none}}
 
+  /* ---- per-game backgrounds: shown while a card is hovered (PC) or centred on screen (phone) ---- */
+  .fx{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:0;transition:opacity .7s;overflow:hidden}
+  .fx *{animation-play-state:paused!important}
+  body[data-theme="nandemo"] .fx-nandemo,body[data-theme="zombie"] .fx-zombie{opacity:1}
+  body[data-theme="nandemo"] .fx-nandemo *,body[data-theme="zombie"] .fx-zombie *{animation-play-state:running!important}
+  /* なんでも衛星: a big planet rising from the bottom, satellites on orbits, a ringed planet drifting */
+  .fx-nandemo{background:radial-gradient(ellipse 80% 60% at 50% 100%,rgba(40,110,255,.28),transparent 70%)}
+  .np{position:absolute;left:50%;bottom:-46vmin;width:72vmin;height:72vmin;margin-left:-36vmin;border-radius:50%;
+    background:radial-gradient(circle at 36% 30%,#7cc0ff,#2a62c9 45%,#0d2560 75%,#06102c);box-shadow:0 0 90px rgba(80,150,255,.55),inset -18px -24px 60px rgba(0,0,30,.7)}
+  .np::before{content:"";position:absolute;inset:0;border-radius:50%;background:
+    radial-gradient(ellipse 18% 10% at 30% 34%,rgba(90,190,110,.9),transparent 70%),radial-gradient(ellipse 14% 9% at 62% 24%,rgba(90,190,110,.85),transparent 70%),
+    radial-gradient(ellipse 22% 8% at 50% 6%,rgba(255,255,255,.8),transparent 70%);opacity:.9}
+  .orb{position:absolute;left:50%;bottom:-10vmin;border:1px dashed rgba(150,190,255,.28);border-radius:50%;transform:translate(-50%,50%)}
+  .orb .rot{position:absolute;inset:0;animation:spin linear infinite}
+  .orb .sat{position:absolute;left:50%;top:0;transform:translate(-50%,-50%);font-size:3.4vmin;filter:drop-shadow(0 0 6px rgba(255,255,255,.6))}
+  .orb .sat i{display:inline-block;font-style:normal;animation:spin linear infinite reverse}
+  .rp{position:absolute;width:13vmin;height:13vmin;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe7a8,#c9984a 60%,#6b4a1e);box-shadow:0 0 30px rgba(255,210,120,.35);animation:float 14s ease-in-out infinite}
+  .rp::after{content:"";position:absolute;left:-45%;top:38%;width:190%;height:26%;border-radius:50%;border:2px solid rgba(255,225,170,.75);transform:rotate(-18deg)}
+  .rp.p2{width:8vmin;height:8vmin;background:radial-gradient(circle at 35% 30%,#ffb8d8,#d0508e 60%,#5a1838);box-shadow:0 0 24px rgba(255,140,200,.35);animation-duration:18s}
+  .rp.p2::after{display:none}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes float{0%,100%{transform:translate(0,0) rotate(0deg)}50%{transform:translate(2vmin,3vmin) rotate(8deg)}}
+  /* ゾンビ一閃: red mist pulsing like a heartbeat, blood splatters on the edges, slow drips */
+  .fx-zombie{background:radial-gradient(ellipse at center,transparent 38%,rgba(110,0,8,.6) 100%)}
+  .zm{position:absolute;inset:-10%;background:radial-gradient(ellipse at center,transparent 45%,rgba(160,0,12,.55) 100%);animation:beat 2.4s ease-in-out infinite}
+  .mist{position:absolute;width:60vmax;height:30vmax;border-radius:50%;background:rgba(150,0,15,.35);filter:blur(50px);animation:mist 16s ease-in-out infinite}
+  .splat{position:absolute;transform:scale(.4);opacity:0;transition:transform .45s cubic-bezier(.2,1.6,.4,1),opacity .3s}
+  body[data-theme="zombie"] .splat{transform:scale(1);opacity:.9}
+  .drip{position:absolute;width:7px;border-radius:0 0 6px 6px;background:linear-gradient(#7a0010,#a0101a);height:0;animation:drip 7s ease-in infinite}
+  @keyframes beat{0%,100%{opacity:.55}12%{opacity:1}24%{opacity:.7}36%{opacity:.95}}
+  @keyframes mist{0%,100%{transform:translateX(-5vmax)}50%{transform:translateX(5vmax)}}
+  @keyframes drip{0%{height:0}70%{height:var(--h)}100%{height:var(--h);opacity:0}}
+  @media (prefers-reduced-motion:reduce){.fx *{animation:none!important}}
   h1{
     font-family:Iceberg,sans-serif;font-weight:400;
     font-size:clamp(34px,7vw,56px);
@@ -167,11 +200,13 @@
 </head>
 <body>
   <div class="sky" aria-hidden="true"></div>
+  <div class="fx fx-nandemo" aria-hidden="true"><div class="rp" style="left:8vw;top:14vh"></div><div class="rp p2" style="right:10vw;top:26vh"></div><div class="np"></div></div>
+  <div class="fx fx-zombie" aria-hidden="true"><div class="zm"></div><div class="mist" style="left:-20vmax;bottom:-12vmax"></div><div class="mist" style="right:-20vmax;bottom:-14vmax;animation-delay:-8s"></div></div>
   <h1>KUROBE GAMES</h1>
   <p class="sub">ブラウザで遊べる自作ゲーム集</p>
 
   <div class="grid">
-    <a class="card" href="/nandemo-eisei/" style="--ac:#7fb6ff">
+    <a class="card" href="/nandemo-eisei/" data-theme="nandemo" style="--ac:#7fb6ff">
       <div class="thumb"><img src="/nandemo-eisei/og.jpg" alt="なんでも衛星" loading="lazy" width="1200" height="630"><span class="new">NEW</span></div>
       <div class="body">
         <p class="title">なんでも衛星</p>
@@ -180,7 +215,7 @@
         <span class="play">▶ PLAY</span>
       </div>
     </a>
-    <a class="card" href="/zombie-issen/" style="--ac:#ff5a6e">
+    <a class="card" href="/zombie-issen/" data-theme="zombie" style="--ac:#ff5a6e">
       <div class="thumb"><img src="/zombie-issen/og.jpg" alt="ゾンビ一閃" loading="lazy" width="1200" height="630"></div>
       <div class="body">
         <p class="title">ゾンビ一閃</p>
@@ -203,6 +238,43 @@
 </script>
 <!-- admax -->
   </div>
+
+  <script>
+  /* per-game background: hover / keyboard focus on PC, the card nearest the screen centre on touch screens */
+  (function(){
+    var NS='http://www.w3.org/2000/svg';
+    /* なんでも衛星: orbits with satellites */
+    var fn=document.querySelector('.fx-nandemo');
+    [[78,'🍙🚀',38],[118,'🐄🍌',56],[160,'🌏🍩🛸',80]].forEach(function(o){var d=document.createElement('div');d.className='orb';d.style.width=d.style.height=o[0]+'vmin';
+      var r=document.createElement('div');r.className='rot';r.style.animationDuration=o[2]+'s';
+      Array.from(o[1]).forEach(function(e,i,a){var w=document.createElement('div');w.style.cssText='position:absolute;inset:0;transform:rotate('+(i*360/a.length+(o[0]%50))+'deg)';
+        var s=document.createElement('span');s.className='sat';s.innerHTML='<i style="animation-duration:'+o[2]+'s">'+e+'</i>';w.appendChild(s);r.appendChild(w)});
+      d.appendChild(r);fn.appendChild(d)});
+    /* ゾンビ一閃: blood splatters (random blobs + droplets) on the edges, drips under the top ones */
+    var fz=document.querySelector('.fx-zombie');
+    function splat(css,size,delay,drips){var sv=document.createElementNS(NS,'svg');sv.setAttribute('viewBox','-100 -100 200 200');sv.setAttribute('class','splat');
+      sv.style.cssText=css+';width:'+size+'vmin;height:'+size+'vmin;transition-delay:'+delay+'s';
+      function c(x,y,r){var e=document.createElementNS(NS,'circle');e.setAttribute('cx',x);e.setAttribute('cy',y);e.setAttribute('r',r);e.setAttribute('fill',Math.random()<.5?'#8a0010':'#6e000c');sv.appendChild(e)}
+      c(0,0,34);for(var i=0;i<9;i++){var a=Math.random()*6.283,d=22+Math.random()*16;c(Math.cos(a)*d,Math.sin(a)*d,10+Math.random()*12)}
+      for(i=0;i<16;i++){a=Math.random()*6.283;d=50+Math.random()*45;c(Math.cos(a)*d,Math.sin(a)*d,1.5+Math.random()*5)}
+      fz.appendChild(sv);
+      (drips||[]).forEach(function(q){var dr=document.createElement('div');dr.className='drip';dr.style.cssText='left:'+q[0]+';top:'+q[1]+';--h:'+q[2]+'px;animation-delay:'+q[3]+'s';fz.appendChild(dr)})}
+    splat('left:-6vmin;top:-7vmin',34,0,[['9vmin','19vmin',90,.4],['15vmin','17vmin',60,2.2]]);
+    splat('right:-8vmin;top:-5vmin',40,.08,[['calc(100% - 17vmin)','23vmin',120,1.1]]);
+    splat('left:-12vmin;top:42vh',28,.16);splat('right:-10vmin;bottom:8vh',36,.24);splat('left:18vw;bottom:-10vmin',26,.3);
+    /* switching */
+    var b=document.body,cards=document.querySelectorAll('a.card[data-theme]'),t=null;
+    function set(v){clearTimeout(t);if(v)b.setAttribute('data-theme',v);else t=setTimeout(function(){b.removeAttribute('data-theme')},150)}
+    if(window.matchMedia&&matchMedia('(hover:hover)').matches){
+      Array.prototype.forEach.call(cards,function(c){var v=c.getAttribute('data-theme');
+        c.addEventListener('mouseenter',function(){set(v)});c.addEventListener('mouseleave',function(){set(null)});
+        c.addEventListener('focus',function(){set(v)});c.addEventListener('blur',function(){set(null)})})}
+    else{var cur=null,raf=0;function pick(){raf=0;var mid=innerHeight/2,best=null,bd=1e9;
+        Array.prototype.forEach.call(cards,function(c){var r=c.getBoundingClientRect();if(r.bottom<innerHeight*.2||r.top>innerHeight*.8)return;var d=Math.abs((r.top+r.bottom)/2-mid);if(d<bd){bd=d;best=c}});
+        var v=best?best.getAttribute('data-theme'):null;if(v!==cur){cur=v;if(v)b.setAttribute('data-theme',v);else b.removeAttribute('data-theme')}}
+      addEventListener('scroll',function(){if(!raf)raf=requestAnimationFrame(pick)},{passive:true});addEventListener('resize',pick);pick()}
+  })();
+  </script>
 
   <footer>&copy; 2026 · <a href="/privacy.html" style="color:#778">プライバシーポリシー</a></footer>
 </body>
