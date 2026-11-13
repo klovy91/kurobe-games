@@ -101,9 +101,11 @@ var PAD=50;                        /* launch pad height. ?pad= overrides it on t
    same turn rates. Raising the launch speed on its own would just make it loop. */
 var MP=0.210, PCM=new V3(0.02,0,0);          /* paper: mass and its own centre of mass */
 var IPX=6.99e-4, IPY=2.073e-3, IPZ=1.371e-3; /* paper inertia about PCM (roll, yaw, pitch) */
-var ME=0.090, TH=2.0, EFUEL=3.0, EMAX=4;     /* one engine: mass, thrust, fuel seconds, how many fit.
-   thrust is about 0.7x the weight of a one-engine build, so it climbs instead of looping. Adding engines
-   raises that ratio, so a four-engine build will loop unless they are burnt a few at a time. */
+var ME=0.0, TH=2.0, EFUEL=3.0, EMAX=4;       /* one engine: mass, thrust, fuel seconds, how many fit.
+   The engines weigh nothing, so every build balances and glides exactly like the bare plane and only the
+   thrust and its leverage differ. That also keeps the weight fixed, which is what lets QFLEX below be
+   tuned tightly. Adding engines raises thrust without adding weight, so four of them will loop unless
+   they are burnt a few at a time. */
 var CLA=3.2, ASTALL=0.28, CD0=0.015, ADAMP=0.0045;
 /* launch: always the same, so only the build differs. ?v= and ?a= override it on the test version */
 var LV=24, LANG=20;
@@ -113,9 +115,9 @@ var LV=24, LANG=20;
  var ma=q.match(/[?&]a=(-?\d+(?:\.\d+)?)/);if(ma)LANG=clampN(parseFloat(ma[1]),-20,70);
  function clampN(v,a,b){return v<a?a:v>b?b:v}})();
 LANG=LANG*Math.PI/180;
-var NP=-0.035;                     /* neutral point: the build is stable while the centre of mass sits ahead of this */
 var IW=0.09, IE=-0.22;             /* the folded paper holds the wings slightly nose-up and the tail edge turned up, so it trims nose-up instead of just falling */
-var QFLEX=900;                     /* fast air flattens those folds again, so the faster it goes the less it wants to climb */
+var QFLEX=311;                     /* fast air flattens those folds again, so the faster it goes the less it wants to climb.
+   Tuned so that lift levels off only a little above the plane's weight: any higher and a burn turns into a loop instead of distance. */
 var PANELS=[
  {r:new V3(-0.010,0,-0.055), inc:IW,          A:0.012},   /* left wing */
  {r:new V3(-0.010,0, 0.055), inc:IW,          A:0.012},   /* right wing */
@@ -191,10 +193,15 @@ var craft=new THREE.Group();scene.add(craft);
 var paperMesh=craft.getObjectByName('paper');
 
 /* centre of mass marker and the lift-centre ring, shown while building */
-var cmBall=new THREE.Mesh(new THREE.SphereGeometry(0.014,12,10),new THREE.MeshBasicMaterial({color:0xffffff}));
-craft.add(cmBall);
-var acRing=new THREE.Mesh(new THREE.TorusGeometry(0.018,0.004,6,16),new THREE.MeshBasicMaterial({color:0x6fe0ff}));
-acRing.position.set(NP,0,0);acRing.rotation.y=Math.PI/2;craft.add(acRing);
+/* the centre of mass: drawn through the paper, because above it or below it is the whole decision */
+var cmBall=new THREE.Mesh(new THREE.SphereGeometry(0.013,14,10),new THREE.MeshBasicMaterial({color:0xffffff,depthTest:false}));
+cmBall.renderOrder=10;craft.add(cmBall);
+(function(){
+ var lv=[-0.075,0,0, 0.075,0,0, 0,0,-0.075, 0,0,0.075, 0,-0.05,0, 0,0.05,0];
+ var g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(lv,3));
+ var m=new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0.5,depthTest:false});
+ var cross=new THREE.LineSegments(g,m);cross.renderOrder=9;cmBall.add(cross);
+})();
 
 /* ---------- engines ---------- */
 var ENG=[];            /* {pos:V3 body, nrm:V3, grp:Group, fuel:number, on:boolean} */
@@ -250,7 +257,7 @@ function startFlight(){
  for(var i=0;i<ENG.length;i++){ENG[i].fuel=EFUEL;ENG[i].on=false;ENG[i].flame.visible=false}
  buildJetButtons();
  craft.position.copy(POS);craft.quaternion.copy(Q);
- cmBall.visible=false;acRing.visible=false;window.__pole.visible=true;
+ cmBall.visible=false;window.__pole.visible=true;
  mode='fly';ovHide();bbox.style.display='none';btip.style.display='none';
  hud.style.display='flex';bars.style.display='block';jets.style.display='block';
 }
@@ -346,7 +353,7 @@ function buildCam(){
 function enterBuild(){
  mode='build';
  craft.position.set(0,PAD,0);craft.quaternion.identity();
- cmBall.visible=true;acRing.visible=true;window.__pole.visible=false;
+ cmBall.visible=true;window.__pole.visible=false;
  hud.style.display='none';bars.style.display='none';jets.style.display='none';
  bbox.style.display='flex';btip.style.display='block';
  btip.innerHTML=J('ドラッグで回す／機体をタップしてエンジンを付ける<br>エンジンをタップすると外せる',
@@ -357,12 +364,13 @@ var bbox=document.getElementById('build'),bstat=document.getElementById('bstat')
 function buildInfo(){
  massProps();
  engineColours();
- var stable=CM.x>NP+0.010;
- var side=0;for(var i=0;i<ENG.length;i++)side+=ENG[i].pos.z;
- var sym=Math.abs(side)<0.012;
- bstat.innerHTML='<b>'+J('エンジン','Engines')+' '+ENG.length+' / '+EMAX+'</b>　'+
-  '<span class="'+(stable?'ok':'ng')+'">'+(stable?J('安定','stable'):J('不安定','unstable'))+'</span>　'+
-  '<span class="'+(sym?'ok':'ng')+'">'+(sym?J('左右つりあい','balanced'):(side>0?J('右に寄り','right-heavy'):J('左に寄り','left-heavy')))+'</span>';
+ var py=0,pz=0;
+ for(var i=0;i<ENG.length;i++){py+=ENG[i].pos.y-CM.y;pz+=ENG[i].pos.z-CM.z}
+ var up=Math.abs(py)<=0.008, ctr=Math.abs(pz)<=0.012;
+ var vt=up?J('上下つりあい','pitch even'):py<0?J('噴くと機首が上がる','burn pitches up'):J('噴くと機首が下がる','burn pitches down');
+ var hz=ctr?J('左右つりあい','yaw even'):pz>0?J('噴くと左に曲がる','burn turns left'):J('噴くと右に曲がる','burn turns right');
+ bstat.innerHTML='<b>'+J('エンジン','Engines')+' '+ENG.length+' / '+EMAX+'</b>'+
+  (ENG.length?'　<span class="'+(up?'ok':'')+'">'+vt+'</span>　<span class="'+(ctr?'ok':'')+'">'+hz+'</span>':'');
  brow.innerHTML='<button class="btn go" id="golaunch" type="button">'+J('発射','Launch')+'</button>'+
   (ENG.length?'<button class="btn sm" id="clr" type="button">'+J('全部はずす','Clear')+'</button>':'');
 }
@@ -468,7 +476,7 @@ function ovTitle(){
  mode='title';
  hud.style.display='none';bars.style.display='none';jets.style.display='none';
  bbox.style.display='none';btip.style.display='none';
- cmBall.visible=true;acRing.visible=true;window.__pole.visible=false;
+ cmBall.visible=true;window.__pole.visible=false;
  ovShow('<h1>'+J('ジェット紙飛行機','Jet Paper Plane')+'</h1>'+
   '<p>'+J('紙飛行機の<b>どこにジェットエンジンを付けるか</b>で、飛び方が変わります。重心より下に付ければ機首が上がり、片側に寄せれば曲がる。どこまで飛ばせるか。',
           'Where you <b>mount the jets</b> decides how it flies. Below the centre of mass it pitches up; off to one side it turns. How far can you get?')+'</p>'+
