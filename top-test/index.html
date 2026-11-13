@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4796367100342566"
+    crossorigin="anonymous"></script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4YLJM61BY7"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4YLJM61BY7');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Kurobe Games</title>
+<meta name="description" content="Kurobe Games は、ブラウザで遊べる個人制作の無料ゲーム集です。インストール不要で、スマホでもPCでもすぐに遊べます。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Kurobe Games">
+<meta property="og:title" content="Kurobe Games">
+<meta property="og:description" content="ブラウザで遊べる個人制作の無料ゲーム集。">
+<meta property="og:url" content="https://kurobe-games.com/">
+<meta property="og:image" content="https://kurobe-games.com/zombie-issen/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#07080f">
+<link rel="icon" type="image/png" sizes="32x32" href="/zombie-issen/icon-32.png">
+<link rel="apple-touch-icon" href="/zombie-issen/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Iceberg&display=swap">
+<style>
+  :root{color-scheme:dark;}
+  *{box-sizing:border-box;}
+  html{background:#07080f;}
+  body{
+    margin:0;
+    min-height:100vh;
+    color:#eee;
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:56px 20px 80px;
+    position:relative;
+    overflow-x:hidden;
+  }
+  /* background: nebula glow + two layers of slowly drifting stars (CSS only) */
+  .sky{position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:
+      radial-gradient(ellipse 60% 45% at 18% 12%,rgba(120,70,255,.22),transparent 70%),
+      radial-gradient(ellipse 55% 40% at 85% 30%,rgba(255,60,90,.14),transparent 70%),
+      radial-gradient(ellipse 70% 50% at 50% 100%,rgba(40,140,255,.18),transparent 70%),
+      #07080f;}
+  .sky::before,.sky::after{content:"";position:absolute;inset:-200px 0 0 0;background-repeat:repeat;}
+  .sky::before{background-image:
+      radial-gradient(1.2px 1.2px at 20px 30px,#fff,transparent),
+      radial-gradient(1px 1px at 120px 80px,rgba(255,255,255,.8),transparent),
+      radial-gradient(1.4px 1.4px at 200px 160px,#cfe0ff,transparent),
+      radial-gradient(1px 1px at 60px 190px,rgba(255,255,255,.7),transparent),
+      radial-gradient(1.2px 1.2px at 170px 20px,#ffe9b0,transparent);
+    background-size:240px 220px;opacity:.75;animation:drift 90s linear infinite;}
+  .sky::after{background-image:
+      radial-gradient(2px 2px at 50px 60px,#fff,transparent),
+      radial-gradient(1.6px 1.6px at 300px 250px,#bcd4ff,transparent),
+      radial-gradient(1.8px 1.8px at 180px 340px,#fff,transparent);
+    background-size:380px 400px;opacity:.6;animation:drift 50s linear infinite;}
+  @keyframes drift{from{transform:translateY(0)}to{transform:translateY(200px)}}
+  @media (prefers-reduced-motion:reduce){.sky::before,.sky::after{animation:none}}
+
+  h1{
+    font-family:Iceberg,sans-serif;font-weight:400;
+    font-size:clamp(34px,7vw,56px);
+    letter-spacing:.12em;
+    margin:0 0 10px;
+    text-align:center;
+    background:linear-gradient(90deg,#9fd0ff,#ffffff 45%,#ffb0c8);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 0 14px rgba(120,170,255,.55));
+  }
+  .sub{
+    font-family:"DotGothic16",sans-serif;
+    color:#b9c4dd;
+    font-size:15px;
+    letter-spacing:.08em;
+    margin:0 0 44px;
+    text-align:center;
+  }
+  .grid{
+    width:100%;
+    max-width:960px;
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,340px));
+    justify-content:center;
+    gap:22px;
+  }
+  a.card{
+    --ac:#8fb7ff;
+    display:flex;flex-direction:column;
+    text-decoration:none;
+    color:#eee;
+    background:rgba(18,20,30,.82);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:16px;
+    overflow:hidden;
+    transition:transform .2s,border-color .2s,box-shadow .2s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  a.card:hover,a.card:focus-visible,a.card:active{
+    transform:translateY(-4px);
+    border-color:var(--ac);
+    box-shadow:0 10px 30px rgba(0,0,0,.45),0 0 22px color-mix(in srgb,var(--ac) 45%,transparent);
+    outline:none;
+  }
+  .thumb{position:relative;aspect-ratio:1200/630;overflow:hidden;background:#000;}
+  .thumb img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .35s;}
+  a.card:hover .thumb img,a.card:focus-visible .thumb img{transform:scale(1.06);}
+  .new{position:absolute;top:10px;left:10px;padding:3px 10px;border-radius:999px;
+    font:12px Iceberg,sans-serif;letter-spacing:.12em;color:#1a1300;background:#ffd84a;box-shadow:0 0 12px rgba(255,216,74,.7);}
+  .body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:8px;flex:1;}
+  .card .title{
+    font-family:"DotGothic16",sans-serif;
+    font-size:22px;
+    margin:0;
+    color:#fff;
+    text-shadow:0 0 10px color-mix(in srgb,var(--ac) 60%,transparent);
+  }
+  .tags{display:flex;gap:6px;flex-wrap:wrap;}
+  .tags span{font-size:11px;padding:2px 9px;border-radius:999px;color:var(--ac);border:1px solid color-mix(in srgb,var(--ac) 55%,transparent);}
+  .card .desc{
+    font-size:13px;
+    color:#aab1c2;
+    line-height:1.6;
+    margin:0;
+    flex:1;
+  }
+  .play{align-self:flex-end;font:14px Iceberg,sans-serif;letter-spacing:.12em;color:var(--ac);}
+  .ad{
+    width:100%;
+    max-width:728px;
+    min-height:50px;
+    margin:56px auto 0;
+    text-align:center;
+    overflow:hidden;
+  }
+  /* スマホ：広告は画面の幅いっぱいの箱で中央に表示（切らない） */
+  @media (max-width:600px){
+    body{padding-top:44px;}
+    .ad{width:auto;max-width:none;align-self:stretch;margin:48px -20px 0;overflow:visible;display:flex;justify-content:center;}
+  }
+  footer{
+    margin-top:60px;
+    font-size:12px;
+    color:#667;
+  }
+</style>
+</head>
+<body>
+  <div class="sky" aria-hidden="true"></div>
+  <h1>KUROBE GAMES</h1>
+  <p class="sub">ブラウザで遊べる自作ゲーム集</p>
+
+  <div class="grid">
+    <a class="card" href="/nandemo-eisei/" style="--ac:#7fb6ff">
+      <div class="thumb"><img src="/nandemo-eisei/og.jpg" alt="なんでも衛星" loading="lazy" width="1200" height="630"><span class="new">NEW</span></div>
+      <div class="body">
+        <p class="title">なんでも衛星</p>
+        <div class="tags"><span>物理</span><span>合体</span><span>長押し</span></div>
+        <p class="desc">長押しで打ち上げて、なんでも人工衛星に。ぶつけて合体させて、惑星をつくろう。</p>
+        <span class="play">▶ PLAY</span>
+      </div>
+    </a>
+    <a class="card" href="/zombie-issen/" style="--ac:#ff5a6e">
+      <div class="thumb"><img src="/zombie-issen/og.jpg" alt="ゾンビ一閃" loading="lazy" width="1200" height="630"></div>
+      <div class="body">
+        <p class="title">ゾンビ一閃</p>
+        <div class="tags"><span>アクション</span><span>スワイプ</span><span>一人称</span></div>
+        <p class="desc">一太刀で斬り抜ける、一人称ゾンビ斬撃アクション。</p>
+        <span class="play">▶ PLAY</span>
+      </div>
+    </a>
+    <!-- 新しいゲームを追加するときは、ここに同じ形式でカードを追加してください(新作には NEW を付けて先頭に) -->
+  </div>
+
+  <div class="ad">
+<!-- admax：スマホはスマホ用の枠、それ以外はPC用の枠 -->
+<script>
+(function(){
+  var sp=/iPhone|iPod|Android.+Mobile|Windows Phone/i.test(navigator.userAgent);
+  var id=sp?'5da68a901c66dc40ba25813107825f56':'4875ab3f089e9b671a7083d5cda45686';
+  document.write('<script src="https://adm.shinobi.jp/s/'+id+'"><\/script>');
+})();
+</script>
+<!-- admax -->
+  </div>
+
+  <footer>&copy; 2026 · <a href="/privacy.html" style="color:#778">プライバシーポリシー</a></footer>
+</body>
+</html>
