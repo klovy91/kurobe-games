@@ -2,5 +2,6 @@ User-agent: *
 Disallow: /zombie-issen-test/
 Disallow: /nandemo-eisei-test/
 Disallow: /top-test/
+Disallow: /jet-kamihikoki-test/
 
 Sitemap: https://kurobe-games.com/sitemap.xml
