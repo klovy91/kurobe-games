@@ -34,8 +34,10 @@ html,body{height:100%;margin:0;background:#0a1120;color:#fff;overflow:hidden;tou
 .bi{height:100%;width:0}
 #fu .bi{background:linear-gradient(90deg,#6ff0ff,#2f8dff)}
 #he .bi{background:linear-gradient(90deg,#ffd36b,#ff5a2f)}
-#jet{position:fixed;right:calc(env(safe-area-inset-right,0px) + 20px);bottom:calc(env(safe-area-inset-bottom,0px) + 20px);width:104px;height:104px;border-radius:50%;border:2px solid rgba(255,255,255,.75);background:rgba(255,120,40,.22);color:#fff;font-size:17px;letter-spacing:.08em;display:none;align-items:center;justify-content:center;touch-action:none;-webkit-tap-highlight-color:transparent}
-#jet.on{background:rgba(255,120,40,.6);box-shadow:0 0 26px rgba(255,140,50,.75)}
+#jets{position:fixed;right:calc(env(safe-area-inset-right,0px) + 14px);bottom:calc(env(safe-area-inset-bottom,0px) + 14px);width:190px;height:170px;display:none;touch-action:none}
+.jb{position:absolute;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;border:2px solid #fff;background:rgba(255,120,40,.18);color:#fff;font-size:15px;padding:0;display:flex;align-items:center;justify-content:center;touch-action:none;-webkit-tap-highlight-color:transparent}
+.jb.on{background:rgba(255,130,50,.62);box-shadow:0 0 24px rgba(255,150,60,.8)}
+.jb.no{opacity:.26}
 #warn{position:fixed;left:0;right:0;top:32%;text-align:center;font-size:32px;color:#ff6a4a;text-shadow:0 0 12px #000;pointer-events:none;opacity:0}
 #build{position:fixed;left:0;right:0;bottom:0;display:none;flex-direction:column;align-items:center;gap:10px;padding:14px 16px calc(env(safe-area-inset-bottom,0px) + 16px);background:linear-gradient(to top,rgba(6,10,22,.88),rgba(6,10,22,0));text-align:center}
 #bstat{font-size:14px;line-height:1.7;opacity:.9}
@@ -64,7 +66,7 @@ html,body{height:100%;margin:0;background:#0a1120;color:#fff;overflow:hidden;tou
   <div class="bar" id="fu"><span></span><div class="bo"><div class="bi"></div></div></div>
   <div class="bar" id="he"><span></span><div class="bo"><div class="bi"></div></div></div>
 </div>
-<button id="jet" class="f" type="button"></button>
+<div id="jets" class="f"></div>
 <div id="warn" class="f"></div>
 <div id="btip" class="f"></div>
 <div id="build" class="f"><div id="bstat"></div><div id="brow"></div></div>
@@ -193,7 +195,8 @@ var acRing=new THREE.Mesh(new THREE.TorusGeometry(0.018,0.004,6,16),new THREE.Me
 acRing.position.set(NP,0,0);acRing.rotation.y=Math.PI/2;craft.add(acRing);
 
 /* ---------- engines ---------- */
-var ENG=[];            /* {pos:V3 body, nrm:V3, grp:Group, fuel:number} */
+var ENG=[];            /* {pos:V3 body, nrm:V3, grp:Group, fuel:number, on:boolean} */
+var ECSS=['#ffa24a','#6fe0ff','#9dff7d','#ff8ad6'], EHEX=[0xffa24a,0x6fe0ff,0x9dff7d,0xff8ad6];
 var egeo=new THREE.CylinderGeometry(0.013,0.015,0.05,10);
 var ngeo=new THREE.CylinderGeometry(0.011,0.014,0.014,10);
 var emat=new THREE.MeshLambertMaterial({color:0x4a5161});
@@ -203,15 +206,16 @@ function addEngine(pos,nrm){
  if(ENG.length>=EMAX)return;
  var g=new THREE.Group();
  var b=new THREE.Mesh(egeo,emat);b.rotation.z=Math.PI/2;g.add(b);
- var n=new THREE.Mesh(ngeo,nmat);n.rotation.z=Math.PI/2;n.position.x=-0.031;g.add(n);
+ var n=new THREE.Mesh(ngeo,nmat.clone());n.rotation.z=Math.PI/2;n.position.x=-0.031;g.add(n);
  var fl=new THREE.Mesh(new THREE.ConeGeometry(0.012,0.07,8),fmat);
  fl.rotation.z=Math.PI/2;fl.position.x=-0.072;fl.visible=false;g.add(fl);
  g.position.copy(pos);
- var e={pos:pos.clone(),nrm:nrm.clone(),grp:g,flame:fl,fuel:EFUEL};
+ var e={pos:pos.clone(),nrm:nrm.clone(),grp:g,flame:fl,nz:n,fuel:EFUEL,on:false,btn:null};
  ENG.push(e);craft.add(g);buildInfo();
 }
 function removeEngine(i){craft.remove(ENG[i].grp);ENG.splice(i,1);buildInfo()}
 function clearEngines(){while(ENG.length)removeEngine(0)}
+function engineColours(){for(var i=0;i<ENG.length;i++)ENG[i].nz.material.color.setHex(EHEX[i%EHEX.length])}
 
 /* ---------- mass properties ---------- */
 var MASS=MP, CM=new V3(), IB=m3zero(), IINV=m3zero();
@@ -229,7 +233,7 @@ function massProps(){
 
 /* ---------- flight state ---------- */
 var POS=new V3(), VEL=new V3(), Q=new THREE.Quaternion(), W=new V3();
-var heat=0, scorch=0, burn=false, far=0, ft=0, mode='title', best=0, alive=true;
+var heat=0, scorch=0, far=0, ft=0, mode='title', best=0, alive=true;
 try{best=Math.max(0,parseFloat(localStorage.getItem('jk_best'))||0)}catch(e){}
 var t1=new V3(),t2=new V3(),t3=new V3(),t4=new V3(),vb=new V3(),rr=new V3(),vp=new V3(),uu=new V3(),ld=new V3(),ff=new V3(),fb=new V3(),tb=new V3(),wd=new V3(),pnv=new V3();
 var qc=new THREE.Quaternion(),qw=new THREE.Quaternion(),qd=new THREE.Quaternion();
@@ -240,12 +244,13 @@ function startFlight(){
  POS.set(0,PAD,0);
  VEL.set(Math.cos(LANG)*LV,Math.sin(LANG)*LV,0);
  Q.setFromAxisAngle(new V3(0,0,1),LANG);
- W.set(0,0,0);heat=0;scorch=0;burn=false;far=0;ft=0;alive=true;
- for(var i=0;i<ENG.length;i++){ENG[i].fuel=EFUEL;ENG[i].flame.visible=false}
+ W.set(0,0,0);heat=0;scorch=0;far=0;ft=0;alive=true;
+ for(var i=0;i<ENG.length;i++){ENG[i].fuel=EFUEL;ENG[i].on=false;ENG[i].flame.visible=false}
+ buildJetButtons();
  craft.position.copy(POS);craft.quaternion.copy(Q);
  cmBall.visible=false;acRing.visible=false;window.__pole.visible=true;
  mode='fly';ovHide();bbox.style.display='none';btip.style.display='none';
- hud.style.display='flex';bars.style.display='block';jetBtn.style.display='flex';
+ hud.style.display='flex';bars.style.display='block';jets.style.display='block';
 }
 
 function step(dt){
@@ -282,18 +287,16 @@ function step(dt){
   if(i===3){lastB=Math.asin(sa)}
  }
  var nb=0;
- if(burn){
-  for(i=0;i<ENG.length;i++){
-   var e=ENG[i];
-   if(e.fuel<=0){e.flame.visible=false;continue}
-   e.fuel=Math.max(0,e.fuel-dt);nb++;
-   rr.copy(e.pos).sub(CM);
-   ff.set(TH,0,0);
-   fb.add(ff);tb.add(t2.crossVectors(rr,ff));
-   e.flame.visible=true;
-   e.flame.scale.set(1,0.75+Math.random()*0.6,1);
-  }
- }else{for(i=0;i<ENG.length;i++)ENG[i].flame.visible=false}
+ for(i=0;i<ENG.length;i++){
+  var e=ENG[i];
+  if(!e.on||e.fuel<=0){e.flame.visible=false;continue}
+  e.fuel=Math.max(0,e.fuel-dt);nb++;
+  rr.copy(e.pos).sub(CM);
+  ff.set(TH,0,0);
+  fb.add(ff);tb.add(t2.crossVectors(rr,ff));
+  e.flame.visible=true;
+  e.flame.scale.set(1,0.75+Math.random()*0.6,1);
+ }
  if(nb>0)heat+=dt*nb/2.6;else heat=Math.max(0,heat-dt*0.35);
  scorch=clamp(Math.max(scorch,heat-1),0,1);
 
@@ -318,9 +321,9 @@ function step(dt){
 
 function land(){
  if(mode!=='fly')return;
- mode='over';burn=false;alive=false;
- for(var i=0;i<ENG.length;i++)ENG[i].flame.visible=false;
- jetBtn.style.display='none';jetBtn.className='f';
+ mode='over';alive=false;
+ for(var i=0;i<ENG.length;i++){ENG[i].on=false;ENG[i].flame.visible=false}
+ jets.style.display='none';
  bars.style.display='none';
  var m=Math.floor(far),isNew=m>Math.floor(best);
  if(isNew){best=m;try{localStorage.setItem('jk_best',String(m))}catch(e){}}
@@ -342,7 +345,7 @@ function enterBuild(){
  mode='build';
  craft.position.set(0,PAD,0);craft.quaternion.identity();
  cmBall.visible=true;acRing.visible=true;window.__pole.visible=false;
- hud.style.display='none';bars.style.display='none';jetBtn.style.display='none';
+ hud.style.display='none';bars.style.display='none';jets.style.display='none';
  bbox.style.display='flex';btip.style.display='block';
  btip.innerHTML=J('ドラッグで回す／機体をタップしてエンジンを付ける<br>エンジンをタップすると外せる',
                   'Drag to turn it. Tap the plane to mount an engine.<br>Tap an engine to take it off.');
@@ -351,6 +354,7 @@ function enterBuild(){
 var bbox=document.getElementById('build'),bstat=document.getElementById('bstat'),brow=document.getElementById('brow'),btip=document.getElementById('btip');
 function buildInfo(){
  massProps();
+ engineColours();
  var stable=CM.x>NP+0.010;
  var side=0;for(var i=0;i<ENG.length;i++)side+=ENG[i].pos.z;
  var sym=Math.abs(side)<0.012;
@@ -408,17 +412,51 @@ function pup(e){
 addEventListener('pointerup',pup);
 addEventListener('pointercancel',function(){down=false});
 
-var jetBtn=document.getElementById('jet');jetBtn.textContent=J('ふんしゃ','BURN');
-function jetOn(e){if(mode==='fly'){burn=true;jetBtn.className='f on'}if(e)e.preventDefault()}
-function jetOff(e){burn=false;jetBtn.className='f';if(e)e.preventDefault()}
-jetBtn.addEventListener('pointerdown',jetOn);
-jetBtn.addEventListener('pointerup',jetOff);
-jetBtn.addEventListener('pointerleave',jetOff);
-jetBtn.addEventListener('pointercancel',jetOff);
-jetBtn.addEventListener('contextmenu',function(e){e.preventDefault()});
-addEventListener('keydown',function(e){if(e.code==='Space'){if(mode==='fly')jetOn();else if(mode==='build')startFlight();e.preventDefault()}});
-addEventListener('keyup',function(e){if(e.code==='Space')jetOff()});
-addEventListener('blur',function(){jetOff()});
+var jets=document.getElementById('jets'),JPW=190,JPH=170;
+/* one button per engine, laid out the way the engines sit when seen from behind */
+function buildJetButtons(){
+ jets.innerHTML='';
+ var i,pt=[];
+ for(i=0;i<ENG.length;i++)pt.push({
+  x:JPW*0.5+clamp(ENG[i].pos.z/0.105,-1,1)*JPW*0.34,
+  y:JPH*0.52-clamp(ENG[i].pos.y/0.055,-1,1)*JPH*0.30});
+ for(var it=0;it<16;it++){                      /* nudge overlapping buttons apart */
+  for(i=0;i<pt.length;i++)for(var k=i+1;k<pt.length;k++){
+   var dx=pt[k].x-pt[i].x,dy=pt[k].y-pt[i].y,d=Math.hypot(dx,dy);
+   if(d<62){if(d<0.001){dx=1;dy=0;d=1}var pu=(62-d)/2/d;
+    pt[i].x-=dx*pu;pt[i].y-=dy*pu;pt[k].x+=dx*pu;pt[k].y+=dy*pu}
+  }
+  for(i=0;i<pt.length;i++){pt[i].x=clamp(pt[i].x,31,JPW-31);pt[i].y=clamp(pt[i].y,31,JPH-31)}
+ }
+ for(i=0;i<ENG.length;i++)jets.appendChild(mkBtn(ENG[i],i,pt[i]));
+}
+function mkBtn(e,i,p){
+ var b=document.createElement('button');
+ b.type='button';b.className='jb';b.textContent=String(i+1);
+ b.style.left=p.x+'px';b.style.top=p.y+'px';
+ b.style.borderColor=ECSS[i%ECSS.length];b.style.color=ECSS[i%ECSS.length];
+ b.addEventListener('pointerdown',function(ev){
+  if(mode==='fly'&&e.fuel>0)e.on=true;
+  if(b.setPointerCapture&&ev.pointerId!=null){try{b.setPointerCapture(ev.pointerId)}catch(x){}}
+  ev.preventDefault();
+ });
+ function off(ev){e.on=false;if(ev)ev.preventDefault()}
+ b.addEventListener('pointerup',off);
+ b.addEventListener('pointercancel',off);
+ b.addEventListener('contextmenu',function(ev){ev.preventDefault()});
+ e.btn=b;return b;
+}
+function allBurn(on){for(var i=0;i<ENG.length;i++)if(!on||ENG[i].fuel>0)ENG[i].on=on}
+addEventListener('keydown',function(e){
+ if(e.code==='Space'){if(mode==='fly')allBurn(true);else if(mode==='build')startFlight();e.preventDefault();return}
+ var n='1234'.indexOf(e.key);
+ if(n>=0&&mode==='fly'&&ENG[n]&&ENG[n].fuel>0){ENG[n].on=true;e.preventDefault()}
+});
+addEventListener('keyup',function(e){
+ if(e.code==='Space'){allBurn(false);return}
+ var n='1234'.indexOf(e.key);if(n>=0&&ENG[n])ENG[n].on=false;
+});
+addEventListener('blur',function(){allBurn(false)});
 
 /* ---------- overlays ---------- */
 var ov=document.getElementById('ov');
@@ -426,7 +464,7 @@ function ovHide(){ov.className='f off'}
 function ovShow(h){ov.className='f';ov.innerHTML=h}
 function ovTitle(){
  mode='title';
- hud.style.display='none';bars.style.display='none';jetBtn.style.display='none';
+ hud.style.display='none';bars.style.display='none';jets.style.display='none';
  bbox.style.display='none';btip.style.display='none';
  cmBall.visible=true;acRing.visible=true;window.__pole.visible=false;
  ovShow('<h1>'+J('ジェット紙飛行機','Jet Paper Plane')+'</h1>'+
@@ -457,6 +495,9 @@ function drawHud(){
  for(var i=0;i<ENG.length;i++)rem+=ENG[i].fuel;
  fuB.style.width=(tot?rem/tot*100:0)+'%';
  heB.style.width=clamp(heat,0,1)*100+'%';
+ for(i=0;i<ENG.length;i++){var b=ENG[i].btn;if(!b)continue;
+  b.classList.toggle('on',ENG[i].on&&ENG[i].fuel>0);
+  b.classList.toggle('no',ENG[i].fuel<=0)}
  var st=mode==='fly'&&Math.abs(lastA)>ASTALL*1.3;
  elW.textContent=st?J('しっそく！','STALL!'):'';
  elW.style.opacity=st?1:0;
@@ -467,9 +508,9 @@ var camDir=new V3(1,0,0), camPos=new V3(-2.4,PAD+0.9,0), look=new V3();
 function flyCam(dt){
  t1.set(VEL.x,0,VEL.z);
  if(t1.lengthSq()>0.5){t1.normalize();camDir.lerp(t1,1-Math.exp(-3*dt));var cl2=camDir.length();if(cl2>1e-4)camDir.multiplyScalar(1/cl2)}
- t2.copy(POS).addScaledVector(camDir,-2.4);t2.y+=0.95;
- if(t2.y<0.9)t2.y=0.9;
- camPos.lerp(t2,1-Math.exp(-7*dt));
+ /* the position follows with no lag at all: easing it would leave the camera metres behind at speed */
+ camPos.copy(POS).addScaledVector(camDir,-2.4);camPos.y+=0.95;
+ if(camPos.y<0.9)camPos.y=0.9;
  cam.position.copy(camPos);cam.up.set(0,1,0);
  look.copy(POS).addScaledVector(camDir,3);look.y+=0.25;
  cam.lookAt(look);
