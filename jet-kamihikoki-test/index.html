@@ -93,7 +93,7 @@ var V3=THREE.Vector3;
 
 /* ---------- constants. body frame: +X nose, +Y up, +Z right. metres, kg, seconds ---------- */
 var G=9.8, RHO=1.225, HS=1/300;
-var PAD=18;                        /* launch pad height */
+var PAD=50;                        /* launch pad height. ?pad= overrides it on the test version */
 /* Masses, inertia and thrust are all 3x what a real paper plane would be, with the wings left as they are.
    That makes every speed 1.73x higher without changing how it handles: same trim, same glide ratio,
    same turn rates. Raising the launch speed on its own would just make it loop. */
@@ -105,6 +105,7 @@ var CLA=3.2, ASTALL=0.28, CD0=0.015, ADAMP=0.0045;
 var LV=24, LANG=20;
 (function(){var q=location.search;
  var mv=q.match(/[?&]v=(\d+(?:\.\d+)?)/);if(mv)LV=clampN(parseFloat(mv[1]),4,90);
+ var mp=q.match(/[?&]pad=(\d+(?:\.\d+)?)/);if(mp)PAD=clampN(parseFloat(mp[1]),5,250);
  var ma=q.match(/[?&]a=(-?\d+(?:\.\d+)?)/);if(ma)LANG=clampN(parseFloat(ma[1]),-20,70);
  function clampN(v,a,b){return v<a?a:v>b?b:v}})();
 LANG=LANG*Math.PI/180;
@@ -163,7 +164,7 @@ grd.rotation.x=-Math.PI/2;grd.position.set(1400,0,0);scene.add(grd);
   if(Math.abs(sz)<16)sz+=sz<0?-16:16;
   d.position.set(sx,2*sc,sz);d.rotation.set(0,rnd(k)*6.3,0);d.scale.set(sc,sc,sc);d.updateMatrix();ti.setMatrixAt(k,d.matrix)}
  scene.add(ti);
- var pole=new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.14,PAD,8),new THREE.MeshLambertMaterial({color:0x8a6a4a}));
+ var pole=new THREE.Mesh(new THREE.CylinderGeometry(PAD*0.005,PAD*0.009,PAD,10),new THREE.MeshLambertMaterial({color:0x8a6a4a}));
  pole.position.set(0,PAD/2,0);scene.add(pole);window.__pole=pole;
 })();
 
