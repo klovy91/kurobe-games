@@ -132,6 +132,27 @@ var PANELS=[
 ];
 
 function clamp(v,a,b){return v<a?a:v>b?b:v}
+
+/* ---------- wind ----------
+   A steady wind everywhere would do nothing: the whole air mass carries the plane and it feels no wind at
+   all. So the wind changes with height. Which band you choose to fly in is the decision, and climbing or
+   dropping through the shear throws the plane sideways, which is what asymmetric engines are for. */
+var WHI=120, WIND={ax0:0,az0:0,ax1:0,az1:0,p1:0,p2:0};
+function rollWind(){
+ WIND.ax0=(Math.random()*2-1)*3;WIND.az0=(Math.random()*2-1)*3;
+ WIND.ax1=(Math.random()*2-1)*8;WIND.az1=(Math.random()*2-1)*7;
+ WIND.p1=Math.random()*6.3;WIND.p2=Math.random()*6.3;
+}
+function windAt(y,t,o){
+ var k=clamp(y/WHI,0,1);
+ return o.set(WIND.ax0+(WIND.ax1-WIND.ax0)*k+1.2*Math.sin(t*0.9+WIND.p1),0,
+              WIND.az0+(WIND.az1-WIND.az0)*k+1.2*Math.sin(t*1.3+WIND.p2));
+}
+function windWords(ax,az){
+ var a=Math.round(Math.abs(ax)), z=Math.round(Math.abs(az));
+ return (a<1?J('追い風なし','no tailwind'):(ax>0?J('追い風','tail')+a:J('向かい風','head')+a))+
+        ' / '+(z<1?J('横風なし','no cross'):(az>0?J('左から','from left'):J('右から','from right'))+z);
+}
 function rnd(s){s=Math.sin(s*12.9898)*43758.5453;return s-Math.floor(s)}
 
 /* ---------- 3x3 matrices as flat arrays (row major) ---------- */
@@ -277,7 +298,7 @@ var POS=new V3(), VEL=new V3(), Q=new THREE.Quaternion(), W=new V3();
 var heat=0, scorch=0, fuel=0, far=0, ft=0, mode='title', best=0, alive=true;
 try{best=Math.max(0,parseFloat(localStorage.getItem('jk_best'))||0)}catch(e){}
 var t1=new V3(),t2=new V3(),t3=new V3(),t4=new V3(),vb=new V3(),rr=new V3(),vp=new V3(),uu=new V3(),ld=new V3(),ff=new V3(),fb=new V3(),tb=new V3(),wd=new V3(),pnv=new V3();
-var qc=new THREE.Quaternion(),qw=new THREE.Quaternion(),qd=new THREE.Quaternion();
+var qc=new THREE.Quaternion(),qw=new THREE.Quaternion(),qd=new THREE.Quaternion(),WV=new V3();
 var lastA=0,lastB=0,flex=1;
 
 function startFlight(){
@@ -297,7 +318,8 @@ function startFlight(){
 function step(dt){
  ft+=dt;
  qc.set(-Q.x,-Q.y,-Q.z,Q.w);
- vb.copy(VEL).applyQuaternion(qc);
+ windAt(POS.y,ft,WV);
+ vb.copy(VEL).sub(WV).applyQuaternion(qc);
  flex=1/(1+0.5*RHO*vb.lengthSq()/QFLEX);
  fb.set(0,0,0);tb.set(0,0,0);
  var i,p,V2,Vm,sa,ca,aa,cl,cd,qq,l,pn,ii;
@@ -356,7 +378,7 @@ function step(dt){
  qw.set(W.x,W.y,W.z,0);qd.multiplyQuaternions(Q,qw);
  Q.set(Q.x+0.5*qd.x*dt, Q.y+0.5*qd.y*dt, Q.z+0.5*qd.z*dt, Q.w+0.5*qd.w*dt).normalize();
 
- var d=Math.sqrt(POS.x*POS.x+POS.z*POS.z);if(d>far)far=d;
+ if(POS.x>far)far=POS.x;
  if(POS.y<=0.02){POS.y=0.02;land()}
  else if(ft>120)land();
 }
@@ -471,7 +493,7 @@ function buildCam(){
  cam.up.set(0,1,0);cam.lookAt(0,PAD,0);
 }
 function enterBuild(){
- mode='build';
+ mode='build';rollWind();
  craft.position.set(0,PAD,0);craft.quaternion.identity();craft.visible=true;
  cmBall.visible=true;mountDots.visible=true;window.__pole.visible=false;
  hud.style.display='none';bars.style.display='none';jets.style.display='none';
@@ -496,7 +518,9 @@ function buildInfo(){
  var hz=ctr?J('左右つりあい','yaw even'):pz>0?J('噴くと左に曲がる','burn turns left'):J('噴くと右に曲がる','burn turns right');
  bstat.innerHTML='<b>'+J('エンジン','Engines')+' '+ENG.length+' / '+EMAX+'</b>'+
   (ENG.length?'　<span class="'+(up?'ok':'')+'">'+vt+'</span>　<span class="'+(ctr?'ok':'')+'">'+hz+'</span>':'')+
-  '<div style="opacity:.72;font-size:13px;margin-top:4px">'+J('燃料','Fuel')+' '+TANK.toFixed(1)+
+  '<div style="opacity:.72;font-size:13px;margin-top:4px">'+
+  J('風','Wind')+'　'+J('低空','low')+' '+windWords(WIND.ax0,WIND.az0)+'　'+J('上空','high')+' '+windWords(WIND.ax1,WIND.az1)+'</div>'+
+  '<div style="opacity:.72;font-size:13px;margin-top:2px">'+J('燃料','Fuel')+' '+TANK.toFixed(1)+
   (ENG.length>1?J('秒ぶん（'+ENG.length+'個いっぺんに噴くと'+(TANK/ENG.length).toFixed(1)+'秒）',
                   's of one engine (' + (TANK/ENG.length).toFixed(1) + 's if all ' + ENG.length + ' burn at once)')
               :J('秒ぶん','s'))+'</div>';
@@ -636,7 +660,9 @@ document.querySelector('#he span').textContent=J('こげ','HEAT');
 function drawHud(){
  elD.innerHTML=Math.floor(far)+'<small>BEST '+Math.floor(best)+'</small>';
  var sp=VEL.length();
- var tx=J('高度','ALT')+' '+Math.round(POS.y)+'m<br>'+J('速さ','SPD')+' '+Math.round(sp*3.6)+'km/h';
+ windAt(POS.y,ft,WV);
+ var tx=J('高度','ALT')+' '+Math.round(POS.y)+'m<br>'+J('速さ','SPD')+' '+Math.round(sp*3.6)+'km/h'+
+  '<br><span style="opacity:.8">'+J('風','Wind')+' '+windWords(WV.x,WV.z)+'</span>';
  if(DBG)tx+='<br>a '+(lastA*57.3).toFixed(1)+'&deg; b '+(lastB*57.3).toFixed(1)+'&deg;<br>w '+W.length().toFixed(1)+' flex '+flex.toFixed(2);
  elT.innerHTML=tx;
  fuB.style.width=(fuel/TANK*100)+'%';
@@ -688,7 +714,7 @@ function frame(now){
  ren.render(scene,cam);
 }
 
-resize();massProps();ovTitle();
+resize();massProps();rollWind();ovTitle();
 document.getElementById('ld').style.display='none';
 requestAnimationFrame(frame);
 })();
