@@ -103,7 +103,7 @@ var PAD=50;                        /* launch pad height. ?pad= overrides it on t
    same turn rates. Raising the launch speed on its own would just make it loop. */
 var MP=0.210, PCM=new V3(0.02,0,0);          /* paper: mass and its own centre of mass */
 var IPX=2.45e-3, IPY=7.26e-3, IPZ=4.80e-3;   /* paper inertia about PCM (roll, yaw, pitch) */
-var ME=0.0, TH=2.0, TANK=3.0, EMAX=4;        /* one engine: mass and thrust, how many fit, and the shared
+var ME=0.0, TH=2.0, TANK=4.5, EMAX=4;        /* one engine: mass and thrust, how many fit, and the shared
    tank, measured in seconds of one engine. Every build carries the same 3.0, so four engines give four
    times the thrust for a quarter of the time: you add engines for the choice of where to push, not for power.
    The engines weigh nothing, so every build balances and glides exactly like the bare plane and only the
@@ -117,6 +117,7 @@ var LV=24, LANG=20;
  var mv=q.match(/[?&]v=(\d+(?:\.\d+)?)/);if(mv)LV=clampN(parseFloat(mv[1]),4,90);
  var mp=q.match(/[?&]pad=(\d+(?:\.\d+)?)/);if(mp)PAD=clampN(parseFloat(mp[1]),5,250);
  var ma=q.match(/[?&]a=(-?\d+(?:\.\d+)?)/);if(ma)LANG=clampN(parseFloat(ma[1]),-20,70);
+ var mf=q.match(/[?&]fuel=(\d+(?:\.\d+)?)/);if(mf)TANK=clampN(parseFloat(mf[1]),0.5,20);
  function clampN(v,a,b){return v<a?a:v>b?b:v}})();
 LANG=LANG*Math.PI/180;
 var IW=0.09, IE=-0.22;             /* the folded paper holds the wings slightly nose-up and the tail edge turned up, so it trims nose-up instead of just falling */
