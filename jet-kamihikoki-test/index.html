@@ -123,6 +123,10 @@ LANG=LANG*Math.PI/180;
 var IW=0.09, IE=-0.22;             /* the folded paper holds the wings slightly nose-up and the tail edge turned up, so it trims nose-up instead of just falling */
 var QFLEX=311;                     /* fast air flattens those folds again, so the faster it goes the less it wants to climb.
    Tuned so that lift levels off only a little above the plane's weight: any higher and a burn turns into a loop instead of distance. */
+/* Steering. The jet blows over the wing behind it and lifts that side, so burning the right engine banks
+   the plane left; KLEVEL rolls it back toward level, so the bank settles instead of rolling right round and
+   the plane straightens out again when the burn stops. */
+var KBLOW=0.024, KLEVEL=0.12;
 var DIH=0.20, DC=Math.cos(DIH), DS=Math.sin(DIH);  /* the wings sit in a shallow V */
 var PANELS=[
  {r:new V3(-0.010,0,-0.055), inc:IW, dc:DC, ds: DS, A:0.012},   /* left wing */
@@ -298,7 +302,7 @@ var POS=new V3(), VEL=new V3(), Q=new THREE.Quaternion(), W=new V3();
 var heat=0, scorch=0, fuel=0, far=0, ft=0, mode='title', best=0, alive=true;
 try{best=Math.max(0,parseFloat(localStorage.getItem('jk_best'))||0)}catch(e){}
 var t1=new V3(),t2=new V3(),t3=new V3(),t4=new V3(),vb=new V3(),rr=new V3(),vp=new V3(),uu=new V3(),ld=new V3(),ff=new V3(),fb=new V3(),tb=new V3(),wd=new V3(),pnv=new V3();
-var qc=new THREE.Quaternion(),qw=new THREE.Quaternion(),qd=new THREE.Quaternion(),WV=new V3();
+var qc=new THREE.Quaternion(),qw=new THREE.Quaternion(),qd=new THREE.Quaternion(),WV=new V3(),DNV=new V3();
 var lastA=0,lastB=0,flex=1;
 
 function startFlight(){
@@ -357,6 +361,7 @@ function step(dt){
   rr.copy(e.pos).sub(CM);
   ff.set(TH,0,0);
   fb.add(ff);tb.add(t2.crossVectors(rr,ff));
+  tb.x-=KBLOW*TH*clamp(e.pos.z/0.085,-1.2,1.2);
   e.flame.visible=true;
   e.flame.scale.set(1,0.75+Math.random()*0.6,1);
  }
@@ -365,6 +370,7 @@ function step(dt){
  scorch=clamp(Math.max(scorch,heat-1),0,1);
 
  tb.addScaledVector(W,-ADAMP);
+ tb.x-=KLEVEL*DNV.set(0,-1,0).applyQuaternion(qc).z;   /* roll back toward level */
 
  t3.copy(fb).applyQuaternion(Q);t3.y-=MASS*G;
  VEL.addScaledVector(t3,dt/MASS);
